@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             FinancialInstitutionTypeSeeder::class,
             FinancialInstitutionSeeder::class,
             DisbursementTypeSeeder::class,
+            VendorSeeder::class,
         ]);
     }
 }

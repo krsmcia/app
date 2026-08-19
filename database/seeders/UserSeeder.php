@@ -36,14 +36,6 @@ class UserSeeder extends Seeder
                     'current_department' => 'hr',
                 ],
                 [
-                    'name' => 'IT Staff',
-                    'email' => 'it-staff@ciamactan.com',
-                    'password' => 'password',
-                    'role' => 'staff',
-                    'departments' => ['it'],
-                    'current_department' => 'it',
-                ],
-                [
                     'name' => 'Audit Staff',
                     'email' => 'audit-staff@ciamactan.com',
                     'password' => 'password',
@@ -51,7 +43,14 @@ class UserSeeder extends Seeder
                     'departments' => ['audit'],
                     'current_department' => 'audit',
                 ],
-
+                [
+                    'name' => 'Procurement Staff',
+                    'email' => 'procurement-staff@ciamactan.com',
+                    'password' => 'password',
+                    'role' => 'staff',
+                    'departments' => ['procurement'],
+                    'current_department' => 'procurement',
+                ],
                 [
                     'name' => 'HR Team-leader',
                     'email' => 'hr-team-leader@ciamactan.com',
@@ -61,14 +60,6 @@ class UserSeeder extends Seeder
                     'current_department' => 'hr',
                 ],
                 [
-                    'name' => 'IT Team-leader',
-                    'email' => 'it-team-leader@ciamactan.com',
-                    'password' => 'password',
-                    'role' => 'team-leader',
-                    'departments' => ['it'],
-                    'current_department' => 'it',
-                ],
-                [
                     'name' => 'Audit Team-leader',
                     'email' => 'audit-team-leader@ciamactan.com',
                     'password' => 'password',
@@ -76,7 +67,14 @@ class UserSeeder extends Seeder
                     'departments' => ['audit'],
                     'current_department' => 'audit',
                 ],
-
+                [
+                    'name' => 'Procurement Staff',
+                    'email' => 'procurement-team-leader@ciamactan.com',
+                    'password' => 'password',
+                    'role' => 'team-leader',
+                    'departments' => ['procurement'],
+                    'current_department' => 'procurement',
+                ],
                 [
                     'name' => 'HR Supervisor',
                     'email' => 'hr-supervisor@ciamactan.com',
@@ -86,14 +84,6 @@ class UserSeeder extends Seeder
                     'current_department' => 'hr',
                 ],
                 [
-                    'name' => 'IT Supervisor',
-                    'email' => 'it-supervisor@ciamactan.com',
-                    'password' => 'password',
-                    'role' => 'supervisor',
-                    'departments' => ['it'],
-                    'current_department' => 'it',
-                ],
-                [
                     'name' => 'Audit Supervisor',
                     'email' => 'audit-supervisor@ciamactan.com',
                     'password' => 'password',
@@ -101,7 +91,14 @@ class UserSeeder extends Seeder
                     'departments' => ['audit'],
                     'current_department' => 'audit',
                 ],
-
+                [
+                    'name' => 'Procurement Staff',
+                    'email' => 'procurement-supervisor@ciamactan.com',
+                    'password' => 'password',
+                    'role' => 'supervisor',
+                    'departments' => ['procurement'],
+                    'current_department' => 'procurement',
+                ],
                 [
                     'name' => 'HR Head',
                     'email' => 'hr-head@ciamactan.com',
@@ -111,14 +108,6 @@ class UserSeeder extends Seeder
                     'current_department' => 'hr',
                 ],
                 [
-                    'name' => 'IT Head',
-                    'email' => 'it-head@ciamactan.com',
-                    'password' => 'password',
-                    'role' => 'head',
-                    'departments' => ['it'],
-                    'current_department' => 'it',
-                ],
-                [
                     'name' => 'Audit Head',
                     'email' => 'audit-head@ciamactan.com',
                     'password' => 'password',
@@ -126,14 +115,13 @@ class UserSeeder extends Seeder
                     'departments' => ['audit'],
                     'current_department' => 'audit',
                 ],
-
                 [
-                    'name' => 'Admin',
-                    'email' => 'admin@ciamactan.com',
+                    'name' => 'Procurement Head',
+                    'email' => 'procurement-head@ciamactan.com',
                     'password' => 'password',
-                    'role' => 'admin',
-                    'departments' => [],
-                    'current_department' => '',
+                    'role' => 'head',
+                    'departments' => ['procurement'],
+                    'current_department' => 'procurement',
                 ],
             ]);
         }

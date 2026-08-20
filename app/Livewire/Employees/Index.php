@@ -107,6 +107,7 @@ class Index extends Component
                     'name' => $employee['name'],
                     'email' => $employee['email'],
                     'password' => Hash::make($employee['password']),
+                    'current_department_id' => $employee['department_ids'][0],
                 ]);
 
                 $user->syncRoles([$employee['role']]);
@@ -228,6 +229,7 @@ class Index extends Component
         $users = User::with([
             'roles',
             'departments',
+            'department',
         ])
             ->whereDoesntHave('roles', function ($query) {
                 $query->whereIn('name', [

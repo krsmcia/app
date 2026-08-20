@@ -343,4 +343,150 @@
         </x-slot>
 
     </x-dialog-modal>
+    <x-dialog-modal maxWidth="2xl" wire:model.live="showEditModal">
+        <x-slot name="title">
+            Edit Employee
+        </x-slot>
+        <x-slot name="content">
+            <div class="space-y-5">
+                {{-- Name --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Name
+                    </label>
+                    <input
+                        type="text"
+                        wire:model="editName"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                    @error('editName')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                {{-- Email --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        wire:model="editEmail"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                    @error('editEmail')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                {{-- Password --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <input
+                        type="password"
+                        wire:model="editPassword"
+                        placeholder="Leave blank to keep current password"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                    @error('editPassword')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    <p class="mt-1 text-xs text-gray-500">
+                        Leave blank if you don't want to change the password.
+                    </p>
+                </div>
+                {{-- Role --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Role
+                    </label>
+                    <select
+                        wire:model="editRole"
+                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->name }}">
+                                {{ ucfirst($role->name) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('editRole')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                {{-- Departments --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Departments
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach ($departments as $department)
+                            <label class="flex items-center gap-2 text-sm text-gray-700">
+                                <input
+                                    type="checkbox"
+                                    value="{{ $department->id }}"
+                                    wire:model="editDepartmentIds"
+                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                >
+
+                                <span>
+                                    {{ $department->name }}
+                                </span>
+
+                            </label>
+
+                        @endforeach
+
+                    </div>
+
+                    @error('editDepartmentIds')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                </div>
+
+            </div>
+
+        </x-slot>
+
+        <x-slot name="footer">
+
+            <button
+                type="button"
+                wire:click="$set('showEditModal', false)"
+                class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                wire:click="updateEmployee"
+                wire:loading.attr="disabled"
+                class="ml-3 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium"
+            >
+
+                <span wire:loading.remove wire:target="updateEmployee">
+                    Update Employee
+                </span>
+
+                <span wire:loading wire:target="updateEmployee">
+                    Updating...
+                </span>
+
+            </button>
+
+        </x-slot>
+
+    </x-dialog-modal>
 </div>

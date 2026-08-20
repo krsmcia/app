@@ -1,20 +1,23 @@
 <div class="p-2">
-    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+
         @if(auth()->user()->hasRole('super-admin') || auth()->user()->department?->code === 'hr')
+
             {{-- Team Management --}}
             <a
                 href="{{ route('departments') }}"
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-indigo-600"
+                        class="size-5 text-indigo-600 sm:size-6"
                     >
                         <path
                             stroke-linecap="round"
@@ -24,33 +27,35 @@
                     </svg>
                 </div>
 
-                <h2 class="mt-5 text-lg font-semibold text-gray-900">
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
                     Department Management
                 </h2>
 
-                <p class="mt-2 text-sm leading-6 text-gray-500">
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                     Manage departments, department members, and department assignments.
                 </p>
 
-                <div class="mt-5 text-sm font-semibold text-indigo-600">
-                    Manage departments
+                <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
+                    Manage
                     <span class="transition group-hover:ml-1">→</span>
                 </div>
             </a>
+
             {{-- Employee Management --}}
             <a
                 href="{{ route('employees') }}"
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-blue-600"
+                        class="size-5 text-blue-600 sm:size-6"
                     >
                         <path
                             stroke-linecap="round"
@@ -70,34 +75,41 @@
                         />
                     </svg>
                 </div>
-                <h2 class="mt-5 text-lg font-semibold text-gray-900">
+
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
                     Employee Management
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-gray-500">
+
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                     Manage employees, departments, positions, and HR information.
                 </p>
-                <div class="mt-5 text-sm font-semibold text-indigo-600">
-                    Manage employees
+
+                <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
+                    Manage
                     <span class="transition group-hover:ml-1">→</span>
                 </div>
             </a>
-            
+
         @endif
+
+
         @if(auth()->user()->hasRole('super-admin') || auth()->user()->department?->code === 'procurement')
+
+            {{-- Procurement Categories --}}
             <a
                 href="{{ route('procurements.categories') }}"
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                {{-- Icon --}}
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-indigo-600"
+                        class="size-5 text-indigo-600 sm:size-6"
                     >
                         <path
                             stroke-linecap="round"
@@ -109,39 +121,38 @@
                     </svg>
                 </div>
 
-                {{-- Content --}}
-                <h2 class="mt-5 text-lg font-semibold text-slate-600">
+                <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
                     Procurement Categories
                 </h2>
 
-                <p class="mt-2 text-sm leading-6 text-gray-500">
-                    Manage procurement categories, organize category hierarchies,
-                    and control their display order.
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                    Manage procurement categories, organize category hierarchies, and control their display order.
                 </p>
 
-                {{-- Action --}}
-                <div class="mt-5 flex items-center text-sm font-semibold text-indigo-600">
-                    Manage categories
-
+                <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
+                    Manage
                     <span class="ml-1 transition-transform duration-200 group-hover:translate-x-1">
                         →
                     </span>
                 </div>
             </a>
+
+
+            {{-- Procurement Items --}}
             <a
                 href="{{ route('procurements.items') }}"
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition-all duration-200 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                {{-- Icon --}}
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-indigo-600"
+                        class="size-5 text-indigo-600 sm:size-6"
                     >
                         <path
                             stroke-linecap="round"
@@ -160,51 +171,39 @@
                     </svg>
                 </div>
 
-                {{-- Content --}}
-                <h2 class="mt-5 text-lg font-semibold text-slate-600">
+                <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
                     Procurement Items
                 </h2>
 
-                <p class="mt-2 text-sm leading-6 text-gray-500">
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                     Manage procurement items, assign categories, and maintain item details and status.
                 </p>
 
-                {{-- Action --}}
-                <div class="mt-5 flex items-center text-sm font-semibold text-indigo-600">
-                    Manage items
-
+                <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
+                    Manage
                     <span class="ml-1 transition-transform duration-200 group-hover:translate-x-1">
                         →
                     </span>
                 </div>
             </a>
+
+
+            {{-- Vendors --}}
             <a
                 href="{{ route('procurements.vendors') }}"
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition-all duration-200 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                {{-- Icon --}}
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-emerald-600"
+                        class="size-5 text-emerald-600 sm:size-6"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M18 18.72a9.094 9.094 0 003.742-.61
-                            9.094 9.094 0 00-3.742-.61m0 1.22
-                            a9.094 9.094 0 01-3.742-.61
-                            9.094 9.094 0 013.742-.61m0 1.22
-                            v-1.22m0 0a9.094 9.094 0 00-3.742-.61
-                            M6 18.72a9.094 9.094 0 01-3.742-.61
-                            9.094 9.094 0 013.742-.61m0 1.22
-                            v-1.22m0 0a9.094 9.094 0 013.742-.61"
-                        />
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -218,72 +217,85 @@
                     </svg>
                 </div>
 
-                {{-- Content --}}
-                <h2 class="mt-5 text-lg font-semibold text-slate-600">
+                <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
                     Vendors
                 </h2>
 
-                <p class="mt-2 text-sm leading-6 text-gray-500">
-                    Manage vendors, contact information, supplied items, purchasing details, and vendor status.
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                    Manage vendors, contact information, supplied items, and purchasing details.
                 </p>
 
-                {{-- Action --}}
-                <div class="mt-5 flex items-center text-sm font-semibold text-emerald-600">
-                    Manage vendors
-
+                <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
+                    Manage
                     <span class="ml-1 transition-transform duration-200 group-hover:translate-x-1">
                         →
                     </span>
                 </div>
             </a>
+
         @endif
+
+
         {{-- My Requests --}}
         <a
             href=""
-            class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
         >
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 sm:h-11 sm:w-11">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke-width="1.5"
                     stroke="currentColor"
-                    class="size-6 text-slate-600"
+                    class="size-5 text-slate-600 sm:size-6"
                 >
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 0H6.375A2.625 2.625 0 003.75 4.875v14.25a2.625 2.625 0 002.625 2.625h10.5a2.625 2.625 0 002.625-2.625V15M8.25 3.75H9m-1.5 9h7.5m-7.5 3h4.5"
+                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5
+                        a1.125 1.125 0 01-1.125-1.125v-1.5
+                        a3.375 3.375 0 00-3.375-3.375H8.25
+                        m0 0H6.375A2.625 2.625 0 003.75 4.875v14.25
+                        a2.625 2.625 0 002.625 2.625h10.5
+                        a2.625 2.625 0 002.625-2.625V15
+                        M8.25 3.75H9m-1.5 9h7.5m-7.5 3h4.5"
                     />
                 </svg>
             </div>
-            <h2 class="mt-5 text-lg font-semibold text-slate-600">
+
+            <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
                 My Requests
             </h2>
-            <p class="mt-2 text-sm leading-6 text-gray-500">
+
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                 View and manage the purchasing requests you have submitted.
             </p>
-            <div class="mt-5 text-sm font-semibold text-indigo-600">
+
+            <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
                 View requests
                 <span class="transition group-hover:ml-1">→</span>
             </div>
         </a>
+
+
         {{-- New Request --}}
         <a
-            href="{{route('purchasing.request.create')}}"
-            class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+            href="{{ route('purchasing.request.create') }}"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
         >
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke-width="1.5"
                     stroke="currentColor"
-                    class="size-6 text-emerald-600"
+                    class="size-5 text-emerald-600 sm:size-6"
                 >
                     <path
                         stroke-linecap="round"
@@ -292,30 +304,37 @@
                     />
                 </svg>
             </div>
-            <h2 class="mt-5 text-lg font-semibold text-emerald-600">
+
+            <h2 class="mt-4 text-base font-semibold leading-5 text-emerald-600 sm:mt-5 sm:text-lg">
                 New Request
             </h2>
-            <p class="mt-2 text-sm leading-6 text-gray-500">
+
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                 Submit a new purchasing request for your department.
             </p>
-            <div class="mt-5 text-sm font-semibold text-green-600">
+
+            <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
                 Create request
                 <span class="transition group-hover:ml-1">→</span>
             </div>
         </a>
+
+
+        {{-- Pending Approval --}}
         <a
             href=""
-            class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
         >
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 sm:h-11 sm:w-11">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke-width="1.5"
                     stroke="currentColor"
-                    class="size-6 text-amber-600"
+                    class="size-5 text-amber-600 sm:size-6"
                 >
                     <path
                         stroke-linecap="round"
@@ -324,30 +343,37 @@
                     />
                 </svg>
             </div>
-            <h2 class="mt-5 text-lg font-semibold text-gray-900">
+
+            <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
                 Pending Approval
             </h2>
-            <p class="mt-2 text-sm leading-6 text-gray-500">
-                Review purchasing requests that are waiting for approval.
+
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                Review purchasing requests waiting for approval.
             </p>
-            <div class="mt-5 text-sm font-semibold text-amber-600">
+
+            <div class="mt-auto pt-3 text-xs font-semibold text-amber-600 sm:text-sm">
                 Review requests
                 <span class="transition group-hover:ml-1">→</span>
             </div>
         </a>
+
+
+        {{-- Purchasing History --}}
         <a
             href=""
-            class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
         >
-            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 sm:h-11 sm:w-11">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke-width="1.5"
                     stroke="currentColor"
-                    class="size-6 text-purple-600"
+                    class="size-5 text-purple-600 sm:size-6"
                 >
                     <path
                         stroke-linecap="round"
@@ -356,72 +382,86 @@
                     />
                 </svg>
             </div>
-            <h2 class="mt-5 text-lg font-semibold text-gray-900">
+
+            <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
                 Purchasing History
             </h2>
-            <p class="mt-2 text-sm leading-6 text-gray-500">
+
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                 Review completed and previously processed requests.
             </p>
-            <div class="mt-5 text-sm font-semibold text-slate-600">
+
+            <div class="mt-auto pt-3 text-xs font-semibold text-slate-600 sm:text-sm">
                 View history
                 <span class="transition group-hover:ml-1">→</span>
             </div>
         </a>
+
+
         @if(auth()->user()->hasRole(['supervisor', 'team-leader']))
+
+            {{-- Requests to Review --}}
             <a
                 href=""
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-orange-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-orange-600"
+                        class="size-5 text-orange-600 sm:size-6"
                     >
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586
+                            a1 1 0 01.707.293l5.414 5.414
+                            a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                     </svg>
                 </div>
 
-                <h2 class="mt-5 text-lg font-semibold text-gray-900">
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
                     Requests to Review
                 </h2>
 
-                <p class="mt-2 text-sm leading-6 text-gray-500">
-                    Review purchasing requests that are waiting for your action.
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                    Review purchasing requests waiting for your action.
                 </p>
 
-                <div class="mt-5 flex items-center justify-between">
-                    <span class="text-sm font-semibold text-orange-600">
-                        Review requests
+                <div class="mt-auto flex items-center justify-between pt-3">
+                    <span class="text-xs font-semibold text-orange-600 sm:text-sm">
+                        Review
                         <span class="transition group-hover:ml-1">→</span>
                     </span>
 
-                    <span class="inline-flex min-w-7 items-center justify-center rounded-full bg-orange-100 px-2 py-1 text-xs font-bold text-orange-700">
+                    <span class="inline-flex min-w-6 items-center justify-center rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-700 sm:min-w-7 sm:text-xs">
                         3
                     </span>
                 </div>
             </a>
+
+
+            {{-- Approval History --}}
             <a
                 href=""
-                class="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm
-                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
             >
-                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 sm:h-11 sm:w-11">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke-width="1.5"
                         stroke="currentColor"
-                        class="size-6 text-slate-600"
+                        class="size-5 text-slate-600 sm:size-6"
                     >
                         <path
                             stroke-linecap="round"
@@ -430,18 +470,23 @@
                         />
                     </svg>
                 </div>
-                <h2 class="mt-5 text-lg font-semibold text-gray-900">
+
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
                     Approval History
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-gray-500">
+
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
                     Review completed and previously processed requests.
                 </p>
-                <div class="mt-5 text-sm font-semibold text-purple-600">
+
+                <div class="mt-auto pt-3 text-xs font-semibold text-purple-600 sm:text-sm">
                     View history
                     <span class="transition group-hover:ml-1">→</span>
                 </div>
             </a>
+
         @endif
+
     </div>
     <div class="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-200 px-6 py-5">

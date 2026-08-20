@@ -295,6 +295,69 @@
         </x-slot>
         <x-slot name="content">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        Product Images
+                    </label>
+
+                    <input
+                        type="file"
+                        wire:model="images"
+                        multiple
+                        accept="image/jpeg,image/png,image/webp"
+                        class="block w-full text-sm text-gray-700
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-md file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-50 file:text-indigo-700
+                            hover:file:bg-indigo-100"
+                    >
+
+                    @error('images')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                    @error('images.*')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                    <div
+                        wire:loading
+                        wire:target="images"
+                        class="mt-2 text-sm text-gray-500"
+                    >
+                        Uploading images...
+                    </div>
+
+                    @if ($images)
+                        <div class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+
+                            @foreach ($images as $index => $image)
+                                <div class="relative">
+
+                                    <img
+                                        src="{{ $image->temporaryUrl() }}"
+                                        class="h-24 w-24 rounded-lg object-cover border"
+                                    >
+
+                                    @if ($index === 0)
+                                        <span class="absolute bottom-1 left-1 rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] text-white">
+                                            Primary
+                                        </span>
+                                    @endif
+
+                                </div>
+                            @endforeach
+
+                        </div>
+                    @endif
+
+                </div>
                 {{-- Name --}}
                 <div>
                     <label class="mb-1 block text-sm font-medium text-gray-700">
@@ -562,17 +625,255 @@
     >
 
         <x-slot name="title">
-            Edit Vendor
+            Edit Item
         </x-slot>
-
 
         <x-slot name="content">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+                {{-- Images --}}
+                <div class="md:col-span-2">
+
+                    <label class="mb-2 block text-sm font-medium text-gray-700">
+                        Product Images
+                    </label>
+
+                    {{-- Existing Images --}}
+                    @if (count($existingImages) > 0)
+
+                        <div class="mb-4">
+
+                            <p class="mb-2 text-xs font-medium text-gray-500">
+                                Current Images
+                            </p>
+
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+
+                                @foreach ($existingImages as $image)
+
+                                    <div
+                                        wire:key="existing-image-{{ $image['id'] }}"
+                                        class="relative group"
+                                    >
+
+                                        <img
+                                            src="{{ asset('storage/' . $image['path']) }}"
+                                            class="h-28 w-full rounded-lg object-cover border
+                                                {{ $image['is_primary']
+                                                    ? 'border-2 border-indigo-500'
+                                                    : 'border-gray-200' }}"
+                                        >
+
+                                        {{-- Primary --}}
+                                        @if ($image['is_primary'])
+
+                                            <span
+                                                class="absolute top-1 left-1
+                                                    rounded bg-indigo-600
+                                                    px-2 py-0.5
+                                                    text-[10px] font-medium
+                                                    text-white"
+                                            >
+                                                Primary
+                                            </span>
+
+                                        @else
+
+                                            <button
+                                                type="button"
+                                                wire:click="setPrimaryImage({{ $image['id'] }})"
+                                                class="absolute top-1 left-1
+                                                    rounded bg-white/90
+                                                    px-2 py-0.5
+                                                    text-[10px] font-medium
+                                                    text-gray-700
+                                                    opacity-0 group-hover:opacity-100
+                                                    transition"
+                                            >
+                                                Set Primary
+                                            </button>
+
+                                        @endif
+
+                                        {{-- Delete --}}
+                                        <button
+                                            type="button"
+                                            wire:click="deleteImage({{ $image['id'] }})"
+                                            wire:confirm="Are you sure you want to delete this image?"
+                                            class="absolute top-1 right-1
+                                                h-6 w-6
+                                                rounded-full
+                                                bg-red-600
+                                                text-white
+                                                text-xs
+                                                flex items-center justify-center
+                                                opacity-0
+                                                group-hover:opacity-100
+                                                transition"
+                                        >
+                                            ×
+                                        </button>
+
+                                    </div>
+
+                                @endforeach
+
+                            </div>
+
+                        </div>
+
+                    @endif
+
+
+                    {{-- Add New Images --}}
+                    <div>
+
+                        <p class="mb-2 text-xs font-medium text-gray-500">
+                            Add New Images
+                        </p>
+
+                        <input
+                            type="file"
+                            wire:model="images"
+                            multiple
+                            accept="image/jpeg,image/png,image/webp"
+                            class="block w-full text-sm text-gray-700
+                                file:mr-4
+                                file:py-2
+                                file:px-4
+                                file:rounded-md
+                                file:border-0
+                                file:text-sm
+                                file:font-semibold
+                                file:bg-indigo-50
+                                file:text-indigo-700
+                                hover:file:bg-indigo-100"
+                        >
+
+                        @error('images')
+                            <p class="mt-1 text-xs text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
+
+                        @error('images.*')
+                            <p class="mt-1 text-xs text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
+
+                        <div
+                            wire:loading
+                            wire:target="images"
+                            class="mt-2 text-sm text-gray-500"
+                        >
+                            Uploading images...
+                        </div>
+
+
+                        {{-- New Image Preview --}}
+                        @if (count($images) > 0)
+
+                            <div class="mt-4">
+
+                                <p class="mb-2 text-xs font-medium text-gray-500">
+                                    New Images
+                                </p>
+
+                                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+
+                                    @foreach ($images as $index => $image)
+
+                                        <div
+                                            wire:key="new-image-{{ $index }}"
+                                            class="relative"
+                                        >
+
+                                            <img
+                                                src="{{ $image->temporaryUrl() }}"
+                                                class="h-28 w-full rounded-lg object-cover border border-gray-200"
+                                            >
+
+                                            @if ($index === 0 && count($existingImages) === 0)
+
+                                                <span
+                                                    class="absolute top-1 left-1
+                                                        rounded bg-indigo-600
+                                                        px-2 py-0.5
+                                                        text-[10px]
+                                                        text-white"
+                                                >
+                                                    Primary
+                                                </span>
+
+                                            @endif
+
+                                        </div>
+
+                                    @endforeach
+
+                                </div>
+
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+
+                {{-- SKU --}}
+                <div>
+
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        SKU
+                    </label>
+
+                    <input
+                        type="text"
+                        wire:model="sku"
+                        placeholder="SKU"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+
+                    @error('sku')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                </div>
+
+
+                {{-- Barcode --}}
+                <div>
+
+                    <label class="mb-1 block text-sm font-medium text-gray-700">
+                        Barcode
+                    </label>
+
+                    <input
+                        type="text"
+                        wire:model="barcode"
+                        placeholder="Barcode"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
+                    >
+
+                    @error('barcode')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                </div>
+
 
                 {{-- Name --}}
-                <div>
+                <div class="md:col-span-2">
 
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Name
@@ -581,8 +882,9 @@
                     <input
                         type="text"
                         wire:model="name"
-                        placeholder="Vendor name"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        placeholder="Product name"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
                     >
 
                     @error('name')
@@ -594,21 +896,22 @@
                 </div>
 
 
-                {{-- Code --}}
+                {{-- Unit --}}
                 <div>
 
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Code
+                        Unit
                     </label>
 
                     <input
                         type="text"
-                        wire:model="code"
-                        placeholder="Vendor code"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        wire:model="unit"
+                        placeholder="e.g. pcs"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
                     >
 
-                    @error('code')
+                    @error('unit')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
@@ -617,21 +920,22 @@
                 </div>
 
 
-                {{-- Legal Name --}}
+                {{-- Brand --}}
                 <div>
 
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Legal Name
+                        Brand
                     </label>
 
                     <input
                         type="text"
-                        wire:model="legalName"
-                        placeholder="Legal name"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        wire:model="brand"
+                        placeholder="Brand"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
                     >
 
-                    @error('legalName')
+                    @error('brand')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
@@ -640,22 +944,22 @@
                 </div>
 
 
-                {{-- Type --}}
+                {{-- Color --}}
                 <div>
 
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Type
+                        Color
                     </label>
 
-                    <select
-                        wire:model="type"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    <input
+                        type="text"
+                        wire:model="color"
+                        placeholder="Color"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
                     >
-                        <option value="supplier">Supplier</option>
-                        <option value="customer">Customer</option>
-                    </select>
 
-                    @error('type')
+                    @error('color')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
@@ -664,121 +968,26 @@
                 </div>
 
 
-                {{-- Contact Person --}}
+                {{-- Size --}}
                 <div>
 
                     <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Contact Person
+                        Size
                     </label>
 
                     <input
                         type="text"
-                        wire:model="contactPerson"
-                        placeholder="Contact person"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        wire:model="size"
+                        placeholder="Size"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
                     >
 
-                </div>
-
-
-                {{-- Email --}}
-                <div>
-
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Email
-                    </label>
-
-                    <input
-                        type="email"
-                        wire:model="email"
-                        placeholder="Email address"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-
-                </div>
-
-
-                {{-- Phone --}}
-                <div>
-
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Phone
-                    </label>
-
-                    <input
-                        type="text"
-                        wire:model="phone"
-                        placeholder="Phone number"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-
-                </div>
-
-
-                {{-- Website --}}
-                <div>
-
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Website
-                    </label>
-
-                    <input
-                        type="text"
-                        wire:model="website"
-                        placeholder="Website"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-
-                </div>
-
-
-                {{-- Tax Number --}}
-                <div>
-
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Tax Number
-                    </label>
-
-                    <input
-                        type="text"
-                        wire:model="taxNumber"
-                        placeholder="Tax number"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-
-                </div>
-
-
-                {{-- Payment Terms --}}
-                <div>
-
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Payment Terms
-                    </label>
-
-                    <input
-                        type="text"
-                        wire:model="paymentTerms"
-                        placeholder="e.g. 30 Days"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    >
-
-                </div>
-
-
-                {{-- Address --}}
-                <div class="md:col-span-2">
-
-                    <label class="mb-1 block text-sm font-medium text-gray-700">
-                        Address
-                    </label>
-
-                    <textarea
-                        wire:model="address"
-                        rows="2"
-                        placeholder="Vendor address"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    ></textarea>
+                    @error('size')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
 
                 </div>
 
@@ -794,8 +1003,15 @@
                         wire:model="description"
                         rows="3"
                         placeholder="Description"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        class="block w-full rounded-md border-gray-300 shadow-sm
+                            focus:border-indigo-500 focus:ring-indigo-500"
                     ></textarea>
+
+                    @error('description')
+                        <p class="mt-1 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
 
                 </div>
 
@@ -808,7 +1024,8 @@
                         <input
                             type="checkbox"
                             wire:model="isActive"
-                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            class="rounded border-gray-300 text-indigo-600
+                                focus:ring-indigo-500"
                         >
 
                         <span class="text-sm text-gray-700">
@@ -829,23 +1046,26 @@
             <button
                 type="button"
                 wire:click="closeEditModal"
-                class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700"
+                class="px-4 py-2 bg-white border border-gray-300 rounded-md
+                    text-sm font-medium text-gray-700"
             >
                 Cancel
             </button>
 
             <button
                 type="button"
-                wire:click="updateVendor"
+                wire:click="updateItem"
                 wire:loading.attr="disabled"
-                class="ml-3 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium"
+                wire:target="updateItem"
+                class="ml-3 px-4 py-2 bg-indigo-600 text-white rounded-md
+                    text-sm font-medium"
             >
 
-                <span wire:loading.remove wire:target="updateVendor">
+                <span wire:loading.remove wire:target="updateItem">
                     Update
                 </span>
 
-                <span wire:loading wire:target="updateVendor">
+                <span wire:loading wire:target="updateItem">
                     Updating...
                 </span>
 

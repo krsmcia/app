@@ -17,12 +17,15 @@ class Item extends Model
         'size',
         'is_active',
     ];
-
-
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
         ];
+    }
+    public function itemImages()
+    {
+        return $this->hasMany(ItemImage::class)
+            ->orderBy('sort_order');
     }
 }

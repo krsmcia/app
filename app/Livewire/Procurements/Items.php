@@ -3,6 +3,8 @@
 namespace App\Livewire\Procurements;
 
 use App\Models\Item;
+use App\Models\ItemImage;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -51,6 +53,8 @@ class Items extends Component
 
     public bool $showImportModal = false;
 
+    public array $existingImages = [];
+    public array $images = [];
 
     protected function rules(): array
     {
@@ -61,51 +65,53 @@ class Items extends Component
                 'max:50',
                 Rule::unique('items', 'sku')->ignore($this->editingItemId),
             ],
-
             'barcode' => [
                 'nullable',
                 'string',
                 'max:50',
                 Rule::unique('items', 'barcode')->ignore($this->editingItemId),
             ],
-
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
-
             'description' => [
                 'nullable',
                 'string',
             ],
-
             'unit' => [
                 'required',
                 'string',
                 'max:30',
             ],
-
             'brand' => [
                 'nullable',
                 'string',
                 'max:255',
             ],
-
             'color' => [
                 'nullable',
                 'string',
                 'max:255',
             ],
-
             'size' => [
                 'nullable',
                 'string',
                 'max:255',
             ],
-
             'isActive' => [
                 'boolean',
+            ],
+            'images' => [
+                'nullable',
+                'array',
+                'max:10',
+            ],
+            'images.*' => [
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
             ],
         ];
     }
@@ -209,7 +215,14 @@ class Items extends Component
         $this->isActive = (bool) $item->is_active;
 
         $this->resetValidation();
-
+        $this->existingImages = $item->itemImages
+            ->map(fn ($image) => [
+                'id' => $image->id,
+                'path' => $image->path,
+                'is_primary' => $image->is_primary,
+            ])
+            ->toArray();
+        $this->images = [];
         $this->showEditModal = true;
     }
 
@@ -226,7 +239,7 @@ class Items extends Component
 
         $validated = $this->validate();
 
-        Item::create([
+        $item = Item::create([
             'sku' => $validated['sku'],
             'barcode' => $validated['barcode'],
             'name' => $validated['name'],
@@ -238,10 +251,19 @@ class Items extends Component
             'is_active' => $validated['isActive'],
         ]);
 
+        foreach ($this->images as $index => $image) {
+            $path = $image->store('items', 'public');
+
+            $item->itemImages()->create([
+                'path' => $path,
+                'sort_order' => $index,
+                'is_primary' => $index === 0,
+            ]);
+        }
+
         $this->showCreateModal = false;
 
         $this->resetForm();
-
         $this->resetValidation();
 
         session()->flash(
@@ -268,6 +290,31 @@ class Items extends Component
             'size' => $validated['size'],
             'is_active' => $validated['isActive'],
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Upload New Images
+        |--------------------------------------------------------------------------
+        */
+
+        $existingImageCount = $item->itemImages()->count();
+
+        foreach ($this->images as $index => $image) {
+
+            $path = $image->store('items', 'public');
+
+            $item->itemImages()->create([
+                'path' => $path,
+                'sort_order' => $existingImageCount + $index,
+                'is_primary' => $existingImageCount === 0 && $index === 0,
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Modal
+        |--------------------------------------------------------------------------
+        */
 
         $this->showEditModal = false;
 
@@ -410,8 +457,39 @@ class Items extends Component
 
         $this->isActive = true;
     }
+    public function deleteImage(int $imageId): void
+    {
+        $image = ItemImage::where('item_id', $this->editingItemId)
+            ->findOrFail($imageId);
+        Storage::disk('public')->delete($image->path);
+        $image->delete();
+        $this->existingImages = collect($this->existingImages)
+            ->reject(fn ($item) => $item['id'] === $imageId)
+            ->values()
+            ->toArray();
+    }
+    public function setPrimaryImage(int $imageId): void
+    {
+        $image = ItemImage::where('item_id', $this->editingItemId)
+            ->findOrFail($imageId);
 
+        ItemImage::where('item_id', $this->editingItemId)
+            ->update([
+                'is_primary' => false,
+            ]);
 
+        $image->update([
+            'is_primary' => true,
+        ]);
+
+        $this->existingImages = collect($this->existingImages)
+            ->map(function ($item) use ($imageId) {
+                $item['is_primary'] = $item['id'] === $imageId;
+
+                return $item;
+            })
+            ->toArray();
+    }
     /*
     |--------------------------------------------------------------------------
     | Render

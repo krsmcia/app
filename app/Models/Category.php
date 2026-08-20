@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
@@ -25,7 +23,7 @@ class Category extends Model
         ];
     }
 
-    public function parent(): BelongsTo
+    public function parent()
     {
         return $this->belongsTo(
             Category::class,
@@ -33,7 +31,7 @@ class Category extends Model
         );
     }
 
-    public function children(): HasMany
+    public function children()
     {
         return $this->hasMany(
             Category::class,
@@ -41,7 +39,7 @@ class Category extends Model
         );
     }
 
-    public function childrenRecursive(): HasMany
+    public function childrenRecursive()
     {
         return $this->children()
             ->with('childrenRecursive');

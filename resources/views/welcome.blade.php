@@ -13,49 +13,52 @@
 <body class="antialiased bg-gray-50 text-gray-900">
     <div class="min-h-screen">
         {{-- Navigation --}}
-        <nav class="border-b border-gray-200 bg-white">
-            <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-                {{-- Logo --}}
-                <a href="{{ url('/') }}">
-                    <x-application-logo />
-                </a>
-                {{-- Navigation --}}
-                <div class="flex items-center gap-3">
-                    @auth
-                        <span class="hidden text-sm text-gray-500 sm:block">
-                            {{ Auth::user()->name }}
-                        </span>
-                        <a
-                            href="{{ url('/dashboard') }}"
-                            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold
-                                   text-white transition hover:bg-blue-700"
-                        >
-                            Dashboard
-                        </a>
-                    @else
-                        <a
-                            href="{{ route('login') }}"
-                            class="rounded-lg px-4 py-2 text-sm font-medium
-                                   text-gray-600 transition hover:bg-gray-100
-                                   hover:text-gray-900"
-                        >
-                            Log in
-                        </a>
-                        @if (Route::has('register'))
+        <div class="fixed top-0 left-0 right-0 z-50">
+            <nav class="border-b border-gray-200 bg-white">
+                <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
+                    {{-- Logo --}}
+                    <a href="{{ url('/') }}">
+                        <x-application-logo />
+                    </a>
+                    {{-- Navigation --}}
+                    <div class="flex items-center gap-3">
+                        @auth
+                            <span class="hidden text-sm text-gray-500 sm:block">
+                                {{ Auth::user()->name }}
+                            </span>
                             <a
-                                href="{{ route('register') }}"
+                                href="{{ url('/dashboard') }}"
                                 class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold
-                                       text-white transition hover:bg-blue-700"
+                                    text-white transition hover:bg-blue-700"
                             >
-                                Register
+                                Dashboard
                             </a>
-                        @endif
-                    @endauth
+                        @else
+                            <a
+                                href="{{ route('login') }}"
+                                class="rounded-lg px-4 py-2 text-sm font-medium
+                                    text-gray-600 transition hover:bg-gray-100
+                                    hover:text-gray-900"
+                            >
+                                Log in
+                            </a>
+                            @if (Route::has('register'))
+                                <a
+                                    href="{{ route('register') }}"
+                                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold
+                                        text-white transition hover:bg-blue-700"
+                                >
+                                    Register
+                                </a>
+                            @endif
+                        @endauth
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </div>
+        
         {{-- Hero --}}
-        <main>
+        <main class="pt-16">
             <section class="relative overflow-hidden">
                 {{-- Background decoration --}}
                 <div class="pointer-events-none absolute inset-0">

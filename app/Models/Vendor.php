@@ -28,4 +28,16 @@ class Vendor extends Model
             'is_active' => 'boolean',
         ];
     }
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'item_vendors')
+            ->withPivot([
+                'vendor_sku',
+                'unit_price',
+                'minimum_order_qty',
+                'lead_time',
+                'is_preferred',
+            ])
+            ->withTimestamps();
+    }
 }

@@ -10,6 +10,7 @@ Route::get('/', function () {
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
+    'remember.expiration',
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {

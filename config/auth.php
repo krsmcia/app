@@ -111,5 +111,5 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-
+    'remember_days' => (int) env('REMEMBER_ME_DAYS', 180),
 ];

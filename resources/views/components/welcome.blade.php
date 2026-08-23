@@ -131,7 +131,7 @@
 
                 <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
                     Manage
-                    <span class="ml-1 transition-transform duration-200 group-hover:translate-x-1">
+                    <span class="transition group-hover:ml-1">
                         →
                     </span>
                 </div>
@@ -181,7 +181,7 @@
 
                 <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
                     Manage
-                    <span class="ml-1 transition-transform duration-200 group-hover:translate-x-1">
+                    <span class="transition group-hover:ml-1">
                         →
                     </span>
                 </div>
@@ -227,7 +227,7 @@
 
                 <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
                     Manage
-                    <span class="ml-1 transition-transform duration-200 group-hover:translate-x-1">
+                    <span class="transition group-hover:ml-1">
                         →
                     </span>
                 </div>

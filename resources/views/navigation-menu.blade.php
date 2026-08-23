@@ -205,6 +205,76 @@
                 </button>
             </div>
         </div>
+        {{-- Mobile Search --}}
+        <div class="pb-3 sm:hidden">
+
+            <form
+                action="{{ route('items') }}"
+                method="GET"
+            >
+                <div class="relative">
+
+                    <input
+                        type="search"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Search items..."
+                        autocomplete="off"
+                        class="
+                            w-full
+                            rounded-lg
+                            border
+                            border-gray-300
+                            bg-gray-50
+                            py-2.5
+                            pl-4
+                            pr-11
+                            text-sm
+                            text-gray-900
+                            placeholder-gray-400
+                            outline-none
+                            transition
+                            focus:border-blue-500
+                            focus:bg-white
+                            focus:ring-2
+                            focus:ring-blue-500/20
+                        "
+                    >
+
+                    <button
+                        type="submit"
+                        class="
+                            absolute
+                            inset-y-0
+                            right-0
+                            flex
+                            w-11
+                            items-center
+                            justify-center
+                            text-gray-400
+                            hover:text-blue-600
+                        "
+                        aria-label="Search"
+                    >
+                        <svg
+                            class="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"
+                            />
+                        </svg>
+                    </button>
+
+                </div>
+            </form>
+
+        </div>
     </div>
 
     <!-- Responsive Navigation Menu -->

@@ -1,40 +1,44 @@
 <div>
-    {{-- Categories --}}
     <x-categories />
+
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
         {{-- Header --}}
         <div class="mb-6">
-            {{-- Breadcrumb --}}
             <div class="flex items-center gap-2 text-sm text-gray-500">
                 <span class="font-medium text-gray-900">
                     Items
                 </span>
             </div>
-            {{-- Title --}}
+
             <div class="mt-3 flex items-end justify-between gap-4">
                 <div class="min-w-0">
                     @if (filled($search))
                         <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">
                             Search results
                         </h1>
+
                         <p class="mt-1 truncate text-sm text-gray-500">
                             "{{ $search }}"
                             ·
-                            {{ $items->total() }} items
+                            {{ $total }} items
                         </p>
                     @else
                         <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">
                             All Items
                         </h1>
+
                         <p class="mt-1 text-sm text-gray-500">
-                            {{ $items->total() }} items
+                            {{ $total }} items
                         </p>
                     @endif
                 </div>
             </div>
         </div>
+
         {{-- Items --}}
-        @if ($items->isNotEmpty())
+        @if (count($items))
+
             <div
                 class="
                     grid
@@ -49,7 +53,7 @@
                 @foreach ($items as $item)
                     <a
                         href="#"
-                        wire:key="item-{{ $item->id }}"
+                        wire:key="item-{{ $item['id'] }}"
                         class="
                             group
                             overflow-hidden
@@ -65,26 +69,15 @@
                     >
                         {{-- Image --}}
                         <div class="aspect-square overflow-hidden bg-gray-100">
-                            <div class="aspect-square overflow-hidden bg-gray-100">
-                                @if ($item->primaryImage)
-                                    <img
-                                        src="{{ Storage::url($item->primaryImage->path) }}"
-                                        alt="{{ $item->name }}"
-                                        loading="lazy"
-                                        decoding="async"
-                                        class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                    >
-                                @else
-                                    <img
-                                        src="{{ asset('images/default-item.png') }}"
-                                        alt="{{ $item->name }}"
-                                        loading="lazy"
-                                        decoding="async"
-                                        class="h-full w-full object-cover"
-                                    >
-                                @endif
-                            </div>
+                            <img
+                                src="{{ $item['image'] }}"
+                                alt="{{ $item['name'] }}"
+                                loading="lazy"
+                                decoding="async"
+                                class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                            >
                         </div>
+
                         {{-- Info --}}
                         <div class="p-3">
                             <h2
@@ -96,22 +89,59 @@
                                     text-gray-900
                                 "
                             >
-                                {{ $item->name }}
+                                {{ $item['name'] }}
                             </h2>
-                            @if ($item->sku)
+
+                            @if ($item['sku'])
                                 <p class="mt-1 truncate text-xs text-gray-500">
-                                    {{ $item->sku }}
+                                    {{ $item['sku'] }}
                                 </p>
                             @endif
                         </div>
                     </a>
                 @endforeach
             </div>
-            {{-- Pagination --}}
-            <div class="mt-8">
-                {{ $items->links() }}
-            </div>
+
+            {{-- Infinite Scroll --}}
+            @if ($hasMore)
+                <div
+                    x-data
+                    x-intersect:enter.margin.500px="$wire.loadMore()"
+                    class="flex min-h-24 items-center justify-center"
+                >
+                    <div
+                        wire:loading
+                        wire:target="loadMore"
+                        class="flex items-center gap-2 text-sm text-gray-500"
+                    >
+                        <svg
+                            class="h-5 w-5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            />
+
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                        </svg>
+
+                        Loading...
+                    </div>
+                </div>
+            @endif
+
         @else
+
             {{-- Empty --}}
             <div
                 class="
@@ -135,13 +165,15 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.5"
-                        d="m3 16 5-5a2 2 0 0 1 3 0l2 2 2-2a2 2 0 0 1 3 0l3 3M5 19h14a2 2 0 0 1 2-2V7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2Z"
+                        d="m3 16 5-5a2 2 0 0 1 3 0l2 2 2-2a2 2 0 0 1 3 0l3 3M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0 2 2v10a2 2 0 0 0-2 2Z"
                     />
                 </svg>
+
                 @if (filled($search))
                     <h2 class="mt-4 text-sm font-semibold text-gray-900">
                         No search results
                     </h2>
+
                     <p class="mt-1 text-sm text-gray-500">
                         No items found for "{{ $search }}".
                     </p>
@@ -164,9 +196,7 @@
                     >
                         View all items
                     </a>
-
                 @else
-
                     <h2 class="mt-4 text-sm font-semibold text-gray-900">
                         No items found
                     </h2>
@@ -174,9 +204,7 @@
                     <p class="mt-1 text-sm text-gray-500">
                         There are no items available.
                     </p>
-
                 @endif
-
             </div>
 
         @endif

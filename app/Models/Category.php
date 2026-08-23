@@ -56,4 +56,16 @@ class Category extends Model
             'item_categories'
         )->withTimestamps();
     }
+    public function breadcrumb(): array
+    {
+        $categories = [];
+        $category = $this;
+
+        while ($category) {
+            array_unshift($categories, $category);
+            $category = $category->parent;
+        }
+
+        return $categories;
+    }
 }

@@ -73,4 +73,5 @@ Route::middleware([
     */
 
     Route::get('/items', Livewire\Items::class)->name('items');
+    Route::get('/items/category/{category:code}', Livewire\Items\Category::class)->name('items.category');
 });

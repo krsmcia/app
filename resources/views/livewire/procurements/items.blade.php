@@ -89,6 +89,9 @@
                             @endif
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Categories
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             Unit
                             <br>Brand
                             <br>Color
@@ -133,6 +136,25 @@
                                     {{ $item->name }}
                                 </div>
                             </td>
+                            <td class="px-6 py-4">
+                                @if ($item->categories->isNotEmpty())
+                                    <div class="flex flex-wrap gap-1.5 max-w-xs">
+                                        @foreach ($item->categories as $category)
+                                            <span
+                                                class="inline-flex items-center rounded-full
+                                                    bg-indigo-50 px-2 py-0.5
+                                                    text-xs font-medium text-indigo-700"
+                                            >
+                                                {{ $category->name }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-xs text-gray-400">
+                                        -
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                 {{ $item->unit }}<br>
                                 {{ $item->brand ?: '-' }}<br>
@@ -153,8 +175,15 @@
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                 <button
                                     type="button"
+                                    wire:click="manageCategories({{ $item->id }})"
+                                    class="text-green-600 hover:text-green-900"
+                                >
+                                    Categories
+                                </button>
+                                <button
+                                    type="button"
                                     wire:click="manageVendors({{ $item->id }})"
-                                    class="text-blue-600 hover:text-blue-900"
+                                    class="ml-3 text-blue-600 hover:text-blue-900"
                                 >
                                     Vendors
                                 </button>
@@ -259,31 +288,62 @@
                             {{ $item->size ?: '-' }}
                         </div>
                     </div>
+                    <div class="col-span-2">
+                        <div class="text-[11px] text-gray-400 uppercase">
+                            Categories
+                        </div>
+                        <div class="mt-1 flex flex-wrap gap-1.5">
+                            @forelse ($item->categories as $category)
+                                <span
+                                    class="inline-flex items-center rounded-full
+                                        bg-indigo-50 px-2 py-0.5
+                                        text-[11px] font-medium text-indigo-700"
+                                >
+                                    {{ $category->name }}
+                                </span>
+                            @empty
+                                <span class="text-sm text-gray-400">
+                                    -
+                                </span>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
                 {{-- Actions --}}
-                <div class="mt-4 flex gap-2 border-t border-gray-100 pt-3">
+                <div class="mt-4 grid grid-cols-2 gap-2 border-t border-gray-100 pt-3">
+                    <button
+                        type="button"
+                        wire:click="manageCategories({{ $item->id }})"
+                        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-green-600 hover:bg-green-50"
+                    >
+                        Categories
+                    </button>
+
                     <button
                         type="button"
                         wire:click="manageVendors({{ $item->id }})"
-                        class="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50"
                     >
                         Vendors
                     </button>
+
                     <button
                         type="button"
                         wire:click="edit({{ $item->id }})"
-                        class="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                     >
                         Edit
                     </button>
+
                     <button
                         type="button"
                         wire:click="deleteItem({{ $item->id }})"
                         wire:confirm="Are you sure you want to delete this item?"
-                        class="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
+                        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50"
                     >
                         Delete
                     </button>
+
                 </div>
             </div>
         @empty
@@ -1370,6 +1430,113 @@
             >
                 Close
             </button>
+        </x-slot>
+    </x-dialog-modal>
+    {{-- Category Modal --}}
+    <x-dialog-modal
+        maxWidth="lg"
+        wire:model.live="showCategoryModal"
+    >
+        <x-slot name="title">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">
+                    Categories
+                </h2>
+
+                @if ($categoryItem)
+                    <p class="mt-1 text-sm text-gray-500">
+                        {{ $categoryItem->name }}
+                        <span class="text-gray-400">
+                            · {{ $categoryItem->sku }}
+                        </span>
+                    </p>
+                @endif
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+
+            <div class="space-y-5">
+
+                {{-- Selected Count --}}
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-gray-900">
+                        Select Categories
+                    </h3>
+
+                    <span class="text-xs text-gray-500">
+                        {{ count($selectedCategories) }} selected
+                    </span>
+                </div>
+
+                {{-- Category Tree --}}
+                <div
+                    class="max-h-[450px] overflow-y-auto
+                        rounded-lg border border-gray-200
+                        bg-white p-3"
+                >
+                    @forelse ($categories as $category)
+
+                        @include(
+                            'livewire.procurements.partials.category-checkbox',
+                            [
+                                'category' => $category,
+                                'level' => 0,
+                            ]
+                        )
+
+                    @empty
+
+                        <div class="py-10 text-center">
+                            <p class="text-sm text-gray-500">
+                                No categories available.
+                            </p>
+                        </div>
+
+                    @endforelse
+                </div>
+
+            </div>
+
+        </x-slot>
+
+        <x-slot name="footer">
+
+            <button
+                type="button"
+                wire:click="closeCategoryModal"
+                wire:loading.attr="disabled"
+                class="px-4 py-2 bg-white border border-gray-300
+                    rounded-md text-sm font-medium text-gray-700
+                    hover:bg-gray-50"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                wire:click="saveCategories"
+                wire:loading.attr="disabled"
+                wire:target="saveCategories"
+                class="ml-3 px-4 py-2 bg-indigo-600
+                    text-white rounded-md text-sm font-medium
+                    hover:bg-indigo-700"
+            >
+                <span
+                    wire:loading.remove
+                    wire:target="saveCategories"
+                >
+                    Save Categories
+                </span>
+
+                <span
+                    wire:loading
+                    wire:target="saveCategories"
+                >
+                    Saving...
+                </span>
+            </button>
+
         </x-slot>
     </x-dialog-modal>
 </div>

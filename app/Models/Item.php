@@ -53,4 +53,8 @@ class Item extends Model
             ])
             ->withTimestamps();
     }
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class,'item_categories')->withTimestamps();
+    }
 }

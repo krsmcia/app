@@ -6,6 +6,7 @@ use App\Imports\ItemsImport;
 use App\Models\Item;
 use App\Models\ItemImage;
 use App\Models\Vendor;
+use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -18,30 +19,23 @@ class Items extends Component
 {
     use WithPagination;
     use WithFileUploads;
-
     /*
     |--------------------------------------------------------------------------
     | List
     |--------------------------------------------------------------------------
     */
-
     public string $search = '';
     public string $statusFilter = '';
-
     public string $sortField = 'name';
     public string $sortDirection = 'asc';
-
     /*
     |--------------------------------------------------------------------------
     | Item Form
     |--------------------------------------------------------------------------
     */
-
     public bool $showCreateModal = false;
     public bool $showEditModal = false;
-
     public ?int $editingItemId = null;
-
     public string $sku = '';
     public string $barcode = '';
     public string $name = '';
@@ -50,41 +44,32 @@ class Items extends Component
     public string $brand = '';
     public string $color = '';
     public string $size = '';
-
     public bool $isActive = true;
-
     /*
     |--------------------------------------------------------------------------
     | Images
     |--------------------------------------------------------------------------
     */
-
     public array $images = [];
     public array $existingImages = [];
-
     /*
     |--------------------------------------------------------------------------
     | Excel
     |--------------------------------------------------------------------------
     */
-
     public $excelFile = null;
     public bool $showImportModal = false;
-
     /*
     |--------------------------------------------------------------------------
     | Vendor Modal
     |--------------------------------------------------------------------------
     */
-
     public bool $showVendorModal = false;
-
     public ?int $vendorItemId = null;
     public ?Item $vendorItem = null;
-
     public string $vendorSearch = '';
     public array $vendorSearchResults = [];
-
+    public array $vendorForms = [];
     /*
     | Vendor editing form
     |
@@ -97,14 +82,21 @@ class Items extends Component
     |     ]
     | ]
     */
-    public array $vendorForms = [];
-
+    /*
+    |--------------------------------------------------------------------------
+    | Category Modal
+    |--------------------------------------------------------------------------
+    */
+    
+    public bool $showCategoryModal = false;
+    public ?int $categoryItemId = null;
+    public ?Item $categoryItem = null;
+    public array $selectedCategories = [];
     /*
     |--------------------------------------------------------------------------
     | Validation
     |--------------------------------------------------------------------------
     */
-
     protected function rules(): array
     {
         return [
@@ -115,7 +107,6 @@ class Items extends Component
                 Rule::unique('items', 'sku')
                     ->ignore($this->editingItemId),
             ],
-
             'barcode' => [
                 'nullable',
                 'string',
@@ -123,52 +114,43 @@ class Items extends Component
                 Rule::unique('items', 'barcode')
                     ->ignore($this->editingItemId),
             ],
-
             'name' => [
                 'required',
                 'string',
                 'max:255',
             ],
-
             'description' => [
                 'nullable',
                 'string',
             ],
-
             'unit' => [
                 'required',
                 'string',
                 'max:30',
             ],
-
             'brand' => [
                 'nullable',
                 'string',
                 'max:255',
             ],
-
             'color' => [
                 'nullable',
                 'string',
                 'max:255',
             ],
-
             'size' => [
                 'nullable',
                 'string',
                 'max:255',
             ],
-
             'isActive' => [
                 'boolean',
             ],
-
             'images' => [
                 'nullable',
                 'array',
                 'max:10',
             ],
-
             'images.*' => [
                 'image',
                 'mimes:jpg,jpeg,png,webp',
@@ -176,50 +158,40 @@ class Items extends Component
             ],
         ];
     }
-
     /*
     |--------------------------------------------------------------------------
     | Search / Pagination
     |--------------------------------------------------------------------------
     */
-
     public function updatedSearch(): void
     {
         $this->resetPage();
     }
-
     public function updatedStatusFilter(): void
     {
         $this->resetPage();
     }
-
     /*
     |--------------------------------------------------------------------------
     | Vendor Search
     |--------------------------------------------------------------------------
     */
-
     public function updatedVendorSearch(): void
     {
         $this->searchVendors();
     }
-
     public function searchVendors(): void
     {
         $search = trim($this->vendorSearch);
-
         if (strlen($search) < 2 || ! $this->vendorItemId) {
             $this->vendorSearchResults = [];
-
             return;
         }
-
         $attachedVendorIds = $this->vendorItem
             ? $this->vendorItem->vendors
                 ->pluck('id')
                 ->all()
             : [];
-
         $this->vendorSearchResults = Vendor::query()
             ->where('is_active', true)
             ->when(
@@ -261,11 +233,9 @@ class Items extends Component
             'is_active',
             'created_at',
         ];
-
         if (! in_array($field, $allowedFields, true)) {
             return;
         }
-
         if ($this->sortField === $field) {
             $this->sortDirection =
                 $this->sortDirection === 'asc'
@@ -275,33 +245,25 @@ class Items extends Component
             $this->sortField = $field;
             $this->sortDirection = 'asc';
         }
-
         $this->resetPage();
     }
-
     /*
     |--------------------------------------------------------------------------
     | Create Item
     |--------------------------------------------------------------------------
     */
-
     public function create(): void
     {
         $this->resetForm();
-
         $this->isActive = true;
-
         $this->resetValidation();
-
         $this->showCreateModal = true;
     }
 
     public function createItem(): void
     {
         $this->editingItemId = null;
-
         $validated = $this->validate();
-
         DB::transaction(function () use ($validated) {
             $item = Item::create([
                 'sku' => $validated['sku'],
@@ -314,15 +276,11 @@ class Items extends Component
                 'size' => $validated['size'] ?? null,
                 'is_active' => $validated['isActive'],
             ]);
-
             $this->storeNewImages($item);
         });
-
         $this->showCreateModal = false;
-
         $this->resetForm();
         $this->resetValidation();
-
         session()->flash(
             'success',
             'Item created successfully.'
@@ -339,9 +297,7 @@ class Items extends Component
     {
         $item = Item::with('itemImages')
             ->findOrFail($id);
-
         $this->editingItemId = $item->id;
-
         $this->sku = $item->sku;
         $this->barcode = $item->barcode ?? '';
         $this->name = $item->name;
@@ -351,7 +307,6 @@ class Items extends Component
         $this->color = $item->color ?? '';
         $this->size = $item->size ?? '';
         $this->isActive = (bool) $item->is_active;
-
         $this->existingImages = $item->itemImages
             ->sortBy('sort_order')
             ->map(fn (ItemImage $image) => [
@@ -361,20 +316,15 @@ class Items extends Component
             ])
             ->values()
             ->toArray();
-
         $this->images = [];
-
         $this->resetValidation();
-
         $this->showEditModal = true;
     }
 
     public function updateItem(): void
     {
         $item = Item::findOrFail($this->editingItemId);
-
         $validated = $this->validate();
-
         DB::transaction(function () use ($item, $validated) {
             $item->update([
                 'sku' => $validated['sku'],
@@ -387,15 +337,11 @@ class Items extends Component
                 'size' => $validated['size'] ?? null,
                 'is_active' => $validated['isActive'],
             ]);
-
             $this->storeNewImages($item);
         });
-
         $this->showEditModal = false;
-
         $this->resetForm();
         $this->resetValidation();
-
         session()->flash(
             'success',
             'Item updated successfully.'
@@ -413,30 +359,24 @@ class Items extends Component
         if (empty($this->images)) {
             return;
         }
-
         $lastSortOrder = $item->itemImages()
             ->max('sort_order');
-
         $nextSortOrder = $lastSortOrder === null
             ? 0
             : ((int) $lastSortOrder + 1);
-
         $hasPrimary = $item->itemImages()
             ->where('is_primary', true)
             ->exists();
-
         foreach ($this->images as $image) {
             $path = $image->store(
                 "items/{$item->id}",
                 'public'
             );
-
             $item->itemImages()->create([
                 'path' => $path,
                 'sort_order' => $nextSortOrder++,
                 'is_primary' => ! $hasPrimary,
             ]);
-
             $hasPrimary = true;
         }
     }
@@ -447,68 +387,53 @@ class Items extends Component
             $this->editingItemId,
             404
         );
-
         $image = ItemImage::query()
             ->where('item_id', $this->editingItemId)
             ->findOrFail($imageId);
-
         $wasPrimary = (bool) $image->is_primary;
-
         Storage::disk('public')
             ->delete($image->path);
-
         $image->delete();
-
         if ($wasPrimary) {
             $nextImage = ItemImage::query()
                 ->where('item_id', $this->editingItemId)
                 ->orderBy('sort_order')
                 ->first();
-
             if ($nextImage) {
                 $nextImage->update([
                     'is_primary' => true,
                 ]);
             }
         }
-
         $this->refreshExistingImages();
     }
-
     public function setPrimaryImage(int $imageId): void
     {
         abort_unless(
             $this->editingItemId,
             404
         );
-
         $image = ItemImage::query()
             ->where('item_id', $this->editingItemId)
             ->findOrFail($imageId);
-
         DB::transaction(function () use ($image) {
             ItemImage::query()
                 ->where('item_id', $this->editingItemId)
                 ->update([
                     'is_primary' => false,
                 ]);
-
             $image->update([
                 'is_primary' => true,
             ]);
         });
-
         $this->refreshExistingImages();
     }
-
     private function refreshExistingImages(): void
     {
         if (! $this->editingItemId) {
             $this->existingImages = [];
-
             return;
         }
-
         $this->existingImages = ItemImage::query()
             ->where('item_id', $this->editingItemId)
             ->orderBy('sort_order')
@@ -521,27 +446,22 @@ class Items extends Component
             ->values()
             ->toArray();
     }
-
     /*
     |--------------------------------------------------------------------------
     | Delete Item
     |--------------------------------------------------------------------------
     */
-
     public function deleteItem(int $id): void
     {
         $item = Item::with('itemImages')
             ->findOrFail($id);
-
         DB::transaction(function () use ($item) {
             foreach ($item->itemImages as $image) {
                 Storage::disk('public')
                     ->delete($image->path);
             }
-
             $item->delete();
         });
-
         session()->flash(
             'success',
             'Item deleted successfully.'
@@ -557,27 +477,32 @@ class Items extends Component
     public function manageVendors(int $itemId): void
     {
         $this->vendorItemId = $itemId;
-
         $this->vendorItem = Item::with([
             'vendors',
         ])->findOrFail($itemId);
-
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
-
         $this->initializeVendorForms();
-
         $this->showVendorModal = true;
     }
-
+    public function manageCategories(int $itemId): void
+    {
+        $this->categoryItemId = $itemId;
+        $this->categoryItem = Item::with('categories')
+            ->findOrFail($itemId);
+        $this->selectedCategories = $this->categoryItem
+            ->categories
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->toArray();
+        $this->showCategoryModal = true;
+    }
     private function initializeVendorForms(): void
     {
         $this->vendorForms = [];
-
         if (! $this->vendorItem) {
             return;
         }
-
         foreach ($this->vendorItem->vendors as $vendor) {
             $this->vendorForms[$vendor->id] = [
                 'vendor_sku' => $vendor->pivot->vendor_sku ?? '',
@@ -595,9 +520,7 @@ class Items extends Component
         if (! $this->vendorItemId) {
             return;
         }
-
         $item = Item::findOrFail($this->vendorItemId);
-
         if (
             $item->vendors()
                 ->where('vendor_id', $vendorId)
@@ -605,16 +528,12 @@ class Items extends Component
         ) {
             return;
         }
-
         $isFirstVendor = ! $item->vendors()->exists();
-
         $item->vendors()->attach($vendorId, [
             'minimum_order_qty' => 1,
             'is_preferred' => $isFirstVendor,
         ]);
-
         $this->reloadVendorItem();
-
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
     }
@@ -624,26 +543,21 @@ class Items extends Component
         if (! $this->vendorItemId) {
             return;
         }
-
         $item = Item::findOrFail($this->vendorItemId);
-
         $wasPreferred = $item->vendors()
             ->where('vendor_id', $vendorId)
             ->wherePivot('is_preferred', true)
             ->exists();
-
         DB::transaction(function () use (
             $item,
             $vendorId,
             $wasPreferred
         ) {
             $item->vendors()->detach($vendorId);
-
             if ($wasPreferred) {
                 $nextVendor = $item->vendors()
                     ->orderBy('name')
                     ->first();
-
                 if ($nextVendor) {
                     $item->vendors()->updateExistingPivot(
                         $nextVendor->id,
@@ -654,7 +568,6 @@ class Items extends Component
                 }
             }
         });
-
         $this->reloadVendorItem();
     }
 
@@ -663,16 +576,13 @@ class Items extends Component
         if (! $this->vendorItemId) {
             return;
         }
-
         $item = Item::findOrFail($this->vendorItemId);
-
         abort_unless(
             $item->vendors()
                 ->where('vendor_id', $vendorId)
                 ->exists(),
             404
         );
-
         DB::transaction(function () use ($item, $vendorId) {
             $item->vendors()->updateExistingPivot(
                 $item->vendors()->pluck('vendors.id')->all(),
@@ -680,7 +590,6 @@ class Items extends Component
                     'is_preferred' => false,
                 ]
             );
-
             $item->vendors()->updateExistingPivot(
                 $vendorId,
                 [
@@ -688,7 +597,6 @@ class Items extends Component
                 ]
             );
         });
-
         $this->reloadVendorItem();
     }
 
@@ -697,18 +605,14 @@ class Items extends Component
         if (! $this->vendorItemId) {
             return;
         }
-
         $item = Item::findOrFail($this->vendorItemId);
-
         abort_unless(
             $item->vendors()
                 ->where('vendor_id', $vendorId)
                 ->exists(),
             404
         );
-
         $form = $this->vendorForms[$vendorId] ?? [];
-
         $validated = validator(
             $form,
             [
@@ -737,7 +641,6 @@ class Items extends Component
                 ],
             ]
         )->validate();
-
         $item->vendors()->updateExistingPivot(
             $vendorId,
             [
@@ -747,9 +650,7 @@ class Items extends Component
                 'lead_time' => $validated['lead_time'] ?? null,
             ]
         );
-
         $this->reloadVendorItem();
-
         session()->flash(
             'success',
             'Vendor information updated successfully.'
@@ -761,14 +662,11 @@ class Items extends Component
         if (! $this->vendorItemId) {
             $this->vendorItem = null;
             $this->vendorForms = [];
-
             return;
         }
-
         $this->vendorItem = Item::with([
             'vendors',
         ])->findOrFail($this->vendorItemId);
-
         $this->initializeVendorForms();
     }
 
@@ -781,7 +679,6 @@ class Items extends Component
     public function closeCreateModal(): void
     {
         $this->showCreateModal = false;
-
         $this->resetForm();
         $this->resetValidation();
     }
@@ -789,7 +686,6 @@ class Items extends Component
     public function closeEditModal(): void
     {
         $this->showEditModal = false;
-
         $this->resetForm();
         $this->resetValidation();
     }
@@ -797,10 +693,8 @@ class Items extends Component
     public function closeVendorModal(): void
     {
         $this->showVendorModal = false;
-
         $this->vendorItemId = null;
         $this->vendorItem = null;
-
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
         $this->vendorForms = [];
@@ -815,7 +709,6 @@ class Items extends Component
     private function resetForm(): void
     {
         $this->editingItemId = null;
-
         $this->sku = '';
         $this->barcode = '';
         $this->name = '';
@@ -824,9 +717,7 @@ class Items extends Component
         $this->brand = '';
         $this->color = '';
         $this->size = '';
-
         $this->isActive = true;
-
         $this->images = [];
         $this->existingImages = [];
     }
@@ -840,18 +731,14 @@ class Items extends Component
     public function openImportModal(): void
     {
         $this->excelFile = null;
-
         $this->resetValidation();
-
         $this->showImportModal = true;
     }
 
     public function closeImportModal(): void
     {
         $this->showImportModal = false;
-
         $this->excelFile = null;
-
         $this->resetValidation();
     }
 
@@ -865,24 +752,44 @@ class Items extends Component
                 'max:51200',
             ],
         ]);
-
         Excel::import(
             new ItemsImport,
             $this->excelFile
         );
-
         $this->showImportModal = false;
-
         $this->excelFile = null;
-
         session()->flash(
             'success',
             'Items imported successfully.'
         );
-
         $this->resetPage();
     }
-
+    public function saveCategories(): void
+    {
+        if (! $this->categoryItemId) {
+            return;
+        }
+        $item = Item::findOrFail($this->categoryItemId);
+        $categoryIds = collect($this->selectedCategories)
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        $item->categories()->sync($categoryIds);
+        $this->categoryItem = $item->load('categories');
+        session()->flash(
+            'success',
+            'Categories updated successfully.'
+        );
+    }
+    public function closeCategoryModal(): void
+    {
+        $this->showCategoryModal = false;
+        $this->categoryItemId = null;
+        $this->categoryItem = null;
+        $this->selectedCategories = [];
+    }
     /*
     |--------------------------------------------------------------------------
     | Render
@@ -892,8 +799,10 @@ class Items extends Component
     public function render()
     {
         $items = Item::query()
-            ->with('primaryImage')
-
+            ->with([
+                'primaryImage',
+                'categories',
+            ])
             ->when(
                 $this->search !== '',
                 function ($query) {
@@ -937,7 +846,6 @@ class Items extends Component
                     });
                 }
             )
-
             ->when(
                 $this->statusFilter !== '',
                 function ($query) {
@@ -947,18 +855,23 @@ class Items extends Component
                     );
                 }
             )
-
             ->orderBy(
                 $this->sortField,
                 $this->sortDirection
             )
-
             ->paginate(15);
-
+        $categories = Category::query()
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->with('childrenRecursive')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
         return view(
             'livewire.procurements.items',
             [
                 'items' => $items,
+                'categories' => $categories,
             ]
         );
     }

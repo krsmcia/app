@@ -49,4 +49,11 @@ class Category extends Model
     {
         return $this->childrenRecursive();
     }
+    public function items()
+    {
+        return $this->belongsToMany(
+            Item::class,
+            'item_categories'
+        )->withTimestamps();
+    }
 }

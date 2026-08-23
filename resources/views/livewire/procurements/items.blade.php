@@ -58,87 +58,99 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Image
                         </th>
+
                         <th
                             wire:click="sortBy('sku')"
-                            class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap"
+                            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap"
                         >
                             SKU
                             @if ($sortField === 'sku')
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
+
                         <th
                             wire:click="sortBy('barcode')"
-                            class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap"
+                            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap"
                         >
                             Barcode
                             @if ($sortField === 'barcode')
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
+
                         <th
                             wire:click="sortBy('name')"
-                            class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
                         >
                             Name
                             @if ($sortField === 'name')
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Categories
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Unit
                             <br>Brand
                             <br>Color
                             <br>Size
                         </th>
+
                         <th
                             wire:click="sortBy('is_active')"
-                            class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                            class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
                         >
                             Status
                             @if ($sortField === 'is_active')
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
-                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">
+
+                        <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">
                             Action
                         </th>
                     </tr>
                 </thead>
+
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse ($items as $item)
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-4 py-2 whitespace-nowrap">
                                 <img
                                     src="{{ $item->image_url }}"
                                     alt="{{ $item->name }}"
-                                    class="h-14 w-14 rounded-lg object-cover border border-gray-200"
+                                    class="h-12 w-12 rounded-lg object-cover border border-gray-200"
                                 >
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+
+                            <td class="px-4 py-2 whitespace-nowrap">
                                 <span class="text-sm font-mono text-gray-700">
                                     {{ $item->sku }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+
+                            <td class="px-4 py-2 whitespace-nowrap">
                                 <span class="text-sm text-gray-600">
                                     {{ $item->barcode ?: '-' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
+
+                            <td class="px-4 py-2">
                                 <div class="text-sm font-medium text-gray-900">
                                     {{ $item->name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
+
+                            <td class="px-4 py-2">
                                 @if ($item->categories->isNotEmpty())
-                                    <div class="flex flex-wrap gap-1.5 max-w-xs">
+                                    <div class="flex flex-wrap gap-1 max-w-xs">
                                         @foreach ($item->categories as $category)
                                             <span
                                                 class="inline-flex items-center rounded-full
@@ -155,24 +167,27 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
                                 {{ $item->unit }}<br>
                                 {{ $item->brand ?: '-' }}<br>
                                 {{ $item->color ?: '-' }}<br>
                                 {{ $item->size ?: '-' }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+
+                            <td class="px-4 py-2 whitespace-nowrap">
                                 @if ($item->is_active)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         Active
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                                         Inactive
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+
+                            <td class="px-4 py-2 whitespace-nowrap text-right text-sm">
                                 <button
                                     type="button"
                                     wire:click="manageCategories({{ $item->id }})"
@@ -180,25 +195,28 @@
                                 >
                                     Categories
                                 </button>
+
                                 <button
                                     type="button"
                                     wire:click="manageVendors({{ $item->id }})"
-                                    class="ml-3 text-blue-600 hover:text-blue-900"
+                                    class="ml-2 text-blue-600 hover:text-blue-900"
                                 >
                                     Vendors
                                 </button>
+
                                 <button
                                     type="button"
                                     wire:click="edit({{ $item->id }})"
-                                    class="ml-3 text-indigo-600 hover:text-indigo-900"
+                                    class="ml-2 text-indigo-600 hover:text-indigo-900"
                                 >
                                     Edit
                                 </button>
+
                                 <button
                                     type="button"
                                     wire:click="deleteItem({{ $item->id }})"
                                     wire:confirm="Are you sure you want to delete this item?"
-                                    class="ml-3 text-red-600 hover:text-red-900"
+                                    class="ml-2 text-red-600 hover:text-red-900"
                                 >
                                     Delete
                                 </button>
@@ -206,7 +224,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-6 py-10 text-center text-gray-500">
+                            <td colspan="10" class="px-4 py-8 text-center text-gray-500">
                                 No items found.
                             </td>
                         </tr>

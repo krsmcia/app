@@ -74,4 +74,7 @@ Route::middleware([
 
     Route::get('/items', Livewire\Items::class)->name('items');
     Route::get('/items/category/{category:code}', Livewire\Items\Category::class)->name('items.category');
+    Route::get('/wishlist', Livewire\Wishlist::class)->name('wishlist');
+    Route::get('/purchase-requests', Livewire\PurchaseRequests::class)->name('purchase-requests');
+    Route::get('/cart', Livewire\Cart::class)->name('cart');
 });

@@ -1,4 +1,4 @@
-<div>
+<div class="pb-20 md:pb-0">
     <x-categories />
 
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -35,10 +35,8 @@
                 </div>
             </div>
         </div>
-
         {{-- Items --}}
         @if (count($items))
-
             <div
                 class="
                     grid
@@ -51,41 +49,132 @@
                 "
             >
                 @foreach ($items as $item)
-                    <a
-                        href="#"
+
+                    <div
                         wire:key="item-{{ $item['id'] }}"
                         class="
                             group
                             overflow-hidden
-                            rounded-xl
+                            rounded-2xl
                             border
                             border-gray-200
                             bg-white
+                            shadow-sm
                             transition
-                            hover:-translate-y-0.5
-                            hover:border-gray-300
-                            hover:shadow-md
+                            duration-200
+                            ease-out
+                            sm:hover:border-gray-300
+                            sm:hover:shadow-lg
                         "
                     >
+
                         {{-- Image --}}
-                        <div class="aspect-square overflow-hidden bg-gray-100">
+                        <div class="relative aspect-square overflow-hidden bg-gray-100">
+
                             <img
                                 src="{{ $item['image'] }}"
                                 alt="{{ $item['name'] }}"
                                 loading="lazy"
                                 decoding="async"
-                                class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                class="
+                                    h-full
+                                    w-full
+                                    object-cover
+                                    transition-transform
+                                    duration-500
+                                    ease-out
+                                    sm:group-hover:scale-[1.03]
+                                "
                             >
+
+                            {{-- Image Overlay --}}
+                            <div
+                                class="
+                                    pointer-events-none
+                                    absolute
+                                    inset-0
+                                    bg-gradient-to-t
+                                    from-black/5
+                                    via-transparent
+                                    to-transparent
+                                    opacity-0
+                                    transition-opacity
+                                    duration-300
+                                    sm:group-hover:opacity-100
+                                "
+                            ></div>
+
+                            {{-- Wishlist --}}
+                            <button
+                                type="button"
+                                wire:click="toggleWishlist({{ $item['id'] }})"
+                                wire:loading.attr="disabled"
+                                class="
+                                    absolute
+                                    right-3
+                                    top-3
+                                    flex
+                                    h-9
+                                    w-9
+                                    items-center
+                                    justify-center
+                                    rounded-full
+                                    bg-white/90
+                                    text-gray-500
+                                    shadow-sm
+                                    ring-1
+                                    ring-black/5
+                                    backdrop-blur-sm
+                                    transition-all
+                                    duration-200
+                                    hover:bg-white
+                                    hover:text-red-500
+                                    hover:shadow-md
+                                    active:scale-90
+                                "
+                                aria-label="Add to wishlist"
+                            >
+                                @if ($this->isWishlisted($item['id']))
+
+                                    <svg
+                                        class="h-5 w-5 fill-red-500 text-red-500"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            d="M12 21s-7-4.6-9.4-9.2C.7 7.8 2.8 4 6.5 4c2.1 0 4.1 1.2 5.5 3 1.4-1.8 3.4-3 5.5-3 3.7 0 5.8 3.8 3.9 7.8C19 16.4 12 21 12 21z"
+                                        />
+                                    </svg>
+
+                                @else
+
+                                    <svg
+                                        class="h-5 w-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.6Z"
+                                        />
+                                    </svg>
+
+                                @endif
+                            </button>
                         </div>
 
                         {{-- Info --}}
-                        <div class="p-3">
+                        <div class="p-3.5">
+
                             <h2
                                 class="
                                     min-h-[2.5rem]
                                     line-clamp-2
                                     text-sm
                                     font-medium
+                                    leading-5
                                     text-gray-900
                                 "
                             >
@@ -93,12 +182,175 @@
                             </h2>
 
                             @if ($item['sku'])
-                                <p class="mt-1 truncate text-xs text-gray-500">
+                                <p class="mt-1 truncate text-xs text-gray-400">
                                     {{ $item['sku'] }}
                                 </p>
                             @endif
+
+                            {{-- Quantity --}}
+                            <div class="mt-3 flex items-center justify-between">
+
+                                <span class="text-xs font-medium text-gray-400">
+                                    Quantity
+                                </span>
+
+                                <div
+                                    class="
+                                        flex
+                                        items-center
+                                        overflow-hidden
+                                        rounded-lg
+                                        border
+                                        border-gray-200
+                                        bg-gray-50
+                                    "
+                                >
+
+                                    <button
+                                        type="button"
+                                        wire:click="decreaseQuantity({{ $item['id'] }})"
+                                        class="
+                                            flex
+                                            h-8
+                                            w-8
+                                            items-center
+                                            justify-center
+                                            text-gray-500
+                                            transition
+                                            hover:bg-white
+                                            hover:text-gray-900
+                                            active:bg-gray-100
+                                        "
+                                    >
+                                        <span class="text-lg leading-none">
+                                            −
+                                        </span>
+                                    </button>
+
+                                    <span
+                                        class="
+                                            flex
+                                            h-8
+                                            min-w-8
+                                            items-center
+                                            justify-center
+                                            border-x
+                                            border-gray-200
+                                            bg-white
+                                            text-sm
+                                            font-semibold
+                                            text-gray-900
+                                        "
+                                    >
+                                        {{ $quantities[$item['id']] ?? 1 }}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        wire:click="increaseQuantity({{ $item['id'] }})"
+                                        class="
+                                            flex
+                                            h-8
+                                            w-8
+                                            items-center
+                                            justify-center
+                                            text-gray-500
+                                            transition
+                                            hover:bg-white
+                                            hover:text-gray-900
+                                            active:bg-gray-100
+                                        "
+                                    >
+                                        <span class="text-lg leading-none">
+                                            +
+                                        </span>
+                                    </button>
+
+                                </div>
+                            </div>
+
+                            {{-- Add to Cart --}}
+                            <button
+                                type="button"
+                                wire:click="addToCart({{ $item['id'] }})"
+                                wire:loading.attr="disabled"
+                                wire:target="addToCart({{ $item['id'] }})"
+                                class="
+                                    mt-3
+                                    flex
+                                    w-full
+                                    items-center
+                                    justify-center
+                                    gap-2
+                                    rounded-lg
+                                    bg-gray-900
+                                    px-3
+                                    py-2.5
+                                    text-sm
+                                    font-semibold
+                                    text-white
+                                    shadow-sm
+                                    transition-all
+                                    duration-200
+                                    hover:bg-gray-800
+                                    hover:shadow-md
+                                    active:scale-[0.98]
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-60
+                                "
+                            >
+
+                                <svg
+                                    wire:loading.remove
+                                    wire:target="addToCart({{ $item['id'] }})"
+                                    class="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13L17 13M9 21a1 1 0 1 1-2 0m10 0a1 1 0 1 1-2 0"
+                                    />
+                                </svg>
+
+                                <svg
+                                    wire:loading
+                                    wire:target="addToCart({{ $item['id'] }})"
+                                    class="h-4 w-4 animate-spin"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    />
+
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                                    />
+                                </svg>
+
+                                <span wire:loading.remove wire:target="addToCart({{ $item['id'] }})">
+                                    Add to Cart
+                                </span>
+
+                                <span wire:loading wire:target="addToCart({{ $item['id'] }})">
+                                    Adding...
+                                </span>
+
+                            </button>
+
                         </div>
-                    </a>
+                    </div>
                 @endforeach
             </div>
 
@@ -209,5 +461,229 @@
 
         @endif
 
+    </div>
+    {{-- Mobile Bottom Navigation --}}
+    <div
+        class="
+            fixed
+            inset-x-0
+            bottom-0
+            z-50
+            border-t
+            border-gray-200
+            bg-white/95
+            shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
+            backdrop-blur
+            md:hidden
+        "
+    >
+        <div
+            class="
+                mx-auto
+                grid
+                h-16
+                max-w-lg
+                grid-cols-4
+            "
+        >
+
+            {{-- Home --}}
+            <a
+                href="{{ route('items') }}"
+                class="
+                    relative
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    gap-0.5
+                    text-gray-700
+                    active:bg-gray-50
+                "
+            >
+                <svg
+                    class="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V10Z"
+                    />
+                </svg>
+
+                <span class="text-[11px] font-medium">
+                    Home
+                </span>
+            </a>
+
+            {{-- Wishlist --}}
+            <a
+                href="{{ route('wishlist') }}"
+                class="
+                    relative
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    gap-0.5
+                    text-gray-700
+                    active:bg-gray-50
+                "
+            >
+                <div class="relative">
+
+                    <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.6Z"
+                        />
+                    </svg>
+
+                    @if ($this->wishlistCount > 0)
+                        <span
+                            class="
+                                absolute
+                                -right-2
+                                -top-2
+                                flex
+                                h-4
+                                min-w-4
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-red-500
+                                px-1
+                                text-[9px]
+                                font-bold
+                                text-white
+                            "
+                        >
+                            {{ $this->wishlistCount }}
+                        </span>
+                    @endif
+
+                </div>
+
+                <span class="text-[11px] font-medium">
+                    Wishlist
+                </span>
+            </a>
+            {{-- History --}}
+            <a
+                href="{{ route('purchase-requests') }}"
+                class="
+                    relative
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    gap-0.5
+                    text-gray-700
+                    transition
+                    active:bg-gray-50
+                "
+            >
+                <svg
+                    class="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 8v4l2.5 2.5"
+                    />
+
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    />
+
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3.5 6.5 5 4"
+                    />
+                </svg>
+
+                <span class="text-[11px] font-medium">
+                    History
+                </span>
+            </a>
+            {{-- Cart --}}
+            <a
+                href="{{ route('cart') }}"
+                class="
+                    relative
+                    flex
+                    flex-col
+                    items-center
+                    justify-center
+                    gap-0.5
+                    text-gray-700
+                    active:bg-gray-50
+                "
+            >
+                <div class="relative">
+
+                    <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13L17 13M9 21a1 1 0 1 1-2 0m10 0a1 1 0 1 1-2 0"
+                        />
+                    </svg>
+
+                    @if ($this->cartCount > 0)
+                        <span
+                            class="
+                                absolute
+                                -right-2
+                                -top-2
+                                flex
+                                h-4
+                                min-w-4
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-gray-900
+                                px-1
+                                text-[9px]
+                                font-bold
+                                text-white
+                            "
+                        >
+                            {{ $this->cartCount }}
+                        </span>
+                    @endif
+
+                </div>
+
+                <span class="text-[11px] font-medium">
+                    Cart
+                </span>
+            </a>
+
+        </div>
     </div>
 </div>

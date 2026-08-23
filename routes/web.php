@@ -1,27 +1,76 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Livewire;
 use App\Http\Controllers\Purchasing\PurchaseRequestController;
+use App\Livewire;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', function () {
     return view('welcome');
 });
-
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'remember.expiration',
     'verified',
 ])->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
-    Route::get('/empoyees', Livewire\Employees\Index::class)->name('employees');
-    Route::get('/departments', Livewire\Departments\Index::class)->name('departments');
-    Route::get('/procurements/categories', Livewire\Procurements\Categories::class)->name('procurements.categories');
-    Route::get('/procurements/items', Livewire\Procurements\Items::class)->name('procurements.items');
-    Route::get('/procurements/vendors', Livewire\Procurements\Vendors::class)->name('procurements.vendors');
-    //Route::get('/purchasing/request', Livewire\Purchasing\Request\Index::class)->name('purchasing.request');
-    Route::get('/purchasing/request/create',[PurchaseRequestController::class, 'create'])->name('purchasing.request.create');
-    Route::post('/purchasing/request',[PurchaseRequestController::class, 'store'])->name('purchasing.request.store');
+    /*
+    |--------------------------------------------------------------------------
+    | Organization
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/employees', Livewire\Employees\Index::class)
+        ->name('employees');
+    Route::get('/departments', Livewire\Departments\Index::class)
+        ->name('departments');
+    /*
+    |--------------------------------------------------------------------------
+    | Procurements
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('procurements')->name('procurements.')->group(function () {
+        Route::get('/categories', Livewire\Procurements\Categories::class)->name('categories');
+        Route::get('/items', Livewire\Procurements\Items::class)->name('items');
+        Route::get('/vendors', Livewire\Procurements\Vendors::class)->name('vendors');
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Purchasing
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    Route::prefix('purchasing')->name('purchasing.')->group(function () {
+        Route::get('/request/create', [PurchaseRequestController::class,'create',])->name('request.create');
+        Route::post('/request', [PurchaseRequestController::class,'store',])->name('request.store');
+    });
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Items
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/items', Livewire\Items::class)->name('items');
 });

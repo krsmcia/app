@@ -283,7 +283,7 @@
 
         {{-- New Request --}}
         <a
-            href="{{ route('purchasing.request.create') }}"
+            href="{{ route('items') }}"
             class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
                 transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
                 sm:p-5 lg:aspect-auto lg:p-6"

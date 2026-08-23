@@ -3,14 +3,14 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>{{ config('app.name', 'Purchasing Request') }}</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased bg-gray-50 text-gray-900">
+<body class="antialiased bg-gray-50 text-gray-900 touch-manipulation">
     <div class="min-h-screen">
         {{-- Navigation --}}
         <div class="fixed top-0 left-0 right-0 z-50">

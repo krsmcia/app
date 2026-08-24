@@ -21,10 +21,8 @@ class Items extends Component
     | Shopping
     |--------------------------------------------------------------------------
     */
-    public array $wishlist = [];
     public function mount(): void
     {
-        $this->wishlist = session()->get('wishlist', []);
         $this->loadItems();
     }
     public function updatedSearch(): void
@@ -89,38 +87,6 @@ class Items extends Component
             $this->nextCursor = null;
             $this->hasMore = false;
         }
-    }
-    /*
-    |--------------------------------------------------------------------------
-    | Wishlist
-    |--------------------------------------------------------------------------
-    */
-    public function toggleWishlist(int $itemId): void
-    {
-        if (in_array($itemId, $this->wishlist)) {
-            $this->wishlist = array_values(
-                array_diff($this->wishlist, [$itemId])
-            );
-        } else {
-            $this->wishlist[] = $itemId;
-        }
-
-        session()->put('wishlist', $this->wishlist);
-
-        $this->dispatch('wishlist-updated');
-    }
-    public function isWishlisted(int $itemId): bool
-    {
-        return in_array($itemId, $this->wishlist);
-    }
-    /*
-    |--------------------------------------------------------------------------
-    | Cart
-    |--------------------------------------------------------------------------
-    */
-    public function getWishlistCountProperty(): int
-    {
-        return count($this->wishlist);
     }
     public function render()
     {

@@ -2,10 +2,15 @@
     class="pb-20 md:pb-0"
     x-data="{
         count: CartStore.count(),
+        wishlistCount: WishlistStore.count(),
 
         init() {
             window.addEventListener('cart-updated', (event) => {
                 this.count = event.detail.count;
+            });
+
+            window.addEventListener('wishlist-updated', (event) => {
+                this.wishlistCount = event.detail.count;
             });
         }
     }"
@@ -120,12 +125,10 @@
                                     sm:group-hover:opacity-100
                                 "
                             ></div>
-
                             {{-- Wishlist --}}
                             <button
                                 type="button"
-                                wire:click="toggleWishlist({{ $item['id'] }})"
-                                wire:loading.attr="disabled"
+                                @click="toggleWishlist()"
                                 class="
                                     absolute
                                     right-3
@@ -149,10 +152,9 @@
                                     hover:shadow-md
                                     active:scale-90
                                 "
-                                aria-label="Add to wishlist"
+                                :aria-label="wishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
                             >
-                                @if ($this->isWishlisted($item['id']))
-
+                                <template x-if="wishlisted">
                                     <svg
                                         class="h-5 w-5 fill-red-500 text-red-500"
                                         viewBox="0 0 24 24"
@@ -161,9 +163,8 @@
                                             d="M12 21s-7-4.6-9.4-9.2C.7 7.8 2.8 4 6.5 4c2.1 0 4.1 1.2 5.5 3 1.4-1.8 3.4-3 5.5-3 3.7 0 5.8 3.8 3.9 7.8C19 16.4 12 21 12 21z"
                                         />
                                     </svg>
-
-                                @else
-
+                                </template>
+                                <template x-if="!wishlisted">
                                     <svg
                                         class="h-5 w-5"
                                         fill="none"
@@ -177,11 +178,9 @@
                                             d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.6Z"
                                         />
                                     </svg>
-
-                                @endif
+                                </template>
                             </button>
                         </div>
-
                         {{-- Info --}}
                         <div class="p-3.5">
 
@@ -535,28 +534,27 @@
                         />
                     </svg>
 
-                    @if ($this->wishlistCount > 0)
-                        <span
-                            class="
-                                absolute
-                                -right-2
-                                -top-2
-                                flex
-                                h-4
-                                min-w-4
-                                items-center
-                                justify-center
-                                rounded-full
-                                bg-red-500
-                                px-1
-                                text-[9px]
-                                font-bold
-                                text-white
-                            "
-                        >
-                            {{ $this->wishlistCount }}
-                        </span>
-                    @endif
+                    <span
+                        x-cloak
+                        x-show="wishlistCount > 0"
+                        x-text="wishlistCount"
+                        class="
+                            absolute
+                            -right-2
+                            -top-2
+                            flex
+                            h-4
+                            min-w-4
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-red-500
+                            px-1
+                            text-[9px]
+                            font-bold
+                            text-white
+                        "
+                    ></span>
 
                 </div>
 

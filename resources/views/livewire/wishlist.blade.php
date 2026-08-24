@@ -11,13 +11,13 @@
         },
 
         syncWishlist() {
-            this.initialized = false;
-
             $wire.setWishlist(WishlistStore.get()).then(() => {
                 this.initialized = true;
             });
         }
     }"
+    x-cloak
+    x-show="initialized"
     class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
 >
     {{-- Header --}}
@@ -32,18 +32,12 @@
                 x-cloak
                 class="mt-1 text-sm text-gray-500"
             >
-                {{ $this->wishlistItems->count() }} items
+                {{ $wishlistItems->count() }} items
             </p>
-
-            {{-- Header skeleton --}}
-            <div
-                x-show="!initialized"
-                class="mt-2 h-4 w-20 animate-pulse rounded bg-gray-200"
-            ></div>
         </div>
 
         <button
-            x-show="initialized && {{ $this->wishlistItems->count() > 0 ? 'true' : 'false' }}"
+            x-show="initialized && {{ $wishlistItems->count() > 0 ? 'true' : 'false' }}"
             x-cloak
             type="button"
             @click="
@@ -59,34 +53,6 @@
 
 
     {{-- ============================================================
-        Loading Skeleton
-    ============================================================= --}}
-    <div
-        x-show="!initialized"
-        x-cloak
-        class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5"
-    >
-        @for ($i = 0; $i < 10; $i++)
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                {{-- Image skeleton --}}
-                <div class="aspect-square animate-pulse bg-gray-200"></div>
-
-                <div class="space-y-3 p-3 sm:p-4">
-                    {{-- Name --}}
-                    <div class="h-4 w-4/5 animate-pulse rounded bg-gray-200"></div>
-
-                    {{-- SKU --}}
-                    <div class="h-3 w-2/5 animate-pulse rounded bg-gray-200"></div>
-
-                    {{-- Button --}}
-                    <div class="h-10 w-full animate-pulse rounded-lg bg-gray-200"></div>
-                </div>
-            </div>
-        @endfor
-    </div>
-
-
-    {{-- ============================================================
         Actual Content
     ============================================================= --}}
     <div
@@ -94,7 +60,7 @@
         x-cloak
         x-transition.opacity.duration.150ms
     >
-        @if ($this->wishlistItems->isEmpty())
+        @if ($wishlistItems->isEmpty())
 
             {{-- Empty --}}
             <div class="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 text-center">
@@ -132,20 +98,20 @@
 
             {{-- Items --}}
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
-                @foreach ($this->wishlistItems as $item)
+                @foreach ($wishlistItems as $item)
                     <div
                         wire:key="wishlist-item-{{ $item->id }}"
                         class="group overflow-hidden rounded-xl border border-gray-200 bg-white"
                     >
                         {{-- Image --}}
                         <div class="relative aspect-square overflow-hidden bg-gray-100">
-                            @if ($item->image)
-                                <img
-                                    src="{{ $item->image }}"
-                                    alt="{{ $item->name }}"
-                                    loading="lazy"
-                                    class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                >
+                            @if ($item->primaryImage)
+                            <img
+                                src="{{ Storage::url($item->primaryImage->path) }}"
+                                alt="{{ $item->name }}"
+                                loading="lazy"
+                                class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                            >
                             @else
                                 <div class="flex h-full w-full items-center justify-center text-gray-400">
                                     <svg
@@ -200,7 +166,11 @@
                                             id: {{ $item->id }},
                                             name: @js($item->name),
                                             sku: @js($item->sku),
-                                            image: @js($item->image),
+                                            image: @js(
+                                                $item->primaryImage
+                                                    ? Storage::url($item->primaryImage->path)
+                                                    : null
+                                            ),
                                             quantity: 1,
                                             unit: @js($item->unit),
                                             brand: @js($item->brand),

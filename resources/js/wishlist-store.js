@@ -4,9 +4,13 @@ window.WishlistStore = {
 
     get() {
         try {
-            return JSON.parse(
+            const wishlist = JSON.parse(
                 localStorage.getItem(this.storageKey) || '[]'
             );
+
+            return Array.isArray(wishlist)
+                ? wishlist.map(Number).filter(id => id > 0)
+                : [];
         } catch (error) {
             return [];
         }

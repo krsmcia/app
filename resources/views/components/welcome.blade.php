@@ -1,7 +1,7 @@
 <div class="p-2">
     <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
 
-        @if(auth()->user()->hasRole('super-admin') || auth()->user()->department?->code === 'hr')
+        @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'hr'))
 
             {{-- Team Management --}}
             <a
@@ -93,7 +93,7 @@
         @endif
 
 
-        @if(auth()->user()->hasRole('super-admin') || auth()->user()->department?->code === 'procurement')
+        @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'procurement'))
 
             {{-- Procurement Categories --}}
             <a

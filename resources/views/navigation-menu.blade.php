@@ -144,14 +144,71 @@
                 <div
                     x-data="{
                         count: CartStore.count(),
+                        wishlistCount: WishlistStore.count(),
                         init() {
                             window.addEventListener('cart-updated', (event) => {
                                 this.count = event.detail.count;
                             });
+                            window.addEventListener('wishlist-updated', (event) => {
+                                this.wishlistCount = event.detail.count;
+                            });
                         }
                     }"
-                    class="items-center justify-center px-4 flex"
+                    class="items-center justify-center flex gap-4"
                 >
+                    <a
+                        href="{{ route('wishlist') }}"
+                        class="
+                            relative
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+                            gap-0.5
+                            text-gray-700
+                            active:bg-gray-50
+                        "
+                    >
+                        <div class="relative">
+
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.6Z"
+                                />
+                            </svg>
+
+                            <span
+                                x-cloak
+                                x-show="wishlistCount > 0"
+                                x-text="wishlistCount"
+                                class="
+                                    absolute
+                                    -right-2
+                                    -top-2
+                                    flex
+                                    h-4
+                                    min-w-4
+                                    items-center
+                                    justify-center
+                                    rounded-full
+                                    bg-red-500
+                                    px-1
+                                    text-[9px]
+                                    font-bold
+                                    text-white
+                                "
+                            ></span>
+
+                        </div>
+                    </a>
                     <a
                         href="{{ route('cart') }}"
                         class="

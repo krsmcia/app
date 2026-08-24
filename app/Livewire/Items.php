@@ -78,6 +78,10 @@ class Items extends Component
                 'image' => $item->primaryImage
                     ? Storage::url($item->primaryImage->path)
                     : asset('images/default-item.png'),
+                'unit' => $item->unit,
+                'brand' => $item->brand,
+                'color' => $item->color,
+                'size' => $item->size,
             ];
         }
         if ($results->nextCursor()) {

@@ -73,6 +73,10 @@
                             name: @js($item['name']),
                             sku: @js($item['sku']),
                             image: @js($item['image']),
+                            unit: @js($item['unit']),
+                            brand: @js($item['brand']),
+                            color: @js($item['color']),
+                            size: @js($item['size']),
                         })"
                         class="
                             group

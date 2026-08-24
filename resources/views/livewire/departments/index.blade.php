@@ -7,23 +7,45 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
     {{-- Header --}}
-    <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="mb-4 space-y-3">
 
-        <input
-            type="text"
-            wire:model.live.debounce.300ms="search"
-            placeholder="Search by department name or code..."
-            class="w-full sm:w-96 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            autocomplete="off"
-        >
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-        <button
-            type="button"
-            wire:click="$set('showCreateModal', true)"
-            class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
-        >
-            Add Department
-        </button>
+            {{-- Search --}}
+            <div class="w-full sm:max-w-md">
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Search department..."
+                    class="block w-full rounded-lg border-gray-300 px-4 py-2.5 text-sm shadow-sm
+                        focus:border-indigo-500 focus:ring-indigo-500"
+                    autocomplete="off"
+                >
+            </div>
+
+            {{-- Add --}}
+            <button
+                type="button"
+                wire:click="$set('showCreateModal', true)"
+                class="inline-flex w-full items-center justify-center rounded-lg
+                    bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white
+                    shadow-sm hover:bg-indigo-700
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                    sm:w-auto"
+            >
+                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                    />
+                </svg>
+
+                Add Department
+            </button>
+
+        </div>
 
     </div>
 
@@ -41,92 +63,67 @@
         </div>
     @endif
 
-    {{-- Table --}}
-    <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+    {{-- Department List --}}
+    <div class="overflow-hidden rounded-xl bg-white shadow-sm">
 
-        <table class="min-w-full divide-y divide-gray-200">
+        {{-- =========================================================
+            Mobile: Card View
+            ========================================================= --}}
+        <div class="divide-y divide-gray-100 md:hidden">
 
-            <thead class="bg-gray-50">
-                <tr>
+            @forelse ($departments as $department)
 
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Name
-                    </th>
+                <div class="p-4">
 
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Code
-                    </th>
+                    {{-- Top --}}
+                    <div class="flex items-start justify-between gap-3">
 
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Employees
-                    </th>
-
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Status
-                    </th>
-
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                        Action
-                    </th>
-
-                </tr>
-            </thead>
-
-            <tbody class="bg-white divide-y divide-gray-200">
-
-                @forelse ($departments as $department)
-
-                    <tr>
-
-                        {{-- Name --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">
+                        <div class="min-w-0">
+                            <h3 class="truncate text-sm font-semibold text-gray-900">
                                 {{ $department->name }}
-                            </div>
-                        </td>
+                            </h3>
 
-                        {{-- Code --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-mono text-gray-600">
+                            <p class="mt-1 font-mono text-xs text-gray-500">
                                 {{ $department->code }}
-                            </span>
-                        </td>
-
-                        {{-- Employees --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
-
-                            <span class="text-sm text-gray-700">
-                                {{ $department->users_count }}
-                            </span>
-
-                        </td>
+                            </p>
+                        </div>
 
                         {{-- Status --}}
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        @if ($department->is_active)
+                            <span class="shrink-0 inline-flex items-center rounded-full
+                                        bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+                                Active
+                            </span>
+                        @else
+                            <span class="shrink-0 inline-flex items-center rounded-full
+                                        bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                                Inactive
+                            </span>
+                        @endif
 
-                            @if ($department->is_active)
+                    </div>
 
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Active
-                                </span>
+                    {{-- Info --}}
+                    <div class="mt-4 flex items-center justify-between">
 
-                            @else
+                        <div>
+                            <p class="text-xs text-gray-500">
+                                Employees
+                            </p>
 
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                    Inactive
-                                </span>
+                            <p class="mt-0.5 text-sm font-medium text-gray-900">
+                                {{ $department->users_count }}
+                            </p>
+                        </div>
 
-                            @endif
-
-                        </td>
-
-                        {{-- Action --}}
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        {{-- Actions --}}
+                        <div class="flex items-center gap-3">
 
                             <button
                                 type="button"
                                 wire:click="editDepartment({{ $department->id }})"
-                                class="text-indigo-600 hover:text-indigo-900"
+                                class="rounded-md px-3 py-2 text-sm font-medium text-indigo-600
+                                    hover:bg-indigo-50"
                             >
                                 Edit
                             </button>
@@ -137,33 +134,163 @@
                                     type="button"
                                     wire:click="deleteDepartment({{ $department->id }})"
                                     wire:confirm="Are you sure you want to delete this department?"
-                                    class="ml-3 text-red-600 hover:text-red-900"
+                                    class="rounded-md px-3 py-2 text-sm font-medium text-red-600
+                                        hover:bg-red-50"
                                 >
                                     Delete
                                 </button>
 
                             @endif
 
-                        </td>
+                        </div>
 
-                    </tr>
+                    </div>
 
-                @empty
+                </div>
 
+            @empty
+
+                <div class="px-4 py-12 text-center text-sm text-gray-500">
+                    No departments found.
+                </div>
+
+            @endforelse
+
+        </div>
+
+
+        {{-- =========================================================
+            Desktop: Table View
+            ========================================================= --}}
+        <div class="hidden overflow-x-auto md:block">
+
+            <table class="min-w-full divide-y divide-gray-200">
+
+                <thead class="bg-gray-50">
                     <tr>
-                        <td
-                            colspan="5"
-                            class="px-6 py-10 text-center text-gray-500"
-                        >
-                            No departments found.
-                        </td>
+
+                        <th class="px-6 py-3 text-left text-xs font-medium
+                                uppercase tracking-wider text-gray-500">
+                            Name
+                        </th>
+
+                        <th class="px-6 py-3 text-left text-xs font-medium
+                                uppercase tracking-wider text-gray-500">
+                            Code
+                        </th>
+
+                        <th class="px-6 py-3 text-left text-xs font-medium
+                                uppercase tracking-wider text-gray-500">
+                            Employees
+                        </th>
+
+                        <th class="px-6 py-3 text-left text-xs font-medium
+                                uppercase tracking-wider text-gray-500">
+                            Status
+                        </th>
+
+                        <th class="px-6 py-3 text-right text-xs font-medium
+                                uppercase tracking-wider text-gray-500">
+                            Action
+                        </th>
+
                     </tr>
+                </thead>
 
-                @endforelse
+                <tbody class="divide-y divide-gray-200 bg-white">
 
-            </tbody>
+                    @forelse ($departments as $department)
 
-        </table>
+                        <tr class="hover:bg-gray-50">
+
+                            {{-- Name --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ $department->name }}
+                                </div>
+                            </td>
+
+                            {{-- Code --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+                                <span class="font-mono text-sm text-gray-600">
+                                    {{ $department->code }}
+                                </span>
+                            </td>
+
+                            {{-- Employees --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+                                <span class="text-sm text-gray-700">
+                                    {{ $department->users_count }}
+                                </span>
+                            </td>
+
+                            {{-- Status --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+
+                                @if ($department->is_active)
+
+                                    <span class="inline-flex items-center rounded-full
+                                                bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+                                        Active
+                                    </span>
+
+                                @else
+
+                                    <span class="inline-flex items-center rounded-full
+                                                bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                                        Inactive
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+                            {{-- Action --}}
+                            <td class="whitespace-nowrap px-6 py-4 text-right">
+
+                                <button
+                                    type="button"
+                                    wire:click="editDepartment({{ $department->id }})"
+                                    class="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                                >
+                                    Edit
+                                </button>
+
+                                @if ($department->users_count === 0)
+
+                                    <button
+                                        type="button"
+                                        wire:click="deleteDepartment({{ $department->id }})"
+                                        wire:confirm="Are you sure you want to delete this department?"
+                                        class="ml-4 text-sm font-medium text-red-600 hover:text-red-900"
+                                    >
+                                        Delete
+                                    </button>
+
+                                @endif
+
+                            </td>
+
+                        </tr>
+
+                    @empty
+
+                        <tr>
+                            <td
+                                colspan="5"
+                                class="px-6 py-12 text-center text-sm text-gray-500"
+                            >
+                                No departments found.
+                            </td>
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
 
     </div>
 

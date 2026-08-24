@@ -225,6 +225,7 @@
 
                                     <input
                                         type="number"
+                                        inputmode="numeric"
                                         min="1"
                                         max="999"
                                         :value="item.quantity"

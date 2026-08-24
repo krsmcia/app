@@ -1,4 +1,15 @@
-<div class="pb-20 md:pb-0">
+<div 
+    class="pb-20 md:pb-0"
+    x-data="{
+        count: CartStore.count(),
+
+        init() {
+            window.addEventListener('cart-updated', (event) => {
+                this.count = event.detail.count;
+            });
+        }
+    }"
+>
     <x-categories />
 
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -52,6 +63,12 @@
 
                     <div
                         wire:key="item-{{ $item['id'] }}"
+                        x-data="itemCard({
+                            id: @js($item['id']),
+                            name: @js($item['name']),
+                            sku: @js($item['sku']),
+                            image: @js($item['image']),
+                        })"
                         class="
                             group
                             overflow-hidden
@@ -189,11 +206,9 @@
 
                             {{-- Quantity --}}
                             <div class="mt-3 flex items-center justify-between">
-
                                 <span class="text-xs font-medium text-gray-400">
                                     Quantity
                                 </span>
-
                                 <div
                                     class="
                                         flex
@@ -205,10 +220,11 @@
                                         bg-gray-50
                                     "
                                 >
-
+                                    {{-- Decrease --}}
                                     <button
                                         type="button"
-                                        wire:click="decreaseQuantity({{ $item['id'] }})"
+                                        @click="decrease()"
+                                        :disabled="quantity <= 1"
                                         class="
                                             flex
                                             h-8
@@ -220,14 +236,17 @@
                                             hover:bg-white
                                             hover:text-gray-900
                                             active:bg-gray-100
+                                            disabled:cursor-not-allowed
+                                            disabled:opacity-40
                                         "
                                     >
                                         <span class="text-lg leading-none">
                                             −
                                         </span>
                                     </button>
-
+                                    {{-- Quantity --}}
                                     <span
+                                        x-text="quantity"
                                         class="
                                             flex
                                             h-8
@@ -241,13 +260,12 @@
                                             font-semibold
                                             text-gray-900
                                         "
-                                    >
-                                        {{ $quantities[$item['id']] ?? 1 }}
-                                    </span>
-
+                                    ></span>
+                                    {{-- Increase --}}
                                     <button
                                         type="button"
-                                        wire:click="increaseQuantity({{ $item['id'] }})"
+                                        @click="increase()"
+                                        :disabled="quantity >= 999"
                                         class="
                                             flex
                                             h-8
@@ -259,22 +277,20 @@
                                             hover:bg-white
                                             hover:text-gray-900
                                             active:bg-gray-100
+                                            disabled:cursor-not-allowed
+                                            disabled:opacity-40
                                         "
                                     >
                                         <span class="text-lg leading-none">
                                             +
                                         </span>
                                     </button>
-
                                 </div>
                             </div>
-
                             {{-- Add to Cart --}}
                             <button
                                 type="button"
-                                wire:click="addToCart({{ $item['id'] }})"
-                                wire:loading.attr="disabled"
-                                wire:target="addToCart({{ $item['id'] }})"
+                                @click="addToCart()"
                                 class="
                                     mt-3
                                     flex
@@ -295,14 +311,10 @@
                                     hover:bg-gray-800
                                     hover:shadow-md
                                     active:scale-[0.98]
-                                    disabled:cursor-not-allowed
-                                    disabled:opacity-60
                                 "
                             >
 
                                 <svg
-                                    wire:loading.remove
-                                    wire:target="addToCart({{ $item['id'] }})"
                                     class="h-4 w-4"
                                     fill="none"
                                     stroke="currentColor"
@@ -316,35 +328,8 @@
                                     />
                                 </svg>
 
-                                <svg
-                                    wire:loading
-                                    wire:target="addToCart({{ $item['id'] }})"
-                                    class="h-4 w-4 animate-spin"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        class="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        stroke-width="4"
-                                    />
-
-                                    <path
-                                        class="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                                    />
-                                </svg>
-
-                                <span wire:loading.remove wire:target="addToCart({{ $item['id'] }})">
+                                <span>
                                     Add to Cart
-                                </span>
-
-                                <span wire:loading wire:target="addToCart({{ $item['id'] }})">
-                                    Adding...
                                 </span>
 
                             </button>
@@ -654,28 +639,29 @@
                         />
                     </svg>
 
-                    @if ($this->cartCount > 0)
-                        <span
-                            class="
-                                absolute
-                                -right-2
-                                -top-2
-                                flex
-                                h-4
-                                min-w-4
-                                items-center
-                                justify-center
-                                rounded-full
-                                bg-gray-900
-                                px-1
-                                text-[9px]
-                                font-bold
-                                text-white
-                            "
-                        >
-                            {{ $this->cartCount }}
-                        </span>
-                    @endif
+                    
+                    <span
+                        x-cloak
+                        x-show="count > 0"
+                        x-text="count"
+                        class="
+                            absolute
+                            -right-2
+                            -top-2
+                            flex
+                            h-4
+                            min-w-4
+                            items-center
+                            justify-center
+                            rounded-full
+                            bg-gray-900
+                            px-1
+                            text-[9px]
+                            font-bold
+                            text-white
+                        "
+                    >
+                    </span>
 
                 </div>
 

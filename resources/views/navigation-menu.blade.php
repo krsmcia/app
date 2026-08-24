@@ -141,7 +141,68 @@
                         </x-dropdown>
                     </div>
                 @endif
-
+                <div
+                    x-data="{
+                        count: CartStore.count(),
+                        init() {
+                            window.addEventListener('cart-updated', (event) => {
+                                this.count = event.detail.count;
+                            });
+                        }
+                    }"
+                    class="items-center justify-center px-4 flex"
+                >
+                    <a
+                        href="{{ route('cart') }}"
+                        class="
+                            relative
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+                            gap-0.5
+                            text-gray-700
+                            active:bg-gray-50
+                        "
+                    >
+                        <div class="relative">
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13L17 13M9 21a1 1 0 1 1-2 0m10 0a1 1 0 1 1-2 0"
+                                />
+                            </svg>
+                            <span
+                                x-cloak
+                                x-show="count > 0"
+                                x-text="count"
+                                class="
+                                    absolute
+                                    -right-2
+                                    -top-2
+                                    flex
+                                    h-4
+                                    min-w-4
+                                    items-center
+                                    justify-center
+                                    rounded-full
+                                    bg-gray-900
+                                    px-1
+                                    text-[9px]
+                                    font-bold
+                                    text-white
+                                "
+                            ></span>
+                        </div>
+                    </a>
+                </div>
                 <!-- Settings Dropdown -->
                 <div class="ms-3 relative">
                     <x-dropdown align="right" width="48">

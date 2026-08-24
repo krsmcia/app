@@ -48,6 +48,7 @@ class Items extends Component
     {
         $query = Item::query()
             ->with('primaryImage')
+            ->where('is_active', true)
             ->when(
                 filled($this->search),
                 function ($query) {

@@ -24,6 +24,7 @@ class Wishlist extends Component
         $wishlistItems = empty($this->wishlistIds)
             ? collect()
             : Item::query()
+                ->where('is_active', true)
                 ->with('primaryImage')
                 ->whereIn('id', $this->wishlistIds)
                 ->get();

@@ -77,4 +77,6 @@ Route::middleware([
     Route::get('/wishlist', Livewire\Wishlist::class)->name('wishlist');
     Route::get('/purchase-requests', Livewire\PurchaseRequests::class)->name('purchase-requests');
     Route::get('/cart', Livewire\Cart::class)->name('cart');
+    Route::get('/my-requests', Livewire\MyRequests::class)->name('my-requests');
+    Route::get('/pending-approval', Livewire\PendingApproval::class)->name('pending-approval');
 });

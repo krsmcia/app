@@ -235,10 +235,47 @@
 
         @endif
 
+        {{-- New Request --}}
+        <a
+            href="{{ route('items') }}"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
+        >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-5 text-emerald-600 sm:size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                </svg>
+            </div>
+
+            <h2 class="mt-4 text-base font-semibold leading-5 text-emerald-600 sm:mt-5 sm:text-lg">
+                New Request
+            </h2>
+
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                Submit a new purchasing request for your department.
+            </p>
+
+            <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
+                Create request
+                <span class="transition group-hover:ml-1">→</span>
+            </div>
+        </a>
 
         {{-- My Requests --}}
         <a
-            href=""
+            href="{{route('my-requests')}}"
             class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
                 transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
                 sm:p-5 lg:aspect-auto lg:p-6"
@@ -280,49 +317,9 @@
             </div>
         </a>
 
-
-        {{-- New Request --}}
-        <a
-            href="{{ route('items') }}"
-            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
-                transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
-                sm:p-5 lg:aspect-auto lg:p-6"
-        >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5 text-emerald-600 sm:size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                </svg>
-            </div>
-
-            <h2 class="mt-4 text-base font-semibold leading-5 text-emerald-600 sm:mt-5 sm:text-lg">
-                New Request
-            </h2>
-
-            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
-                Submit a new purchasing request for your department.
-            </p>
-
-            <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
-                Create request
-                <span class="transition group-hover:ml-1">→</span>
-            </div>
-        </a>
-
-
         {{-- Pending Approval --}}
         <a
-            href=""
+            href="{{route('pending-approval')}}"
             class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
                 transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-md
                 sm:p-5 lg:aspect-auto lg:p-6"

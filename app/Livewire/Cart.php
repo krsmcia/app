@@ -13,22 +13,17 @@ class Cart extends Component
     {
         if (empty($cartItems)) {
             $this->dispatch('cart-error', message: 'Your cart is empty.');
-
             return;
         }
-
         $purchaseRequest = DB::transaction(function () use ($cartItems) {
             $user = auth()->user();
-
             $purchaseRequest = PurchaseRequest::create([
                 'request_no' => $this->generateRequestNo(),
                 'user_id' => $user->id,
                 'department_id' => $user->current_department_id,
                 'total_amount' => 0,
             ]);
-
             $totalAmount = 0;
-
             foreach ($cartItems as $cartItem) {
                 $purchaseRequest->items()->create([
                     'item_id' => $cartItem['id'],
@@ -36,10 +31,8 @@ class Cart extends Component
                         1,
                         min((int) ($cartItem['quantity'] ?? 1), 999)
                     ),
-
                     'item_name' => $cartItem['name'],
                     'sku' => $cartItem['sku'] ?? '',
-
                     'item_vendor_id' => null,
                     'vendor_name' => null,
                     'vendor_sku' => null,
@@ -47,32 +40,38 @@ class Cart extends Component
                     'amount' => null,
                 ]);
             }
-
             $purchaseRequest->update([
                 'total_amount' => $totalAmount,
             ]);
-
-            /*
-             * Initial workflow
-             */
-            $workflow = $purchaseRequest->workflows()->create([
-                'step' => 'supervisor',
+            $nextStep = $this->nextApprovalStep($user);
+            if (!$nextStep) {
+                throw new \RuntimeException(
+                    'No approval workflow is available for this user.'
+                );
+            }
+            $workflow = $purchaseRequest->purchaseWorkflow()->create([
+                'step' => $nextStep,
                 'status' => 'pending',
             ]);
-
             foreach ($purchaseRequest->items as $purchaseItem) {
-                $workflow->items()->create([
+                $workflow->purchaseWorkflowItems()->create([
                     'purchase_item_id' => $purchaseItem->id,
                     'status' => 'pending',
                 ]);
             }
-
             return $purchaseRequest;
         });
-
         $this->dispatch('cart-request-created');
     }
-
+    protected function nextApprovalStep($user): ?string
+    {
+        return match (true) {
+            $user->hasRole('staff') => 'team-leader',
+            $user->hasRole('team-leader') => 'supervisor',
+            $user->hasRole('supervisor') => null,
+            default => null,
+        };
+    }
     protected function generateRequestNo(): string
     {
         do {
@@ -82,10 +81,8 @@ class Cart extends Component
         } while (
             PurchaseRequest::where('request_no', $requestNo)->exists()
         );
-
         return $requestNo;
     }
-
     public function render()
     {
         return view('livewire.cart');

@@ -17,7 +17,7 @@ class PurchaseWorkflow extends Model
         );
     }
 
-    public function items()
+    public function purchaseWorkflowItems()
     {
         return $this->hasMany(
             PurchaseWorkflowItem::class

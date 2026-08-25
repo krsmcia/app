@@ -11,7 +11,7 @@ class PurchaseWorkflowItem extends Model
         'acted_at' => 'datetime',
     ];
 
-    public function workflow()
+    public function purchaseWorkflow()
     {
         return $this->belongsTo(
             PurchaseWorkflow::class,
@@ -24,5 +24,9 @@ class PurchaseWorkflowItem extends Model
         return $this->belongsTo(
             PurchaseItem::class
         );
+    }
+    public function purchaseActions()
+    {
+        return $this->hasMany(PurchaseAction::class);
     }
 }

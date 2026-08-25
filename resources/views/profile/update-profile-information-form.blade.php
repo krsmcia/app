@@ -10,10 +10,125 @@
     <x-slot name="form">
         <!-- Profile Photo -->
         @if (Laravel\Jetstream\Jetstream::managesProfilePhotos())
-            <div x-data="{photoName: null, photoPreview: null}" class="col-span-6 sm:col-span-4">
+            <div 
+                x-data="{
+                    photoName: null,
+                    photoPreview: null,
+
+                    resizeImage(file) {
+                        return new Promise((resolve, reject) => {
+                            const maxSize = 1024;
+
+                            const reader = new FileReader();
+
+                            reader.onload = (event) => {
+                                const img = new Image();
+
+                                img.onload = () => {
+                                    let width = img.width;
+                                    let height = img.height;
+
+                                    if (width > maxSize || height > maxSize) {
+                                        if (width > height) {
+                                            height = Math.round(
+                                                height * (maxSize / width)
+                                            );
+
+                                            width = maxSize;
+                                        } else {
+                                            width = Math.round(
+                                                width * (maxSize / height)
+                                            );
+
+                                            height = maxSize;
+                                        }
+                                    }
+
+                                    const canvas = document.createElement('canvas');
+
+                                    canvas.width = width;
+                                    canvas.height = height;
+
+                                    const ctx = canvas.getContext('2d');
+
+                                    ctx.drawImage(
+                                        img,
+                                        0,
+                                        0,
+                                        width,
+                                        height
+                                    );
+
+                                    canvas.toBlob(
+                                        (blob) => {
+                                            if (!blob) {
+                                                reject(
+                                                    new Error('Image resize failed.')
+                                                );
+
+                                                return;
+                                            }
+
+                                            resolve(
+                                                new File(
+                                                    [blob],
+                                                    file.name.replace(
+                                                        /\.[^/.]+$/,
+                                                        '.jpg'
+                                                    ),
+                                                    {
+                                                        type: 'image/jpeg',
+                                                    }
+                                                )
+                                            );
+                                        },
+                                        'image/jpeg',
+                                        0.85
+                                    );
+                                };
+
+                                img.onerror = reject;
+
+                                img.src = event.target.result;
+                            };
+
+                            reader.onerror = reject;
+
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                }" 
+                x-init="
+                    $refs.photo.addEventListener('change', async (event) => {
+                        const originalFile = event.target.files[0];
+
+                        if (!originalFile) {
+                            return;
+                        }
+
+                        const resizedFile = await resizeImage(originalFile);
+
+                        photoName = resizedFile.name;
+
+                        const reader = new FileReader();
+
+                        reader.onload = (e) => {
+                            photoPreview = e.target.result;
+                        };
+
+                        reader.readAsDataURL(resizedFile);
+
+                        $wire.upload(
+                            'photo',
+                            resizedFile
+                        );
+                    });
+                "
+                class="col-span-6 sm:col-span-4"
+            >
                 <!-- Profile Photo File Input -->
                 <input type="file" id="photo" class="hidden"
-                            wire:model.live="photo"
+                            x-on:change="handlePhotoChange($event)"
                             x-ref="photo"
                             x-on:change="
                                     photoName = $refs.photo.files[0].name;

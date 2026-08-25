@@ -1,6 +1,5 @@
 <div
     x-data="{
-        initialized: false,
 
         init() {
             this.syncWishlist();
@@ -16,8 +15,6 @@
             });
         }
     }"
-    x-cloak
-    x-show="initialized"
     class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
 >
     {{-- Header --}}
@@ -28,8 +25,6 @@
             </h1>
 
             <p
-                x-show="initialized"
-                x-cloak
                 class="mt-1 text-sm text-gray-500"
             >
                 {{ $wishlistItems->count() }} items
@@ -37,8 +32,7 @@
         </div>
 
         <button
-            x-show="initialized && {{ $wishlistItems->count() > 0 ? 'true' : 'false' }}"
-            x-cloak
+            x-show="{{ $wishlistItems->count() > 0 ? 'true' : 'false' }}"
             type="button"
             @click="
                 if (confirm('Remove all items from your wishlist?')) {
@@ -55,11 +49,7 @@
     {{-- ============================================================
         Actual Content
     ============================================================= --}}
-    <div
-        x-show="initialized"
-        x-cloak
-        x-transition.opacity.duration.150ms
-    >
+    <div>
         @if ($wishlistItems->isEmpty())
 
             {{-- Empty --}}
@@ -188,4 +178,5 @@
 
         @endif
     </div>
+    <x-mobile-purchase-bottom-nav />
 </div>

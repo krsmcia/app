@@ -21,13 +21,11 @@ class Wishlist extends Component
 
     public function render()
     {
-        $wishlistItems = empty($this->wishlistIds)
-            ? collect()
-            : Item::query()
-                ->where('is_active', true)
-                ->with('primaryImage')
-                ->whereIn('id', $this->wishlistIds)
-                ->get();
+        $wishlistItems = Item::query()
+            ->where('is_active', true)
+            ->whereIn('id', $this->wishlistIds)
+            ->with('primaryImage')
+            ->get();
 
         return view('livewire.wishlist', [
             'wishlistItems' => $wishlistItems,

@@ -8,11 +8,26 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseRequest extends Model
 {
     protected $guarded = [];
-    protected function casts(): array
+    protected $casts = [
+        'total_amount' => 'decimal:2',
+    ];
+    public function user()
     {
-        return [
-            'status' => PurchaseRequestStatus::class,
-        ];
+        return $this->belongsTo(User::class);
     }
-    //
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function workflows()
+    {
+        return $this->hasMany(PurchaseWorkflow::class);
+    }
 }

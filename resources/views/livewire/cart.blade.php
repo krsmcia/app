@@ -2,29 +2,40 @@
     x-data="{
         items: [],
         totalQuantity: 0,
+
         init() {
             this.refresh();
 
             window.addEventListener('cart-updated', () => {
                 this.refresh();
             });
+
+            window.addEventListener('cart-request-created', () => {
+                CartStore.clear();
+            });
         },
+
         refresh() {
             this.items = CartStore.items();
             this.totalQuantity = CartStore.count();
         },
+
         increase(id) {
             CartStore.increase(id);
         },
+
         decrease(id) {
             CartStore.decrease(id);
         },
+
         updateQuantity(id, quantity) {
             CartStore.updateQuantity(id, quantity);
         },
+
         remove(id) {
             CartStore.remove(id);
         },
+
         clear() {
             if (!confirm('Are you sure you want to remove all items from your cart?')) {
                 return;
@@ -293,9 +304,18 @@
                 </div>
                 <button
                     type="button"
-                    class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+                    wire:click="createRequest(CartStore.items())"
+                    wire:loading.attr="disabled"
+                    wire:target="createRequest"
+                    class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    Proceed to Request
+                    <span wire:loading.remove wire:target="createRequest">
+                        Proceed to Request
+                    </span>
+
+                    <span wire:loading wire:target="createRequest">
+                        Creating Request...
+                    </span>
                 </button>
                 <a
                     href="{{ route('items') }}"
@@ -306,4 +326,5 @@
             </div>
         </div>
     </div>
+    <x-mobile-purchase-bottom-nav />
 </div>

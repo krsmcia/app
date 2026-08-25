@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchase_requests', function (Blueprint $table) {
+        Schema::create('purchase_actions', function (Blueprint $table) {
             $table->id();
-            $table->string('request_no', 30)->unique();
-            $table->foreignId('user_id')->constrained()->restrictOnDelete();
-            $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
-            $table->decimal('total_amount', 15, 2)->default(0);
+            $table->foreignId('purchase_workflow_item_id');
+            $table->string('action', 30);
+            $table->foreignId('acted_by')->constrained('users')->restrictOnDelete();
+            $table->text('comment')->nullable();
+            $table->timestamp('acted_at');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_requests');
+        Schema::dropIfExists('purchase_actions');
     }
 };

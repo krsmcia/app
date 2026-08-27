@@ -65,15 +65,14 @@
 
                             {{-- Image --}}
                             <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
-                                @if ($item->item?->primaryImage)
-                                    <img
-                                        src="{{ $item->item->primaryImage->url }}"
-                                        alt="{{ $item->item_name }}"
-                                        class="h-full w-full object-cover"
-                                    >
-                                @endif
+                                <img
+                                    src="{{ $item?->primaryImage
+                                        ? Storage::url($item->primaryImage->path)
+                                        : asset('images/default-item.png') }}"
+                                    alt="{{ $item->item_name }}"
+                                    class="h-full w-full object-cover"
+                                >
                             </div>
-
                             {{-- Item info --}}
                             <div class="min-w-0 flex-1">
 

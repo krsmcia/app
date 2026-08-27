@@ -508,9 +508,9 @@ class Items extends Component
                 'vendor_sku' => $vendor->pivot->vendor_sku ?? '',
                 'unit_price' => $vendor->pivot->unit_price !== null
                     ? (string) $vendor->pivot->unit_price
-                    : '',
+                    : null,
                 'minimum_order_qty' => $vendor->pivot->minimum_order_qty ?? 1,
-                'lead_time' => $vendor->pivot->lead_time ?? '',
+                'lead_time' => $vendor->pivot->lead_time,
             ];
         }
     }
@@ -605,14 +605,31 @@ class Items extends Component
         if (! $this->vendorItemId) {
             return;
         }
+
         $item = Item::findOrFail($this->vendorItemId);
+
         abort_unless(
             $item->vendors()
                 ->where('vendor_id', $vendorId)
                 ->exists(),
             404
         );
+
         $form = $this->vendorForms[$vendorId] ?? [];
+
+        // 빈 문자열을 null로 변환
+        $form['vendor_sku'] = blank($form['vendor_sku'] ?? null)
+            ? null
+            : $form['vendor_sku'];
+
+        $form['unit_price'] = blank($form['unit_price'] ?? null)
+            ? null
+            : $form['unit_price'];
+
+        $form['lead_time'] = blank($form['lead_time'] ?? null)
+            ? null
+            : $form['lead_time'];
+
         $validated = validator(
             $form,
             [
@@ -641,6 +658,7 @@ class Items extends Component
                 ],
             ]
         )->validate();
+
         $item->vendors()->updateExistingPivot(
             $vendorId,
             [
@@ -650,7 +668,9 @@ class Items extends Component
                 'lead_time' => $validated['lead_time'] ?? null,
             ]
         );
+
         $this->reloadVendorItem();
+
         session()->flash(
             'success',
             'Vendor information updated successfully.'

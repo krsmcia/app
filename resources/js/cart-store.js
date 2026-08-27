@@ -1,5 +1,6 @@
 window.CartStore = {
     storageKey: 'cart',
+
     get() {
         try {
             return JSON.parse(
@@ -9,11 +10,13 @@ window.CartStore = {
             return {};
         }
     },
+
     save(cart) {
         localStorage.setItem(
             this.storageKey,
             JSON.stringify(cart)
         );
+
         window.dispatchEvent(
             new CustomEvent('cart-updated', {
                 detail: {
@@ -23,8 +26,10 @@ window.CartStore = {
             })
         );
     },
+
     add(item) {
         const cart = this.get();
+
         if (cart[item.id]) {
             cart[item.id].quantity += item.quantity;
         } else {
@@ -38,51 +43,84 @@ window.CartStore = {
                 brand: item.brand,
                 color: item.color,
                 size: item.size,
+                remark: '',
             };
         }
+
         this.save(cart);
     },
+
     increase(itemId) {
         const cart = this.get();
+
         if (!cart[itemId]) {
             return;
         }
+
         cart[itemId].quantity = Math.min(
             cart[itemId].quantity + 1,
             999
         );
+
         this.save(cart);
     },
+
     decrease(itemId) {
         const cart = this.get();
+
         if (!cart[itemId]) {
             return;
         }
+
         cart[itemId].quantity--;
+
         if (cart[itemId].quantity < 1) {
             delete cart[itemId];
         }
+
         this.save(cart);
     },
+
     updateQuantity(itemId, quantity) {
         const cart = this.get();
+
         if (!cart[itemId]) {
             return;
         }
+
         quantity = parseInt(quantity) || 1;
+
         cart[itemId].quantity = Math.max(
             1,
             Math.min(quantity, 999)
         );
+
         this.save(cart);
     },
+
+    updateRemark(itemId, remark) {
+        const cart = this.get();
+
+        if (!cart[itemId]) {
+            return;
+        }
+
+        cart[itemId].remark = remark;
+
+        this.save(cart);
+    },
+
     remove(itemId) {
         const cart = this.get();
+
         delete cart[itemId];
+
         this.save(cart);
     },
+
     clear() {
         localStorage.removeItem(this.storageKey);
+
         window.dispatchEvent(
             new CustomEvent('cart-updated', {
                 detail: {
@@ -92,15 +130,21 @@ window.CartStore = {
             })
         );
     },
+
     items() {
-        return Object.values(this.get());
+        return Object.values(this.get()).map(item => ({
+            ...item,
+            remark: item.remark ?? '',
+        }));
     },
+
     count() {
         return this.items().reduce(
             (total, item) => total + item.quantity,
             0
         );
     },
+
     totalItems() {
         return Object.keys(this.get()).length;
     },

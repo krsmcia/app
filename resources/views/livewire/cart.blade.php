@@ -114,6 +114,7 @@
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
                 <template x-for="item in items" :key="item.id">
                     <div class="flex gap-4 border-b border-gray-200 p-5 last:border-b-0">
+
                         {{-- Image --}}
                         <div class="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             <template x-if="item.image">
@@ -123,6 +124,7 @@
                                     class="h-full w-full object-cover"
                                 >
                             </template>
+
                             <template x-if="!item.image">
                                 <div class="flex h-full w-full items-center justify-center">
                                     <svg
@@ -141,9 +143,13 @@
                                 </div>
                             </template>
                         </div>
+
                         {{-- Info --}}
                         <div class="min-w-0 flex-1">
+
+                            {{-- Header --}}
                             <div class="flex items-start justify-between gap-4">
+
                                 <div class="min-w-0">
                                     <h3
                                         class="font-semibold leading-5 text-gray-900"
@@ -202,6 +208,8 @@
 
                                     </div>
                                 </div>
+
+                                {{-- Remove --}}
                                 <button
                                     type="button"
                                     @click="remove(item.id)"
@@ -222,10 +230,13 @@
                                         />
                                     </svg>
                                 </button>
+
                             </div>
+
                             {{-- Quantity --}}
                             <div class="mt-5 flex items-center">
                                 <div class="inline-flex h-10 items-center overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
+
                                     <button
                                         type="button"
                                         @click="decrease(item.id)"
@@ -251,7 +262,9 @@
                                     >
                                         +
                                     </button>
+
                                 </div>
+
                                 <span class="ml-3 text-sm text-gray-500">
                                     Qty:
                                     <span
@@ -260,6 +273,30 @@
                                     ></span>
                                 </span>
                             </div>
+
+                            {{-- Remark --}}
+                            <div class="mt-4">
+                                <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                                    Remark
+                                    <span class="text-red-500">*</span>
+                                </label>
+
+                                <textarea
+                                    rows="2"
+                                    :value="item.remark"
+                                    @input="CartStore.updateRemark(item.id, $event.target.value)"
+                                    placeholder="Please enter a remark for this item."
+                                    class="block w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                                ></textarea>
+
+                                <p
+                                    x-show="!item.remark || !item.remark.trim()"
+                                    class="mt-1 text-xs text-red-500"
+                                >
+                                    Remark is required.
+                                </p>
+                            </div>
+
                         </div>
                     </div>
                 </template>

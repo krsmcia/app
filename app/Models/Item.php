@@ -53,6 +53,10 @@ class Item extends Model
             ])
             ->withTimestamps();
     }
+    public function itemVendors()
+    {
+        return $this->hasMany(ItemVendor::class);
+    }
     public function categories()
     {
         return $this->belongsToMany(Category::class,'item_categories')->withTimestamps();

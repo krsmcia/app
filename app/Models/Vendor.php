@@ -40,4 +40,8 @@ class Vendor extends Model
             ])
             ->withTimestamps();
     }
+    public function itemVendors()
+    {
+        return $this->hasMany(ItemVendor::class);
+    }
 }

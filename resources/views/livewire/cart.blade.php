@@ -107,7 +107,7 @@
     <div
         x-show="items.length > 0"
         x-cloak
-        class="grid grid-cols-1 gap-8 lg:grid-cols-3"
+        class="grid grid-cols-1 gap-8 lg:grid-cols-3 mb-12"
     >
         {{-- Items --}}
         <div class="lg:col-span-2">
@@ -341,6 +341,7 @@
                 </div>
                 <button
                     type="button"
+                    :disabled="items.some(item => !item.remark || !item.remark.trim())"
                     wire:click="createRequest(CartStore.items())"
                     wire:loading.attr="disabled"
                     wire:target="createRequest"

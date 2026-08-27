@@ -3,6 +3,7 @@
 namespace App\Livewire\Procurements;
 
 use App\Models\Item;
+use App\Models\Vendor;
 use App\Models\ItemVendor;
 use App\Models\PurchaseWorkflow;
 use Livewire\Component;
@@ -10,20 +11,27 @@ use Livewire\Component;
 class Requests extends Component
 {
     public bool $showVendorModal = false;
-
+    public ?int $vendorItemId = null;
+    public ?Item $vendorItem = null;
+    public string $vendorSearch = '';
+    public array $vendorSearchResults = [];
     public ?int $selectedItemId = null;
-
     public string $selectedItemName = '';
-
     public array $vendorForms = [];
 
     public function openVendorModal(int $itemId): void
     {
         $item = Item::query()->with('itemVendors.vendor')->findOrFail($itemId);
 
+        $this->vendorItemId = $item->id;
+        $this->vendorItem = $item;
+
         $this->selectedItemId = $item->id;
 
         $this->selectedItemName = $item->item_name ?? 'Unnamed Item';
+
+        $this->vendorSearch = '';
+        $this->vendorSearchResults = [];
 
         $this->vendorForms = $item->itemVendors
             ->mapWithKeys(function ($itemVendor) {
@@ -48,8 +56,15 @@ class Requests extends Component
     {
         $this->showVendorModal = false;
 
+        $this->vendorItemId = null;
+        $this->vendorItem = null;
+
         $this->selectedItemId = null;
         $this->selectedItemName = '';
+
+        $this->vendorSearch = '';
+        $this->vendorSearchResults = [];
+
         $this->vendorForms = [];
     }
 
@@ -107,7 +122,132 @@ class Requests extends Component
 
         $this->closeVendorModal();
     }
+    public function removeVendor(int $itemVendorId): void
+    {
+        if (!$this->vendorItemId) {
+            return;
+        }
 
+        $itemVendor = ItemVendor::query()
+            ->where('id', $itemVendorId)
+            ->where('item_id', $this->vendorItemId)
+            ->firstOrFail();
+
+        // Primary Vendor는 삭제 불가
+        if ($itemVendor->is_preferred) {
+            return;
+        }
+
+        $itemVendor->delete();
+
+        $this->reloadVendorItem();
+    }
+    public function updatedVendorSearch(): void
+    {
+        $this->searchVendors();
+    }
+    public function searchVendors(): void
+    {
+        $search = trim($this->vendorSearch);
+
+        if (strlen($search) < 2 || ! $this->vendorItemId) {
+            $this->vendorSearchResults = [];
+            return;
+        }
+
+        $attachedVendorIds = $this->vendorItem
+            ? $this->vendorItem->itemVendors
+                ->pluck('vendor_id')
+                ->all()
+            : [];
+
+        $this->vendorSearchResults = Vendor::query()
+            ->where('is_active', true)
+            ->when(
+                !empty($attachedVendorIds),
+                fn ($query) => $query->whereNotIn('id', $attachedVendorIds)
+            )
+            ->where(function ($query) use ($search) {
+                $query
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->limit(10)
+            ->get()
+            ->map(fn (Vendor $vendor) => [
+                'id' => $vendor->id,
+                'name' => $vendor->name,
+                'code' => $vendor->code,
+            ])
+            ->toArray();
+    }
+    public function addVendor(int $vendorId): void
+    {
+        if (! $this->vendorItemId) {
+            return;
+        }
+
+        $item = Item::findOrFail($this->vendorItemId);
+
+        // Vendor가 실제로 존재하고 활성 상태인지 확인
+        $vendor = Vendor::query()
+            ->where('id', $vendorId)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        // 이미 연결되어 있으면 추가하지 않음
+        if (
+            $item->vendors()
+                ->where('vendor_id', $vendor->id)
+                ->exists()
+        ) {
+            return;
+        }
+
+        // 첫 번째 Vendor라면 자동으로 Preferred
+        $isFirstVendor = ! $item->vendors()->exists();
+
+        $item->vendors()->attach($vendor->id, [
+            'vendor_sku' => null,
+            'unit_price' => null,
+            'minimum_order_qty' => 1,
+            'lead_time' => null,
+            'is_preferred' => $isFirstVendor,
+        ]);
+
+        $this->reloadVendorItem();
+
+        $this->vendorSearch = '';
+
+        $this->vendorSearchResults = [];
+    }
+    private function reloadVendorItem(): void
+    {
+        if (!$this->vendorItemId) {
+            return;
+        }
+
+        $this->vendorItem = Item::query()
+            ->with('itemVendors.vendor')
+            ->findOrFail($this->vendorItemId);
+
+        $this->vendorForms = $this->vendorItem->itemVendors
+            ->mapWithKeys(function ($itemVendor) {
+                return [
+                    $itemVendor->id => [
+                        'vendor_id' => $itemVendor->vendor_id,
+                        'vendor_name' => $itemVendor->vendor->name,
+                        'vendor_sku' => $itemVendor->vendor_sku,
+                        'unit_price' => $itemVendor->unit_price,
+                        'minimum_order_qty' => $itemVendor->minimum_order_qty,
+                        'lead_time' => $itemVendor->lead_time,
+                        'is_preferred' => (bool) $itemVendor->is_preferred,
+                    ],
+                ];
+            })
+            ->toArray();
+    }
     public function render()
     {
         $workflows = PurchaseWorkflow::query()

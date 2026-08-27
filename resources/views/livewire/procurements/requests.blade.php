@@ -238,7 +238,16 @@
                                     ? 'Primary Vendor'
                                     : 'Set as Primary' }}
                             </button>
-
+                            @if (!$vendor['is_preferred'])
+                                <button
+                                    type="button"
+                                    wire:click="removeVendor({{ $itemVendorId }})"
+                                    wire:confirm="Are you sure you want to remove this vendor?"
+                                    class="text-xs font-medium text-red-600 hover:text-red-700"
+                                >
+                                    Remove
+                                </button>
+                            @endif
                         </div>
 
                         {{-- Vendor fields --}}
@@ -327,7 +336,69 @@
                 @endforelse
 
             </div>
+            <div class="mt-2">
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="vendorSearch"
+                    placeholder="Search vendor by name or code..."
+                    autocomplete="off"
+                    class="w-full rounded-lg border-gray-300 pr-10
+                        shadow-sm focus:border-indigo-500
+                        focus:ring-indigo-500"
+                >
+                @if (count($vendorSearchResults) > 0)
 
+                    <div class="mt-2 overflow-hidden rounded-lg
+                        border border-gray-200 bg-white shadow-sm">
+
+                        @foreach ($vendorSearchResults as $vendor)
+
+                            <button
+                                type="button"
+                                wire:key="vendor-search-{{ $vendor['id'] }}"
+                                wire:click="addVendor({{ $vendor['id'] }})"
+                                wire:loading.attr="disabled"
+                                class="flex w-full items-center
+                                    justify-between px-4 py-3
+                                    text-left hover:bg-gray-50"
+                            >
+
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $vendor['name'] }}
+                                    </div>
+
+                                    @if ($vendor['code'])
+                                        <div class="mt-0.5 text-xs text-gray-500">
+                                            {{ $vendor['code'] }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <span class="text-sm font-medium text-indigo-600">
+                                    Add
+                                </span>
+
+                            </button>
+
+                        @endforeach
+
+                    </div>
+                @elseif (
+                    strlen(trim($vendorSearch)) >= 2 &&
+                    ! $vendorSearchResults
+                )
+                    <div class="mt-2 rounded-lg border border-gray-200
+                        px-4 py-6 text-center">
+
+                        <p class="text-sm text-gray-500">
+                            No available vendors found.
+                        </p>
+
+                    </div>
+
+                @endif
+            </div>
         </x-slot>
 
         <x-slot name="footer">

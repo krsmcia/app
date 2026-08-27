@@ -38,6 +38,7 @@ return new class extends Migration
             $table->string('vendor_sku')->nullable();
             $table->decimal('unit_price', 15, 2)->nullable();
             $table->decimal('amount', 15, 2)->nullable();
+            $table->string('remark', 500)->nullable();
             $table->timestamps();
         });
     }

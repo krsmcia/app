@@ -59,14 +59,18 @@
 
                         @php
                             $item = $workflowItem->purchaseItem;
+
+                            $preferredVendor = $item->item
+                                ->itemVendors
+                                ->firstWhere('is_preferred', true);
                         @endphp
 
-                        <div class="px-5 py-4">
+                        <div class="px-4 py-4 sm:px-5">
 
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-3 sm:gap-4">
 
                                 {{-- Image --}}
-                                <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                <div class="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100 sm:h-14 sm:w-14">
                                     <img
                                         src="{{ $item?->item?->primaryImage
                                             ? Storage::url($item->item->primaryImage->path)
@@ -76,60 +80,99 @@
                                     >
                                 </div>
 
-                                {{-- Item info --}}
+                                {{-- Item Info --}}
                                 <div class="min-w-0 flex-1">
 
-                                    <div class="font-medium text-gray-900">
+                                    <div class="truncate text-sm font-medium text-gray-900 sm:text-base">
                                         {{ $item?->item?->item_name }}
                                     </div>
 
-                                    <div class="mt-1 text-sm text-gray-500">
-                                        SKU: {{ $item?->item?->sku }}
+                                    {{-- SKU + Quantity --}}
+                                    <div class="mt-0.5 flex items-center gap-3 text-xs text-gray-500">
+
+                                        <span>
+                                            SKU: {{ $item?->item?->sku }}
+                                        </span>
+
+                                        <span class="text-gray-300">|</span>
+
+                                        <span>
+                                            Qty:
+                                            <span class="font-semibold text-gray-700">
+                                                {{ $item->quantity }}
+                                            </span>
+                                        </span>
+
                                     </div>
 
                                 </div>
 
-                                {{-- Quantity --}}
-                                <div class="text-right">
-                                    <div class="text-xs text-gray-500">
-                                        Quantity
-                                    </div>
-
-                                    <div class="font-semibold text-gray-900">
-                                        {{ $item->quantity }}
-                                    </div>
-                                </div>
-
-                                {{-- Vendor --}}
-                                @php
-                                    $preferredVendor = $item->item
-                                        ->itemVendors
-                                        ->firstWhere('is_preferred', true);
-                                @endphp
-
-                                <div class="ml-4 flex items-center gap-2">
+                                {{-- Preferred Vendor --}}
+                                <div class="hidden w-40 shrink-0 sm:block">
 
                                     @if ($preferredVendor)
-                                        <div class="text-right">
-                                            <div class="text-[11px] text-gray-400">
-                                                Primary Vendor
-                                            </div>
 
-                                            <div class="text-sm font-medium text-gray-700">
-                                                {{ $preferredVendor->vendor->name }}
-                                            </div>
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Vendor
                                         </div>
+
+                                        <div class="truncate text-sm font-medium text-gray-700">
+                                            {{ $preferredVendor->vendor->name }}
+                                        </div>
+
+                                    @else
+
+                                        <div class="text-sm text-gray-400">
+                                            No vendor
+                                        </div>
+
                                     @endif
+
+                                </div>
+
+                                {{-- Manage Vendors --}}
+                                <div class="shrink-0">
 
                                     <button
                                         type="button"
                                         wire:click="openVendorModal({{ $item->item_id }})"
-                                        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                        class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                                     >
-                                        Vendors
+                                        <span class="sm:hidden">
+                                            Vendors
+                                        </span>
+
+                                        <span class="hidden sm:inline">
+                                            Manage Vendors
+                                        </span>
                                     </button>
 
                                 </div>
+
+                            </div>
+
+                            {{-- Mobile Vendor --}}
+                            <div class="mt-2 pl-[60px] sm:hidden">
+
+                                @if ($preferredVendor)
+
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[11px] text-gray-400">
+                                            Vendor:
+                                        </span>
+
+                                        <span class="truncate text-xs font-medium text-gray-700">
+                                            {{ $preferredVendor->vendor->name }}
+                                        </span>
+                                    </div>
+
+                                @else
+
+                                    <div class="text-xs text-gray-400">
+                                        No vendor selected
+                                    </div>
+
+                                @endif
 
                             </div>
 

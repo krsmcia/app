@@ -126,7 +126,7 @@ class PendingApproval extends Component
     {
         $nextStep = match ($workflow->step) {
             'team-leader' => 'supervisor',
-            'supervisor' => null,
+            'supervisor' => 'procurement',
             default => null,
         };
 

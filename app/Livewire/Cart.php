@@ -83,7 +83,7 @@ class Cart extends Component
         return match (true) {
             $user->hasRole('staff') => 'team-leader',
             $user->hasRole('team-leader') => 'supervisor',
-            $user->hasRole('supervisor') => null,
+            $user->hasRole('supervisor') => 'procurement',
             default => null,
         };
     }

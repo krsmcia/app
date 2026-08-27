@@ -232,7 +232,40 @@
                     </span>
                 </div>
             </a>
-
+            {{-- Requests --}}
+            <a
+                href="{{route('procurements.requests')}}"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
+            >
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 sm:h-11 sm:w-11">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-5 text-amber-600 sm:size-6"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 6v6l4 2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                </div>
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
+                    Pending Purchase
+                </h2>
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                    Review purchasing requests waiting for approval.
+                </p>
+                <div class="mt-auto pt-3 text-xs font-semibold text-amber-600 sm:text-sm">
+                    Review requests
+                    <span class="transition group-hover:ml-1">→</span>
+                </div>
+            </a>
         @endif
 
         {{-- New Request --}}
@@ -316,45 +349,45 @@
                 <span class="transition group-hover:ml-1">→</span>
             </div>
         </a>
+        @if(!auth()->user()->hasRole('staff'))
+            {{-- Pending Approval --}}
+            <a
+                href="{{route('pending-approval')}}"
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
+            >
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 sm:h-11 sm:w-11">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-5 text-amber-600 sm:size-6"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 6v6l4 2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    </svg>
+                </div>
 
-        {{-- Pending Approval --}}
-        <a
-            href="{{route('pending-approval')}}"
-            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
-                transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-md
-                sm:p-5 lg:aspect-auto lg:p-6"
-        >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 sm:h-11 sm:w-11">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5 text-amber-600 sm:size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 6v6l4 2.25M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                </svg>
-            </div>
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
+                    Pending Approval
+                </h2>
 
-            <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
-                Pending Approval
-            </h2>
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                    Review purchasing requests waiting for approval.
+                </p>
 
-            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
-                Review purchasing requests waiting for approval.
-            </p>
-
-            <div class="mt-auto pt-3 text-xs font-semibold text-amber-600 sm:text-sm">
-                Review requests
-                <span class="transition group-hover:ml-1">→</span>
-            </div>
-        </a>
-
+                <div class="mt-auto pt-3 text-xs font-semibold text-amber-600 sm:text-sm">
+                    Review requests
+                    <span class="transition group-hover:ml-1">→</span>
+                </div>
+            </a>
+        @endif
 
         {{-- Purchasing History --}}
         <a

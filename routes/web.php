@@ -50,6 +50,7 @@ Route::middleware([
         Route::get('/categories', Livewire\Procurements\Categories::class)->name('categories');
         Route::get('/items', Livewire\Procurements\Items::class)->name('items');
         Route::get('/vendors', Livewire\Procurements\Vendors::class)->name('vendors');
+        Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
     });
 
 

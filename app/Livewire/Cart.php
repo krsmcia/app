@@ -9,29 +9,30 @@ use Livewire\Component;
 
 class Cart extends Component
 {
-    public function createRequest(array $cartItems)
+    public function createRequest(array $cartItems, string $remark = '')
     {
+        $remark = trim($remark);
+        if ($remark === '') {
+            throw new \RuntimeException(
+                'Remark is required.'
+            );
+        }
         if (empty($cartItems)) {
             $this->dispatch('cart-error', message: 'Your cart is empty.');
             return;
         }
         try {
-            DB::transaction(function () use ($cartItems) {
+            DB::transaction(function () use ($cartItems, $remark) {
                 $user = auth()->user();
                 $purchaseRequest = PurchaseRequest::create([
                     'request_no' => $this->generateRequestNo(),
                     'user_id' => $user->id,
                     'department_id' => $user->current_department_id,
+                    'remark' => $remark,
                     'total_amount' => 0,
                 ]);
                 $totalAmount = 0;
                 foreach ($cartItems as $cartItem) {
-                    $remark = trim($cartItem['remark'] ?? '');
-                    if ($remark === '') {
-                        throw new \RuntimeException(
-                            "Remark is required for item: {$cartItem['name']}"
-                        );
-                    }
                     $purchaseRequest->items()->create([
                         'item_id' => $cartItem['id'],
                         'quantity' => max(
@@ -40,7 +41,6 @@ class Cart extends Component
                         ),
                         'item_name' => $cartItem['name'],
                         'sku' => $cartItem['sku'] ?? '',
-                        'remark' => $remark,
                         'item_vendor_id' => null,
                         'vendor_name' => null,
                         'vendor_sku' => null,

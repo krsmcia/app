@@ -2,7 +2,7 @@
     x-data="{
         items: [],
         totalQuantity: 0,
-
+        remark: '',
         init() {
             this.refresh();
 
@@ -12,6 +12,7 @@
 
             window.addEventListener('cart-request-created', () => {
                 CartStore.clear();
+                this.remark = '';
             });
         },
 
@@ -274,29 +275,6 @@
                                 </span>
                             </div>
 
-                            {{-- Remark --}}
-                            <div class="mt-4">
-                                <label class="mb-1.5 block text-sm font-medium text-gray-700">
-                                    Remark
-                                    <span class="text-red-500">*</span>
-                                </label>
-
-                                <textarea
-                                    rows="2"
-                                    :value="item.remark"
-                                    @input="CartStore.updateRemark(item.id, $event.target.value)"
-                                    placeholder="Please enter a remark for this item."
-                                    class="block w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-                                ></textarea>
-
-                                <p
-                                    x-show="!item.remark || !item.remark.trim()"
-                                    class="mt-1 text-xs text-red-500"
-                                >
-                                    Remark is required.
-                                </p>
-                            </div>
-
                         </div>
                     </div>
                 </template>
@@ -305,6 +283,7 @@
         {{-- Summary --}}
         <div class="lg:col-span-1">
             <div class="sticky top-6 rounded-xl border border-gray-200 bg-white p-6">
+                
                 <h2 class="text-lg font-semibold text-gray-900">
                     Order Summary
                 </h2>
@@ -339,10 +318,30 @@
                         </div>
                     </div>
                 </div>
+                <div class="mt-6">
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700">
+                        Remark
+                        <span class="text-red-500">*</span>
+                    </label>
+
+                    <textarea
+                        x-model="remark"
+                        rows="4"
+                        placeholder="Please enter a remark for this purchase request."
+                        class="block w-full resize-y rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                    ></textarea>
+
+                    <p
+                        x-show="!remark.trim()"
+                        class="mt-1 text-xs text-red-500"
+                    >
+                        Remark is required.
+                    </p>
+                </div>
                 <button
                     type="button"
-                    :disabled="items.some(item => !item.remark || !item.remark.trim())"
-                    wire:click="createRequest(CartStore.items())"
+                    :disabled="!remark.trim()"
+                    @click="$wire.createRequest(CartStore.items(), remark)"
                     wire:loading.attr="disabled"
                     wire:target="createRequest"
                     class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
@@ -361,6 +360,7 @@
                 >
                     Continue Shopping
                 </a>
+                
             </div>
         </div>
     </div>

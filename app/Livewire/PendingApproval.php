@@ -176,25 +176,27 @@ class PendingApproval extends Component
 
         return $hasRejected ? 'rejected' : 'approved';
     }
-    public function approveUserItems(int $userId): void
+    public function approveRequestItems(int $requestId): void
     {
-        $this->processUserItems($userId, 'approved');
+        $this->processRequestItems($requestId, 'approved');
     }
 
-    public function rejectUserItems(int $userId): void
+    public function rejectRequestItems(int $requestId): void
     {
-        $this->processUserItems($userId, 'rejected');
+        $this->processRequestItems($requestId, 'rejected');
     }
-    private function processUserItems(
-        int $userId,
+    private function processRequestItems(
+        int $requestId,
         string $action
     ): void {
         $user = Auth::user();
         $step = $this->approvalStep($user);
+
         abort_unless($step, 403);
+
         DB::transaction(function () use (
             $user,
-            $userId,
+            $requestId,
             $step,
             $action
         ) {
@@ -202,7 +204,7 @@ class PendingApproval extends Component
                 ->where('status', 'pending')
                 ->whereHas('purchaseWorkflow', function ($query) use (
                     $user,
-                    $userId,
+                    $requestId,
                     $step
                 ) {
                     $query
@@ -210,56 +212,58 @@ class PendingApproval extends Component
                         ->where('status', 'pending')
                         ->whereHas('purchaseRequest', function ($query) use (
                             $user,
-                            $userId
+                            $requestId
                         ) {
                             $query
+                                ->whereKey($requestId)
                                 ->where(
                                     'department_id',
                                     $user->current_department_id
                                 )
-                                ->where('user_id', $userId);
+                                ->where('user_id', '!=', $user->id);
                         });
                 })
                 ->lockForUpdate()
                 ->get();
+
             abort_if($items->isEmpty(), 404);
-            /*
-            * workflow 별로 처리해야 한다.
-            * 한 User가 여러 PurchaseRequest를 가지고 있을 수 있기 때문.
-            */
-            $workflowIds = $items
-                ->pluck('purchase_workflow_id')
-                ->unique();
+
             foreach ($items as $item) {
                 $item->update([
                     'status' => $action,
                     'acted_at' => now(),
                 ]);
+
                 $item->purchaseActions()->create([
                     'action' => $action,
                     'acted_by' => $user->id,
                     'acted_at' => now(),
                 ]);
             }
-            foreach ($workflowIds as $workflowId) {
-                $workflow = $items
-                    ->where('purchase_workflow_id', $workflowId)
-                    ->first()
-                    ->purchaseWorkflow;
-                $hasPending = $workflow
-                    ->purchaseWorkflowItems()
-                    ->where('status', 'pending')
-                    ->exists();
-                if ($hasPending) {
-                    continue;
-                }
-                $workflow->update([
-                    'status' => 'completed',
-                    'acted_at' => now(),
-                ]);
-                $this->createNextWorkflow($workflow);
+
+            /*
+            * 하나의 PurchaseRequest에 대한
+            * 현재 workflow를 처리한다.
+            */
+            $workflow = $items->first()->purchaseWorkflow;
+
+            $hasPending = $workflow
+                ->purchaseWorkflowItems()
+                ->where('status', 'pending')
+                ->exists();
+
+            if ($hasPending) {
+                return;
             }
+
+            $workflow->update([
+                'status' => 'completed',
+                'acted_at' => now(),
+            ]);
+
+            $this->createNextWorkflow($workflow);
         });
+
         $this->dispatch('approval-updated');
     }
     public function render()
@@ -297,7 +301,7 @@ class PendingApproval extends Component
                 ->groupBy(function ($item) {
                     return $item->purchaseWorkflow
                         ->purchaseRequest
-                        ->user_id;
+                        ->id;
                 });
         }
 

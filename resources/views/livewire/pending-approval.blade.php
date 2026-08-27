@@ -1,104 +1,170 @@
-<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <div class="space-y-6">
-
+<div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+    <div class="mb-5 flex items-center justify-between">
         <div>
-            <h1 class="text-xl font-semibold text-gray-900">
+            <h1 class="text-lg font-semibold text-gray-900">
                 Pending Approval
             </h1>
-
-            @if ($approvalRole)
-                <p class="mt-1 text-sm text-gray-500">
+            @if ($approvalStep)
+                <p class="mt-0.5 text-xs text-gray-500">
                     Approval level:
                     <span class="font-medium">
-                        {{ ucfirst($approvalRole) }}
+                        {{ ucfirst($approvalStep) }}
                     </span>
                 </p>
             @endif
         </div>
+        <div class="text-sm text-gray-500">
+            {{ $groupedItems->count() }} requesters
+        </div>
+    </div>
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-        @forelse ($items as $item)
+        @forelse ($groupedItems as $userId => $userItems)
 
             @php
-                $request = $item->purchaseWorkflow->purchaseRequest;
-                $purchaseItem = $item->purchaseItem;
+                $firstItem = $userItems->first();
+
+                $request = $firstItem
+                    ->purchaseWorkflow
+                    ->purchaseRequest;
+
+                $requester = $request->user;
             @endphp
-            <div class="rounded-lg border bg-white p-4 shadow-sm">
-                <div class="flex items-start justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-gray-50">
-                            <img
-                                src="{{ $purchaseItem->item?->primaryImage ? Storage::url($purchaseItem->item->primaryImage->path) : asset('images/default-item.png') }}"
-                                alt="{{ $purchaseItem->item_name }}"
-                                class="h-full w-full object-cover"
+
+            <div class="flex h-[430px] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+
+                {{-- Header --}}
+                <div class="flex shrink-0 items-center justify-between border-b bg-gray-50 px-4 py-3">
+
+                    <div class="min-w-0">
+
+                        <div class="truncate text-sm font-semibold text-gray-900">
+                            {{ $requester->name }}
+                        </div>
+
+                        <div class="mt-0.5 text-xs text-gray-500">
+                            {{ $request->department?->name ?? '-' }}
+                            · {{ $userItems->count() }} items
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                {{-- Item List --}}
+                <div class="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto">
+
+                    @foreach ($userItems as $item)
+
+                        @php
+                            $purchaseRequest = $item
+                                ->purchaseWorkflow
+                                ->purchaseRequest;
+
+                            $purchaseItem = $item->purchaseItem;
+                        @endphp
+
+                        <div class="flex items-center gap-3 px-4 py-2.5">
+
+                            {{-- Image --}}
+                            <div class="h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-gray-50">
+
+                                <img
+                                    src="{{ $purchaseItem->item?->primaryImage
+                                        ? Storage::url($purchaseItem->item->primaryImage->path)
+                                        : asset('images/default-item.png') }}"
+                                    alt="{{ $purchaseItem->item_name }}"
+                                    class="h-full w-full object-cover"
+                                >
+
+                            </div>
+
+
+                            {{-- Item --}}
+                            <div class="min-w-0 flex-1">
+
+                                <div class="truncate text-sm font-medium text-gray-900">
+                                    {{ $purchaseItem->item_name }}
+                                </div>
+
+                                <div class="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500">
+
+                                    <span>
+                                        {{ $purchaseRequest->request_no }}
+                                    </span>
+
+                                    <span class="text-gray-300">
+                                        ·
+                                    </span>
+
+                                    <span>
+                                        Qty {{ $purchaseItem->quantity }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Individual Action --}}
+                            <div class="flex shrink-0 gap-1">
+
+                                <button
+                                    type="button"
+                                    wire:click="reject({{ $item->id }})"
+                                    wire:confirm="Reject this item?"
+                                    class="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                                >
+                                    Reject
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="approve({{ $item->id }})"
+                                    wire:confirm="Approve this item?"
+                                    class="rounded bg-green-600 px-2 py-1 text-xs font-medium text-white hover:bg-green-700"
+                                >
+                                    Approve
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    @endforeach
+
+                </div>
+
+
+                {{-- Bulk Actions --}}
+                <div class="flex shrink-0 items-center justify-between border-t bg-gray-50 px-4 py-2.5">
+
+                    <span class="text-xs text-gray-500">
+                        {{ $userItems->count() }} pending items
+                    </span>
+
+                    <div class="flex gap-2">
+                        {{--
+                            <button
+                                type="button"
+                                wire:click="rejectUserItems({{ $userId }})"
+                                wire:confirm="Reject all pending items from {{ $requester->name }}?"
+                                class="rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
                             >
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900">
-                                {{ $purchaseItem->item_name }}
-                            </div>
+                                Reject All
+                            </button>
+                        --}}
+                        <button
+                            type="button"
+                            wire:click="approveUserItems({{ $userId }})"
+                            wire:confirm="Approve all pending items from {{ $requester->name }}?"
+                            class="rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                        >
+                            Approve All
+                        </button>
 
-                            <div class="mt-1 text-sm text-gray-500">
-                                SKU: {{ $purchaseItem->sku }}
-                            </div>
-                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-medium">
-                            {{ $request->request_no }}
-                        </div>
-
-                        <div class="text-xs text-gray-500">
-                            Requested by:
-                            {{ $request->user->name }}
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="mt-4 grid grid-cols-3 gap-4 text-sm">
-
-                    <div>
-                        <div class="text-gray-500">Quantity</div>
-                        <div class="font-medium">
-                            {{ $purchaseItem->quantity }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-gray-500">Unit Price</div>
-                        <div class="font-medium">
-                            {{ $purchaseItem->unit_price ?? '-' }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-gray-500">Amount</div>
-                        <div class="font-medium">
-                            {{ $purchaseItem->amount ?? '-' }}
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="mt-4 flex justify-end gap-2">
-
-                    <button
-                        type="button"
-                        wire:click="reject({{ $item->id }})"
-                        wire:confirm="Reject this item?"
-                        class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-                    >
-                        Reject
-                    </button>
-
-                    <button
-                        type="button"
-                        wire:click="approve({{ $item->id }})"
-                        wire:confirm="Approve this item?"
-                        class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-                    >
-                        Approve
-                    </button>
 
                 </div>
 
@@ -106,7 +172,7 @@
 
         @empty
 
-            <div class="rounded-lg border bg-white p-8 text-center text-sm text-gray-500">
+            <div class="col-span-full rounded-lg border border-dashed bg-white py-12 text-center text-sm text-gray-500">
                 No pending approvals.
             </div>
 

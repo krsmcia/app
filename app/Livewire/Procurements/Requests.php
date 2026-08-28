@@ -21,33 +21,33 @@ class Requests extends Component
 
     public function openVendorModal(int $itemId): void
     {
-        $item = Item::query()->with('itemVendors.vendor')->findOrFail($itemId);
+        $item = Item::query()
+            ->with('itemVendors.vendor')
+            ->findOrFail($itemId);
+
+        // 이전 모달 상태 완전히 초기화
+        $this->vendorSearch = '';
+        $this->vendorSearchResults = [];
 
         $this->vendorItemId = $item->id;
         $this->vendorItem = $item;
 
         $this->selectedItemId = $item->id;
-
         $this->selectedItemName = $item->item_name ?? 'Unnamed Item';
 
-        $this->vendorSearch = '';
-        $this->vendorSearchResults = [];
+        $this->vendorForms = [];
 
-        $this->vendorForms = $item->itemVendors
-            ->mapWithKeys(function ($itemVendor) {
-                return [
-                    $itemVendor->id => [
-                        'vendor_id' => $itemVendor->vendor_id,
-                        'vendor_name' => $itemVendor->vendor->name,
-                        'vendor_sku' => $itemVendor->vendor_sku,
-                        'unit_price' => $itemVendor->unit_price,
-                        'minimum_order_qty' => $itemVendor->minimum_order_qty,
-                        'lead_time' => $itemVendor->lead_time,
-                        'is_preferred' => (bool) $itemVendor->is_preferred,
-                    ],
-                ];
-            })
-            ->toArray();
+        foreach ($item->itemVendors as $itemVendor) {
+            $this->vendorForms[$itemVendor->id] = [
+                'vendor_id' => $itemVendor->vendor_id,
+                'vendor_name' => $itemVendor->vendor?->name ?? '',
+                'vendor_sku' => $itemVendor->vendor_sku,
+                'unit_price' => $itemVendor->unit_price,
+                'minimum_order_qty' => $itemVendor->minimum_order_qty,
+                'lead_time' => $itemVendor->lead_time,
+                'is_preferred' => (bool) $itemVendor->is_preferred,
+            ];
+        }
 
         $this->showVendorModal = true;
     }
@@ -64,7 +64,6 @@ class Requests extends Component
 
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
-
         $this->vendorForms = [];
     }
 

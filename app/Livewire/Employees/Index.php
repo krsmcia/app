@@ -103,18 +103,37 @@ class Index extends Component
 
         DB::transaction(function () {
             foreach ($this->employees as $employee) {
-                $user = User::create([
-                    'name' => $employee['name'],
-                    'email' => $employee['email'],
-                    'password' => Hash::make($employee['password']),
-                    'current_department_id' => $employee['department_ids'][0],
+                $departmentIds = collect($employee['department_ids'])
+                    ->filter()
+                    ->map(fn ($id) => (int) $id)
+                    ->values()
+                    ->all();
+                // 삭제된 유저까지 포함해서 이메일 검색
+                $user = User::withTrashed()
+                    ->where('email', $employee['email'])
+                    ->first();
+                if ($user) {
+                    // Soft deleted 상태라면 복구
+                    if ($user->trashed()) {
+                        $user->restore();
+                    }
+                    // 기존 정보 업데이트
+                    $user->password = Hash::make($employee['password']);
+                    $user->current_department_id = $departmentIds[0] ?? null;
+                    $user->save();
+                } else {
+                    // 완전히 새로운 유저 생성
+                    $user = User::create([
+                        'name' => $employee['name'],
+                        'email' => $employee['email'],
+                        'password' => Hash::make($employee['password']),
+                        'current_department_id' => $departmentIds[0] ?? null,
+                    ]);
+                }
+                $user->syncRoles([
+                    $employee['role'],
                 ]);
-
-                $user->syncRoles([$employee['role']]);
-
-                $user->departments()->sync(
-                    $employee['department_ids']
-                );
+                $user->departments()->sync($departmentIds);
             }
         });
 
@@ -202,7 +221,13 @@ class Index extends Component
                 $this->editPassword
             );
         }
-        $user->current_department_id = $this->editDepartmentIds[0];
+        $departmentIds = collect($this->editDepartmentIds)
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        $user->current_department_id = $departmentIds[0] ?? null;
         $user->save();
         $user->syncRoles([
             $this->editRole,
@@ -222,6 +247,21 @@ class Index extends Component
         session()->flash(
             'success',
             'Employee updated successfully.'
+        );
+    }
+    public function deleteEmployee(int $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        if ($user->hasAnyRole(['super-admin', 'admin'])) {
+            abort(403);
+        }
+
+        $user->delete();
+
+        session()->flash(
+            'success',
+            'Employee deleted successfully.'
         );
     }
     public function render()

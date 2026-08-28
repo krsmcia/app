@@ -193,14 +193,26 @@
                     @else
                         <div></div>
                     @endif
+                    @php
+                        $procurementTotal = $workflow->purchaseWorkflowItems->sum(function ($workflowItem) {
+                            $item = $workflowItem->purchaseItem;
 
+                            $preferredVendor = $item->item
+                                ->itemVendors
+                                ->firstWhere('is_preferred', true);
+
+                            return $preferredVendor?->unit_price !== null
+                                ? $item->quantity * $preferredVendor->unit_price
+                                : 0;
+                        });
+                    @endphp
                     <div class="text-sm">
                         <span class="text-gray-500">
                             Total:
                         </span>
 
                         <span class="font-semibold text-gray-900">
-                            {{ number_format($request->total_amount, 2) }}
+                            {{ number_format($procurementTotal, 2) }}
                         </span>
                     </div>
 
@@ -241,7 +253,7 @@
 
         <x-slot name="content">
 
-            <div class="space-y-3">
+            <div class="space-y-3" wire:key="vendor-modal-{{ $selectedItemId }}">
 
                 @forelse ($vendorForms as $itemVendorId => $vendor)
 

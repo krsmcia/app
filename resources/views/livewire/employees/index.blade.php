@@ -30,85 +30,190 @@
         </div>
     @endif
     <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Name
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Email
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Department
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                        Role
-                    </th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                        Action
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse ($users as $user)
+        {{-- Desktop Table --}}
+        <div class="hidden md:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Name
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Email
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Department
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Role
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Action
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse ($users as $user)
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ $user->name }}
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">
+                                    {{ $user->email }}
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if ($user->department)
+                                    <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                                        {{ $user->department->name }}
+                                    </span>
+                                @else
+                                    <span class="text-sm text-gray-400">
+                                        No Department
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-wrap gap-1">
+                                    @forelse ($user->roles as $role)
+                                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                            {{ $role->name }}
+                                        </span>
+                                    @empty
+                                        <span class="text-sm text-gray-400">
+                                            No Role
+                                        </span>
+                                    @endforelse
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <button
+                                    type="button"
+                                    wire:click="editEmployee({{ $user->id }})"
+                                    class="font-medium text-indigo-600 hover:text-indigo-900"
+                                >
+                                    Edit
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="deleteEmployee({{ $user->id }})"
+                                    wire:confirm="Are you sure you want to delete this employee?"
+                                    class="ml-3 font-medium text-red-600 hover:text-red-900"
+                                >
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                No employees found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+
+        {{-- Mobile Cards --}}
+        <div class="space-y-3 md:hidden">
+            @forelse ($users as $user)
+                <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+
+                    {{-- Header --}}
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="truncate text-sm font-semibold text-gray-900">
                                 {{ $user->name }}
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-500">
+
+                            <div class="mt-1 truncate text-xs text-gray-500">
                                 {{ $user->email }}
                             </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if ($user->department)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    {{ $user->department->name }}
-                                </span>
-                            @else
-                                <span class="text-sm text-gray-400">
-                                    No Department
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @forelse ($user->roles as $role)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    {{ $role->name }}
-                                </span>
-                            @empty
-                                <span class="text-sm text-gray-400">
-                                    No Role
-                                </span>
-                            @endforelse
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        </div>
+                        <div class="">
                             <button
                                 type="button"
                                 wire:click="editEmployee({{ $user->id }})"
-                                class="text-indigo-600 hover:text-indigo-900"
+                                class="shrink-0 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-100"
                             >
                                 Edit
                             </button>
-                        </td>
-                    </tr>
+                            <button
+                                type="button"
+                                wire:click="deleteEmployee({{ $user->id }})"
+                                wire:confirm="Are you sure you want to delete this employee?"
+                                class="ml-2 shrink-0 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                        
+                    </div>
 
-                @empty
 
-                    <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
-                            No employees found.
-                        </td>
-                    </tr>
+                    {{-- Information --}}
+                    <div class="mt-4 grid grid-cols-2 gap-4 border-t border-gray-100 pt-3">
 
-                @endforelse
+                        {{-- Department --}}
+                        <div>
+                            <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                Department
+                            </div>
 
-            </tbody>
+                            @if ($user->department)
+                                <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                                    {{ $user->department->name }}
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400">
+                                    No Department
+                                </span>
+                            @endif
+                        </div>
 
-        </table>
+
+                        {{-- Roles --}}
+                        <div>
+                            <div class="mb-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                Role
+                            </div>
+
+                            <div class="flex flex-wrap gap-1">
+                                @forelse ($user->roles as $role)
+                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                                        {{ $role->name }}
+                                    </span>
+                                @empty
+                                    <span class="text-xs text-gray-400">
+                                        No Role
+                                    </span>
+                                @endforelse
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            @empty
+
+                <div class="rounded-xl border border-dashed border-gray-300 bg-white px-4 py-10 text-center text-sm text-gray-500">
+                    No employees found.
+                </div>
+
+            @endforelse
+        </div>
 
     </div>
 

@@ -53,19 +53,10 @@ Route::middleware([
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
     });
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Purchasing
-    |--------------------------------------------------------------------------
-    */
-
-    /*
-    Route::prefix('purchasing')->name('purchasing.')->group(function () {
-        Route::get('/request/create', [PurchaseRequestController::class,'create',])->name('request.create');
-        Route::post('/request', [PurchaseRequestController::class,'store',])->name('request.store');
+    Route::prefix('warehouses')->name('warehouses.')->group(function () {
+        Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');
+        Route::get('/inventory-management', Livewire\Warehouses\InventoryManagement::class)->name('inventory-management');
     });
-    */
 
     /*
     |--------------------------------------------------------------------------

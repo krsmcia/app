@@ -260,7 +260,34 @@ class Requests extends Component
             ->where('status', 'pending')
             ->latest()
             ->get();
+        $workflows->each(function ($workflow) {
+            foreach ($workflow->purchaseWorkflowItems as $workflowItem) {
+                $item = $workflowItem->purchaseItem;
 
+                $workflowItem->preferred_vendor =
+                    $item?->item
+                        ?->itemVendors
+                        ->firstWhere('is_preferred', true);
+            }
+
+            $workflow->can_approve =
+                $workflow->purchaseWorkflowItems->isNotEmpty()
+                && $workflow->purchaseWorkflowItems->every(
+                    fn ($workflowItem) => $workflowItem->preferred_vendor
+                        && filled($workflowItem->preferred_vendor->unit_price)
+                        && (float) $workflowItem->preferred_vendor->unit_price > 0
+                );
+
+            $workflow->procurement_total =
+                $workflow->purchaseWorkflowItems->sum(function ($workflowItem) {
+                    $item = $workflowItem->purchaseItem;
+                    $vendor = $workflowItem->preferred_vendor;
+
+                    return $vendor?->unit_price !== null
+                        ? $item->quantity * $vendor->unit_price
+                        : 0;
+                });
+        });
         return view('livewire.procurements.requests', [
             'workflows' => $workflows,
         ]);

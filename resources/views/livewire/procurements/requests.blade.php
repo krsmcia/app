@@ -45,7 +45,7 @@
                             $item = $workflowItem->purchaseItem;
                             $preferredVendor = $workflowItem->preferred_vendor;
                         @endphp
-                        <div class="px-4 py-4 sm:px-5">
+                        <div class="px-4 py-4 sm:px-5" wire:key="workflow-{{$workflowItem->id}}">
                             <div class="flex items-center gap-3 sm:gap-4">
                                 {{-- Image --}}
                                 <div class="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100 sm:h-14 sm:w-14">

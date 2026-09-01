@@ -53,6 +53,10 @@ Route::middleware([
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
     });
 
+    Route::prefix('audits')->name('audits.')->group(function () {
+        Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
+    });
+
     Route::prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');
         Route::get('/inventory-management', Livewire\Warehouses\InventoryManagement::class)->name('inventory-management');

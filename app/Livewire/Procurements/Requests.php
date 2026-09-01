@@ -6,6 +6,10 @@ use App\Models\Item;
 use App\Models\Vendor;
 use App\Models\ItemVendor;
 use App\Models\PurchaseWorkflow;
+use App\Models\PurchaseWorkflowItem;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 use Livewire\Component;
 
 class Requests extends Component
@@ -246,6 +250,138 @@ class Requests extends Component
                 ];
             })
             ->toArray();
+    }
+    public function approve(int $workflowId): void
+    {
+        $workflow = PurchaseWorkflow::query()
+            ->with([
+                'purchaseRequest',
+                'purchaseWorkflowItems.purchaseItem',
+                'purchaseWorkflowItems.purchaseItem.item.itemVendors.vendor',
+            ])
+            ->whereKey($workflowId)
+            ->where('step', 'procurement')
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        DB::transaction(function () use ($workflow) {
+
+            $totalAmount = 0;
+
+            foreach ($workflow->purchaseWorkflowItems as $workflowItem) {
+                
+                // 현재 Procurement 단계에서는 pending item만 처리
+                if ($workflowItem->status !== 'pending') {
+                    continue;
+                }
+                $purchaseItem = $workflowItem->purchaseItem;
+                $item = $purchaseItem->item;
+                // Preferred Vendor 가져오기
+                $itemVendor = $item->itemVendors
+                    ->firstWhere('is_preferred', true);
+                // Vendor 또는 가격이 없으면 승인 불가
+                if (
+                    !$itemVendor ||
+                    !$itemVendor->vendor ||
+                    !filled($itemVendor->unit_price) ||
+                    (float) $itemVendor->unit_price <= 0
+                ) {
+                    abort(
+                        422,
+                        "Vendor or price is not set for item: {$purchaseItem->item_name}"
+                    );
+                }
+                $unitPrice = (float) $itemVendor->unit_price;
+                $amount = $purchaseItem->quantity * $unitPrice;
+                /*
+                |--------------------------------------------------------------------------
+                | Purchase Item Snapshot
+                |--------------------------------------------------------------------------
+                |
+                | ItemVendor의 현재 정보를 purchase_items에 확정 저장
+                |
+                */
+                $purchaseItem->update([
+                    'item_vendor_id' => $itemVendor->id,
+                    'item_name' => $item->name,
+                    'sku' => $item->sku,
+                    'vendor_name' => $itemVendor->vendor->name,
+                    'vendor_sku' => $itemVendor->vendor_sku,
+                    'unit_price' => $unitPrice,
+                    'amount' => $amount,
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Procurement Workflow Item
+                |--------------------------------------------------------------------------
+                */
+
+                $workflowItem->update([
+                    'status' => 'approved',
+                    'acted_at' => now(),
+                ]);
+
+                $workflowItem->purchaseActions()->create([
+                    'action' => 'approved',
+                    'acted_by' => Auth::id(),
+                    'acted_at' => now(),
+                ]);
+
+                $totalAmount += $amount;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Purchase Request Total
+            |--------------------------------------------------------------------------
+            */
+
+            $workflow->purchaseRequest->update([
+                'total_amount' => $totalAmount,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Procurement Workflow 완료
+            |--------------------------------------------------------------------------
+            */
+
+            $workflow->update([
+                'status' => 'completed',
+                'acted_at' => now(),
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | 다음 단계 → Audit
+            |--------------------------------------------------------------------------
+            */
+
+            $this->createAuditWorkflow($workflow);
+        });
+
+        $this->dispatch('approval-updated');
+    }
+    private function createAuditWorkflow(PurchaseWorkflow $workflow): void
+    {
+        $purchaseRequest = $workflow->purchaseRequest;
+
+        $nextWorkflow = $purchaseRequest->purchaseWorkflow()->create([
+            'step' => 'audit',
+            'status' => 'pending',
+        ]);
+
+        $approvedItems = $workflow->purchaseWorkflowItems()
+            ->where('status', 'approved')
+            ->get();
+
+        foreach ($approvedItems as $workflowItem) {
+            $nextWorkflow->purchaseWorkflowItems()->create([
+                'purchase_item_id' => $workflowItem->purchase_item_id,
+                'status' => 'pending',
+            ]);
+        }
     }
     public function render()
     {

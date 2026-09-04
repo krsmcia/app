@@ -33,7 +33,7 @@ class Cart extends Component
                 ]);
                 $totalAmount = 0;
                 foreach ($cartItems as $cartItem) {
-                    $purchaseRequest->items()->create([
+                    $purchaseRequest->purchaseItems()->create([
                         'item_id' => $cartItem['id'],
                         'quantity' => max(
                             1,
@@ -57,11 +57,11 @@ class Cart extends Component
                         'No approval workflow is available for this user.'
                     );
                 }
-                $workflow = $purchaseRequest->purchaseWorkflow()->create([
+                $workflow = $purchaseRequest->purchaseWorkflows()->create([
                     'step' => $nextStep,
                     'status' => 'pending',
                 ]);
-                foreach ($purchaseRequest->items as $purchaseItem) {
+                foreach ($purchaseRequest->purchaseItems as $purchaseItem) {
                     $workflow->purchaseWorkflowItems()->create([
                         'purchase_item_id' => $purchaseItem->id,
                         'status' => 'pending',

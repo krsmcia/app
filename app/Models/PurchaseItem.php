@@ -24,7 +24,7 @@ class PurchaseItem extends Model
         return $this->belongsTo(ItemVendor::class);
     }
 
-    public function workflowItems()
+    public function purchaseWorkflowItems()
     {
         return $this->hasMany(
             PurchaseWorkflowItem::class

@@ -5,15 +5,19 @@ namespace App\Livewire\Procurements;
 use App\Models\Item;
 use App\Models\Vendor;
 use App\Models\ItemVendor;
+use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 
 use Livewire\Component;
 
 class Requests extends Component
 {
+    use WithPagination;
+
     public bool $showVendorModal = false;
     public ?int $vendorItemId = null;
     public ?Item $vendorItem = null;
@@ -366,16 +370,13 @@ class Requests extends Component
     private function createAuditWorkflow(PurchaseWorkflow $workflow): void
     {
         $purchaseRequest = $workflow->purchaseRequest;
-
-        $nextWorkflow = $purchaseRequest->purchaseWorkflow()->create([
+        $nextWorkflow = $purchaseRequest->purchaseWorkflows()->create([
             'step' => 'audit',
             'status' => 'pending',
         ]);
-
         $approvedItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'approved')
             ->get();
-
         foreach ($approvedItems as $workflowItem) {
             $nextWorkflow->purchaseWorkflowItems()->create([
                 'purchase_item_id' => $workflowItem->purchase_item_id,
@@ -385,47 +386,54 @@ class Requests extends Component
     }
     public function render()
     {
-        $workflows = PurchaseWorkflow::query()
+        $requests = PurchaseRequest::query()
             ->with([
-                'purchaseRequest.user',
-                'purchaseRequest.department',
-                'purchaseWorkflowItems.purchaseItem.item.primaryImage',
-                'purchaseWorkflowItems.purchaseItem.item.itemVendors.vendor',
+                'user',
+                'department',
+                'purchaseWorkflows.purchaseWorkflowItems.purchaseItem.item.primaryImage',
+                'purchaseWorkflows.purchaseWorkflowItems.purchaseItem.item.itemVendors.vendor',
             ])
-            ->where('step', 'procurement')
-            ->where('status', 'pending')
+            ->whereHas('purchaseWorkflows', function ($query) {
+                $query
+                    ->where('step', 'procurement')
+                    ->where('status', 'pending');
+            })
             ->latest()
-            ->get();
-        $workflows->each(function ($workflow) {
+            ->paginate(12);
+        $requests->getCollection()->each(function ($request) {
+            $workflow = $request->purchaseWorkflows
+                ->firstWhere('step', 'procurement');
+
+            if (!$workflow) {
+                return;
+            }
             foreach ($workflow->purchaseWorkflowItems as $workflowItem) {
                 $item = $workflowItem->purchaseItem;
-
                 $workflowItem->preferred_vendor =
                     $item?->item
                         ?->itemVendors
                         ->firstWhere('is_preferred', true);
             }
-
             $workflow->can_approve =
                 $workflow->purchaseWorkflowItems->isNotEmpty()
                 && $workflow->purchaseWorkflowItems->every(
-                    fn ($workflowItem) => $workflowItem->preferred_vendor
+                    fn ($workflowItem) =>
+                        $workflowItem->preferred_vendor
                         && filled($workflowItem->preferred_vendor->unit_price)
                         && (float) $workflowItem->preferred_vendor->unit_price > 0
                 );
-
             $workflow->procurement_total =
                 $workflow->purchaseWorkflowItems->sum(function ($workflowItem) {
                     $item = $workflowItem->purchaseItem;
                     $vendor = $workflowItem->preferred_vendor;
-
-                    return $vendor?->unit_price !== null
-                        ? $item->quantity * $vendor->unit_price
+                    return $workflowItem->preferred_vendor?->unit_price !== null
+                        ? $item->quantity * $workflowItem->preferred_vendor->unit_price
                         : 0;
                 });
         });
+
         return view('livewire.procurements.requests', [
-            'workflows' => $workflows,
+            'requests' => $requests,
         ]);
     }
 }

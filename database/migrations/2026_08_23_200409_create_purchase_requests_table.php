@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->foreignId('department_id')->nullable()->constrained('departments')->nullOnDelete();
             $table->decimal('total_amount', 15, 2)->default(0);
-            $table->string('status', 30)->default('pending');
             $table->text('remark', 500)->nullable();
             $table->timestamps();
         });

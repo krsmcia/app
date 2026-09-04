@@ -2,20 +2,33 @@
 
 namespace App\Livewire\Audits;
 
-use App\Models\Item;
-use App\Models\Vendor;
-use App\Models\ItemVendor;
+use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
-use App\Models\PurchaseWorkflowItem;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-
 use Livewire\Component;
 
 class Requests extends Component
 {
     public function render()
     {
-        return view('livewire.audits.requests');
+        $user = Auth::user();
+        $requests = PurchaseRequest::query()
+            ->with([
+                'user',
+                'department',
+                'purchaseWorkflows.purchaseWorkflowItems.purchaseItem.item.primaryImage',
+                'purchaseWorkflows.purchaseWorkflowItems.purchaseItem.item.itemVendors.vendor',
+            ])
+            ->whereHas('purchaseWorkflows', function ($query) {
+                $query
+                    ->where('step', 'audit')
+                    ->where('status', 'pending');
+            })
+            ->latest()
+            ->paginate(12);
+
+        return view('livewire.audits.requests', [
+            'requests' => $requests,
+        ]);
     }
 }

@@ -21,12 +21,12 @@ class PurchaseRequest extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function items()
+    public function purchaseItems()
     {
         return $this->hasMany(PurchaseItem::class);
     }
 
-    public function purchaseWorkflow()
+    public function purchaseWorkflows()
     {
         return $this->hasMany(PurchaseWorkflow::class);
     }

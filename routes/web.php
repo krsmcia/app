@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
-
 Route::get('/', function () {
     return view('welcome');
 });
@@ -37,37 +36,35 @@ Route::middleware([
     | Organization
     |--------------------------------------------------------------------------
     */
-    Route::get('/employees', Livewire\Employees\Index::class)
-        ->name('employees');
-    Route::get('/departments', Livewire\Departments\Index::class)
-        ->name('departments');
+    Route::middleware(['department:hr'])->group(function () {
+        Route::get('/employees', Livewire\Employees\Index::class)
+            ->name('employees');
+        Route::get('/departments', Livewire\Departments\Index::class)
+            ->name('departments');
+    });
     /*
     |--------------------------------------------------------------------------
     | Procurements
     |--------------------------------------------------------------------------
     */
-    Route::prefix('procurements')->name('procurements.')->group(function () {
+    Route::middleware(['department:procurement'])->prefix('procurements')->name('procurements.')->group(function () {
         Route::get('/categories', Livewire\Procurements\Categories::class)->name('categories');
         Route::get('/items', Livewire\Procurements\Items::class)->name('items');
         Route::get('/vendors', Livewire\Procurements\Vendors::class)->name('vendors');
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
     });
-
-    Route::prefix('audits')->name('audits.')->group(function () {
+    Route::middleware(['department:audit'])->prefix('audits')->name('audits.')->group(function () {
         Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
     });
-
-    Route::prefix('warehouses')->name('warehouses.')->group(function () {
+    Route::middleware(['department:warehouse'])->prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');
         Route::get('/inventory-management', Livewire\Warehouses\InventoryManagement::class)->name('inventory-management');
     });
-
     /*
     |--------------------------------------------------------------------------
     | Items
     |--------------------------------------------------------------------------
     */
-
     Route::get('/items', Livewire\Items::class)->name('items');
     Route::get('/items/category/{category:code}', Livewire\Items\Category::class)->name('items.category');
     Route::get('/wishlist', Livewire\Wishlist::class)->name('wishlist');

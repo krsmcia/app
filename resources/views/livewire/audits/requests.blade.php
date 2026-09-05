@@ -9,12 +9,8 @@
     </div>
     <div class="space-y-4">
         @if(count($requests)>0)
-            @forelse ($requests as $request)
-                @php
-                    $workflow = $request->purchaseWorkflows
-                        ->firstWhere('step', 'procurement');
-                @endphp
-                <div class="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
+            @foreach ($requests as $request)
+                <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                     {{-- Header --}}
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                         <div>
@@ -28,11 +24,11 @@
                             </div>
                             <div class="mt-1 text-sm text-gray-500">
                                 Requested by
-                                <span class="font-medium text-gray-700">
+                                <button x-on:click="$dispatch('open-user-request-history', { userId: {{ $request->user->id }} })" class="font-medium text-gray-700" wire:loading.attr="disabled">
                                     {{ $request->user->name }}
-                                </span>
+                                </button>
                                 @if ($request->department)
-                                    · {{ $request->department->name }}
+                                    <button x-on:click="$dispatch('open-department-request-history', { userId: {{ $request->user->id }} })" wire:loading.attr="disabled">· {{ $request->department->name }}</button>
                                 @endif
                             </div>
                         </div>
@@ -42,88 +38,82 @@
                     </div>
                     {{-- Items --}}
                     <div class="divide-y divide-gray-100">
-                        @foreach ($workflow->purchaseWorkflowItems as $workflowItem)
-                            @php
-                                $item = $workflowItem->purchaseItem;
-                                $preferredVendor = $workflowItem->preferred_vendor;
-                            @endphp
-                            <div class="px-4 py-4 sm:px-5" wire:key="workflow-{{$workflowItem->id}}">
+                        @foreach ($request->audit_workflow->purchaseWorkflowItems as $workflowItem)
+                            <div
+                                class="px-4 py-4 sm:px-5"
+                                wire:key="workflow-item-{{ $workflowItem->id }}"
+                            >
                                 <div class="flex items-center gap-3 sm:gap-4">
                                     {{-- Image --}}
                                     <div class="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100 sm:h-14 sm:w-14">
                                         <img
-                                            src="{{ $item?->item?->primaryImage
-                                                ? Storage::url($item->item->primaryImage->path)
+                                            src="{{ $workflowItem->purchaseItem->item->primaryImage
+                                                ? Storage::url($workflowItem->purchaseItem->item->primaryImage->path)
                                                 : asset('images/default-item.png') }}"
-                                            alt="{{ $item?->item?->item_name }}"
+                                            alt="{{ $workflowItem->purchaseItem->item_name }}"
                                             class="h-full w-full object-cover"
                                         >
                                     </div>
                                     {{-- Item Info --}}
                                     <div class="min-w-0 flex-1">
-                                        <div class="truncate text-sm font-medium text-gray-900 sm:text-base">
-                                            {{ $item?->item?->item_name }}
-                                        </div>
-                                        {{-- SKU + Quantity --}}
+                                        <button 
+                                            x-on:click="$dispatch('open-item', { itemId: {{$workflowItem->purchaseItem->item_id}} })"
+                                            class="truncate text-sm font-medium text-gray-900 sm:text-base"
+                                            wire:loading.attr="disabled"
+                                        >
+                                            {{ $workflowItem->purchaseItem->item_name }}
+                                        </button>
                                         <div class="mt-0.5 flex items-center gap-3 text-xs text-gray-500">
                                             <span>
-                                                SKU: {{ $item?->item?->sku }}
+                                                SKU:
+                                                {{ $workflowItem->purchaseItem->item->sku }}
                                             </span>
                                             <span class="text-gray-300">|</span>
                                             <span>
                                                 Qty:
                                                 <span class="font-semibold text-gray-700">
-                                                    {{ $item->quantity }}
+                                                    {{ $workflowItem->purchaseItem->quantity }}
                                                 </span>
                                             </span>
                                         </div>
                                     </div>
-                                    {{-- Preferred Vendor --}}
-                                    <div class="hidden w-40 shrink-0 sm:block">
-                                        @if ($preferredVendor)
-                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                                Vendor
-                                            </div>
-                                            <div class="truncate text-sm font-medium text-gray-700">
-                                                {{ $preferredVendor->vendor->name }}
-                                            </div>
-                                            <div class="mt-1 text-sm">
-                                                @if ($preferredVendor->unit_price !== null && (float) $preferredVendor->unit_price > 0)
-                                                    <div class="mt-1 text-sm">
-                                                        <span class="text-gray-400">Unit Price:</span>
-                                                        <span class="font-semibold text-gray-900">
-                                                            {{ number_format($preferredVendor->unit_price, 2) }}
-                                                        </span>
-                                                    </div>
-                                                @else
-                                                    <div class="mt-1 text-sm font-medium text-red-600">
-                                                        No price set
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @else
-                                            <div class="text-sm text-gray-400">
-                                                No vendor
-                                            </div>
-                                        @endif
+                                    {{-- Vendor --}}
+                                    <div class="hidden w-60 min-w-0 shrink-0 sm:block">
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Vendor
+                                        </div>
+                                        <button
+                                            x-on:click="$dispatch('open-vendor', { vendorId: {{$workflowItem->purchaseItem->itemVendor->vendor_id}} })"
+                                            class="block w-full truncate text-left text-sm font-medium text-gray-700"
+                                            wire:loading.attr="disabled"
+                                        >
+                                            {{ $workflowItem->purchaseItem->vendor_name }}
+                                        </button>
+
+                                        <div class="mt-1 text-sm">
+                                            <span class="text-gray-400">
+                                                Unit Price:
+                                            </span>
+                                            <span class="font-semibold text-gray-900">
+                                                {{ number_format($workflowItem->purchaseItem->unit_price, 2) }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 {{-- Mobile Vendor --}}
                                 <div class="mt-2 pl-[60px] sm:hidden">
-                                    @if ($preferredVendor)
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="text-[11px] text-gray-400">
-                                                Vendor:
-                                            </span>
-                                            <span class="truncate text-xs font-medium text-gray-700">
-                                                {{ $preferredVendor->vendor->name }}
-                                            </span>
-                                        </div>
-                                    @else
-                                        <div class="text-xs text-gray-400">
-                                            No vendor selected
-                                        </div>
-                                    @endif
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[11px] text-gray-400">
+                                            Vendor:
+                                        </span>
+                                        <button 
+                                            x-on:click="$dispatch('open-vendor', { vendorId: {{$workflowItem->purchaseItem->itemVendor->vendor_id}} })" 
+                                            class="truncate text-xs font-medium text-gray-700"
+                                            wire:loading.attr="disabled"
+                                        >
+                                            {{ $workflowItem->purchaseItem->vendor_name }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -132,31 +122,33 @@
                     <div class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3">
                         @if ($request->remark)
                             <div class="text-sm text-gray-600">
-                                <span class="font-medium">Remark:</span>
+                                <span class="font-medium">
+                                    Remark:
+                                </span>
                                 {{ $request->remark }}
                             </div>
                         @else
                             <div></div>
                         @endif
-                        <div class="text-sm flex-none flex items-center gap-2">
+                        <div class="flex flex-none items-center gap-2 text-sm">
                             <span class="text-gray-500">
                                 Total:
                             </span>
                             <span class="font-semibold text-gray-900">
-                                {{ number_format($workflow->procurement_total, 2) }}
+                                {{ number_format($request->audit_workflow->procurement_total, 2) }}
                             </span>
                             <x-button
                                 type="button"
-                                wire:click="approve({{ $workflow->id }})"
-                                :disabled="!$workflow->can_approve"
-                                class="{{ !$workflow->can_approve ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                wire:click="approve({{ $request->audit_workflow->id }})"
+                                wire:confirm="Are you sure you want to approve all items?"
+                                wire:loading.attr="disabled"
+                                class=""
                             >
-                                Approved
+                                Approve All
                             </x-button>
                         </div>
                     </div>
                 </div>
-                
             @endforeach
             <div class="mt-6">
                 {{ $requests->links() }}
@@ -172,4 +164,8 @@
             </div>
         @endif
     </div>
+    <livewire:audits.modals.user-request-history />
+    <livewire:audits.modals.department-request-history />
+    <livewire:audits.modals.item />
+    <livewire:audits.modals.vendors />
 </div>

@@ -84,4 +84,8 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Department::class, 'current_department_id');
     }
+    public function purchaseRequests()
+    {
+        return $this->hasMany(PurchaseRequest::class);
+    }
 }

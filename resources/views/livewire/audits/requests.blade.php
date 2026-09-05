@@ -28,7 +28,7 @@
                                     {{ $request->user->name }}
                                 </button>
                                 @if ($request->department)
-                                    <button x-on:click="$dispatch('open-department-request-history', { userId: {{ $request->user->id }} })" wire:loading.attr="disabled">· {{ $request->department->name }}</button>
+                                    <button x-on:click="$dispatch('open-department-request-history', { departmentId: {{ $request->department->id }} })" wire:loading.attr="disabled">· {{ $request->department->name }}</button>
                                 @endif
                             </div>
                         </div>

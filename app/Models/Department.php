@@ -21,4 +21,8 @@ class Department extends Model
     {
         return $this->hasMany(DepartmentUser::class);
     }
+    public function purchaseRequests()
+    {
+        return $this->hasMany(PurchaseRequest::class);
+    }
 }

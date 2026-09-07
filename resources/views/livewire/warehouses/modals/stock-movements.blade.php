@@ -110,12 +110,12 @@
                         <input
                             id="movement-quantity"
                             type="number"
-                            step="0.01"
-                            min="0.01"
+                            step="1"
+                            min="0"
                             wire:model="quantity"
                             inputmode="decimal"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="0.00"
+                            placeholder="0"
                         >
 
                         @error('quantity')
@@ -124,6 +124,7 @@
                             </p>
                         @enderror
                     </div>
+                    
                     {{-- Remark --}}
                     <div>
                         <label for="movement-remark" class="block text-sm font-medium text-gray-700">
@@ -145,7 +146,54 @@
                             </p>
                         @enderror
                     </div>
+                    @if (in_array($type, ['out', 'return']))
+                        <div class="relative">
+                            <label
+                                for="movement-user-search"
+                                class="block text-sm font-medium text-gray-700"
+                            >
+                                User
+                                <span class="text-red-500">*</span>
+                            </label>
 
+                            <input
+                                id="movement-user-search"
+                                type="text"
+                                wire:model.live.debounce.300ms="movementUserSearch"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                placeholder="Search user..."
+                                autocomplete="off"
+                            >
+
+                            @if (count($movementUserResults) > 0)
+                                <div class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
+
+                                    @foreach ($movementUserResults as $user)
+                                        <button
+                                            type="button"
+                                            wire:click="selectMovementUser({{ $user['id'] }})"
+                                            class="block w-full px-4 py-2 text-left hover:bg-gray-50"
+                                        >
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ $user['name'] }}
+                                            </div>
+
+                                            <div class="text-xs text-gray-500">
+                                                {{ $user['email'] }}
+                                            </div>
+                                        </button>
+                                    @endforeach
+
+                                </div>
+                            @endif
+
+                            @error('movementUserId')
+                                <p class="mt-1 text-xs text-red-600">
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    @endif
                 </div>
 
                 <div class="flex justify-end border-t border-gray-200 px-4 py-3">

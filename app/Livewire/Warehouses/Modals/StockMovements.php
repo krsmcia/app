@@ -24,6 +24,10 @@ class StockMovements extends Component
     public string $quantity = '';
     public string $remark = '';
 
+    public string $movementUserSearch = '';
+    public ?int $movementUserId = null;
+    public array $movementUserResults = [];
+
     public function mount(): void
     {
         $this->resetForm();
@@ -32,13 +36,14 @@ class StockMovements extends Component
     public function openStockMovementModal($stockId): void
     {
         $this->stockId = (int) $stockId;
-
         $this->stock = Stock::with([
             'item',
             'warehouse',
         ])->findOrFail($this->stockId);
         $this->resetForm();
-        // 다른 Stock을 열었을 때 항상 1페이지부터
+        $this->movementUserSearch = '';
+        $this->movementUserId = null;
+        $this->movementUserResults = [];
         $this->resetPage();
         $this->showModal = true;
     }
@@ -51,8 +56,51 @@ class StockMovements extends Component
             'type',
             'quantity',
             'remark',
+            'movementUserSearch',
+            'movementUserId',
+            'movementUserResults',
         ]);
         $this->resetPage();
+    }
+    public function updatedMovementUserSearch(): void
+    {
+        $search = trim($this->movementUserSearch);
+
+        $this->movementUserId = null;
+
+        if ($search === '' || strlen($search) < 2) {
+            $this->movementUserResults = [];
+
+            return;
+        }
+
+        $this->movementUserResults = \App\Models\User::query()
+            ->select(['id', 'name', 'email'])
+            ->where(function ($query) use ($search) {
+                $query
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->limit(20)
+            ->get()
+            ->toArray();
+    }
+    public function selectMovementUser(int $userId): void
+    {
+        $user = \App\Models\User::query()
+            ->select(['id', 'name', 'email'])
+            ->find($userId);
+
+        if (!$user) {
+            return;
+        }
+
+        $this->movementUserId = $user->id;
+
+        $this->movementUserSearch = $user->name;
+
+        $this->movementUserResults = [];
     }
     public function saveMovement(): void
     {
@@ -72,7 +120,21 @@ class StockMovements extends Component
                 'string',
                 'max:255',
             ],
+            'movementUserId' => [
+                'nullable',
+                'integer',
+                'exists:users,id',
+            ],
         ]);
+
+        if (in_array($this->type, ['out', 'return']) && !$this->movementUserId) {
+            $this->addError(
+                'movementUserId',
+                'Please select a user.'
+            );
+
+            return;
+        }
         DB::transaction(function () {
             $stock = Stock::query()
                 ->whereKey($this->stockId)
@@ -100,7 +162,10 @@ class StockMovements extends Component
                 'type' => $this->type,
                 'quantity' => $quantity,
                 'balance_after' => $newBalance,
-                'user_id' => auth()->id(),
+                'warehouse_user_id' => auth()->id(),
+                'user_id' => in_array($this->type, ['out', 'return'])
+                    ? $this->movementUserId
+                    : auth()->id(),
                 'remark' => $this->remark ?: null,
             ]);
             $this->stock = $stock->fresh([

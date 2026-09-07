@@ -27,10 +27,15 @@ return new class extends Migration
             $table->decimal('balance_after', 12, 2);
             $table->string('reference_type')->nullable();
             $table->unsignedBigInteger('reference_id')->nullable();
+            $table->foreignId('warehouse_user_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->foreignId('user_id')
                 ->nullable()
                 ->constrained()
                 ->nullOnDelete();
+            $table->boolean('is_confirmed')->default(false);
             $table->string('remark')->nullable();
             $table->timestamps();
             $table->index([

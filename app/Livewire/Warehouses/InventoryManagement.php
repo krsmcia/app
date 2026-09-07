@@ -150,6 +150,7 @@ class InventoryManagement extends Component
                     'balance_after' => $quantity,
                     'reference_type' => 'initial_stock',
                     'reference_id' => $stock->id,
+                    'warehouse_user_id' => auth()->id(),
                     'user_id' => auth()->id(),
                     'remark' => 'Initial stock',
                 ]);

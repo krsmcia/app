@@ -353,7 +353,9 @@
                     <div class="mt-3">
                         <button
                             type="button"
-                            wire:click="openMovementModal({{ $stock->id }})"
+                            x-on:click="$dispatch('stock-movement', {
+                                stockId: {{ $stock->id }}
+                            })"
                             wire:loading.attr="disabled"
                             class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:border-indigo-200 hover:text-indigo-600"
                         >

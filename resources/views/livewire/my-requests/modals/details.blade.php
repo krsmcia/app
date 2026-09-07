@@ -93,20 +93,6 @@
 
                         </div>
 
-
-                        {{-- Total --}}
-                        <div class="border-t border-gray-200 pt-3 sm:border-0 sm:pt-0 sm:text-right">
-
-                            <div class="text-xs text-gray-500">
-                                Total Amount
-                            </div>
-
-                            <div class="text-xl font-bold text-gray-900">
-                                ₱수정필요
-                            </div>
-
-                        </div>
-
                     </div>
 
                 </div>

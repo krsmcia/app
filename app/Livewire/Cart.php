@@ -29,7 +29,6 @@ class Cart extends Component
                     'user_id' => $user->id,
                     'department_id' => $user->current_department_id,
                     'remark' => $remark,
-                    'total_amount' => 0,
                 ]);
                 $totalAmount = 0;
                 foreach ($cartItems as $cartItem) {

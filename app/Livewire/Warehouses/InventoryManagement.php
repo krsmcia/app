@@ -9,43 +9,31 @@ use App\Models\StockMovement;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\On;
 
 class InventoryManagement extends Component
 {
     use WithPagination;
-
     public string $search = '';
     public string $warehouseId = '';
     public string $stockStatus = '';
-
     protected $queryString = [
         'search' => ['except' => ''],
         'warehouseId' => ['except' => ''],
         'stockStatus' => ['except' => ''],
     ];
-
     /*
     |--------------------------------------------------------------------------
     | Movement History Modal
     |--------------------------------------------------------------------------
     */
-
-    public bool $movementModal = false;
-    public ?int $selectedStockId = null;
-    public $movements = [];
-
-    public array $movementHistory = [];
-    public ?Stock $selectedStock = null;
-
     public bool $addItemModal = false;
     public string $addItemId = '';
     public string $addWarehouseId = '';
     public string $addQuantity = '0';
     public string $addReorderPoint = '0';
-
     public string $addItemSearch = '';
     public $addItemResults = [];
-
     protected function addItemRules(): array
     {
         return [
@@ -55,23 +43,18 @@ class InventoryManagement extends Component
             'addReorderPoint' => ['required', 'numeric', 'min:0'],
         ];
     }
-
     public function updatedSearch(): void
     {
         $this->resetPage();
     }
-
     public function updatedWarehouseId(): void
     {
         $this->resetPage();
     }
-
     public function updatedStockStatus(): void
     {
         $this->resetPage();
     }
-
-
     public function clearFilters(): void
     {
         $this->reset([
@@ -81,39 +64,6 @@ class InventoryManagement extends Component
         ]);
 
         $this->resetPage();
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Movement History
-    |--------------------------------------------------------------------------
-    */
-    public function openMovementModal(int $stockId): void
-    {
-        $this->selectedStock = Stock::query()
-            ->with([
-                'item',
-                'warehouse',
-            ])
-            ->findOrFail($stockId);
-
-        $this->movements = StockMovement::query()
-            ->where('item_id', $this->selectedStock->item_id)
-            ->where('warehouse_id', $this->selectedStock->warehouse_id)
-            ->with('user')
-            ->latest()
-            ->get();
-
-        $this->movementModal = true;
-    }
-    public function closeMovementModal(): void
-    {
-        $this->reset([
-            'movementModal',
-            'selectedStockId',
-            'movements',
-        ]);
     }
 
     public function openAddItemModal(): void
@@ -171,24 +121,19 @@ class InventoryManagement extends Component
     public function addItem(): void
     {
         $this->validate($this->addItemRules());
-
         $exists = Stock::query()
             ->where('item_id', $this->addItemId)
             ->where('warehouse_id', $this->addWarehouseId)
             ->exists();
-
         if ($exists) {
             $this->addError(
                 'addItemId',
                 'This item already exists in the selected warehouse.'
             );
-
             return;
         }
-
         DB::transaction(function () {
             $quantity = (float) $this->addQuantity;
-
             $stock = Stock::create([
                 'item_id' => $this->addItemId,
                 'warehouse_id' => $this->addWarehouseId,
@@ -196,7 +141,6 @@ class InventoryManagement extends Component
                 'reserved_quantity' => 0,
                 'reorder_point' => $this->addReorderPoint,
             ]);
-
             if ($quantity > 0) {
                 StockMovement::create([
                     'item_id' => $stock->item_id,
@@ -211,7 +155,6 @@ class InventoryManagement extends Component
                 ]);
             }
         });
-
         $this->reset([
             'addItemModal',
             'addItemId',
@@ -221,12 +164,14 @@ class InventoryManagement extends Component
             'addItemSearch',
             'addItemResults',
         ]);
-
         $this->resetPage();
-
         session()->flash('success', 'Item added to inventory.');
     }
-
+    #[On('stock-updated')]
+    public function refreshStocks(): void
+    {
+        
+    }
     public function render()
     {
         $warehouses = Warehouse::query()

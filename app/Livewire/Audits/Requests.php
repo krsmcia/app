@@ -13,11 +13,9 @@ use Livewire\WithPagination;
 class Requests extends Component
 {
     use WithPagination;
-
     public bool $denyModal = false;
     public ?int $denyWorkflowItemId = null;
     public string $denyComment = '';
-
     /**
      * ---------------------------------------------------------
      * Approve single item
@@ -35,25 +33,20 @@ class Requests extends Component
                     ->where('status', 'pending');
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflowItem) {
-
             $workflowItem->update([
                 'status' => 'approved',
                 'acted_at' => now(),
             ]);
-
             $workflowItem->purchaseActions()->create([
                 'action' => 'approved',
                 'acted_by' => Auth::id(),
                 'acted_at' => now(),
             ]);
-
             $this->completeAuditWorkflowIfFinished(
                 $workflowItem->purchaseWorkflow
             );
         });
-
         $this->dispatch('approval-updated');
     }
 
@@ -78,11 +71,9 @@ class Requests extends Component
         ], [
             'denyComment.required' => 'Please provide a reason for denial.',
         ]);
-
         if (!$this->denyWorkflowItemId) {
             return;
         }
-
         $workflowItem = PurchaseWorkflowItem::query()
             ->with('purchaseWorkflow')
             ->whereKey($this->denyWorkflowItemId)
@@ -93,31 +84,25 @@ class Requests extends Component
                     ->where('status', 'pending');
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflowItem) {
-
             $workflowItem->update([
                 'status' => 'denied',
                 'acted_at' => now(),
             ]);
-
             $workflowItem->purchaseActions()->create([
                 'action' => 'denied',
                 'acted_by' => Auth::id(),
                 'comment' => trim($this->denyComment),
                 'acted_at' => now(),
             ]);
-
             $this->completeAuditWorkflowIfFinished(
                 $workflowItem->purchaseWorkflow
             );
         });
-
         // Modal state 초기화
         $this->denyModal = false;
         $this->denyWorkflowItemId = null;
         $this->denyComment = '';
-
         $this->dispatch('approval-updated');
     }
 
@@ -138,16 +123,12 @@ class Requests extends Component
             ->where('step', 'audit')
             ->where('status', 'pending')
             ->firstOrFail();
-
         DB::transaction(function () use ($workflow) {
-
             $pendingItems = $workflow->purchaseWorkflowItems
                 ->filter(fn ($item) => $item->status === 'pending');
-
             if ($pendingItems->isEmpty()) {
                 return;
             }
-
             foreach ($pendingItems as $workflowItem) {
 
                 $workflowItem->update([

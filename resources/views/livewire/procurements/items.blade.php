@@ -61,7 +61,6 @@
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Image
                         </th>
-
                         <th
                             wire:click="sortBy('sku')"
                             class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap"
@@ -71,7 +70,6 @@
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
-
                         <th
                             wire:click="sortBy('barcode')"
                             class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap"
@@ -81,7 +79,6 @@
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
-
                         <th
                             wire:click="sortBy('name')"
                             class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
@@ -91,18 +88,15 @@
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
-
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Categories
                         </th>
-
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                             Unit
                             <br>Brand
                             <br>Color
                             <br>Size
                         </th>
-
                         <th
                             wire:click="sortBy('is_active')"
                             class="cursor-pointer px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase"
@@ -112,13 +106,11 @@
                                 {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                             @endif
                         </th>
-
                         <th class="px-4 py-2 text-xs font-medium text-gray-500 uppercase">
                             Action
                         </th>
                     </tr>
                 </thead>
-
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse ($items as $item)
                         <tr>
@@ -129,25 +121,21 @@
                                     class="h-12 w-12 rounded-lg object-cover border border-gray-200"
                                 >
                             </td>
-
                             <td class="px-4 py-2 whitespace-nowrap">
                                 <span class="text-sm font-mono text-gray-700">
                                     {{ $item->sku }}
                                 </span>
                             </td>
-
                             <td class="px-4 py-2 whitespace-nowrap">
                                 <span class="text-sm text-gray-600">
                                     {{ $item->barcode ?: '-' }}
                                 </span>
                             </td>
-
                             <td class="px-4 py-2">
                                 <div class="text-sm font-medium text-gray-900">
                                     {{ $item->name }}
                                 </div>
                             </td>
-
                             <td class="px-4 py-2">
                                 @if ($item->categories->isNotEmpty())
                                     <div class="flex flex-wrap gap-1 max-w-xs">
@@ -167,14 +155,12 @@
                                     </span>
                                 @endif
                             </td>
-
                             <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
                                 {{ $item->unit }}<br>
                                 {{ $item->brand ?: '-' }}<br>
                                 {{ $item->color ?: '-' }}<br>
                                 {{ $item->size ?: '-' }}
                             </td>
-
                             <td class="px-4 py-2 whitespace-nowrap">
                                 @if ($item->is_active)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -186,7 +172,6 @@
                                     </span>
                                 @endif
                             </td>
-
                             <td class="px-4 py-2 whitespace-nowrap text-right text-sm">
                                 <button
                                     type="button"
@@ -195,7 +180,6 @@
                                 >
                                     Categories
                                 </button>
-
                                 <button
                                     type="button"
                                     wire:click="manageVendors({{ $item->id }})"
@@ -203,7 +187,6 @@
                                 >
                                     Vendors
                                 </button>
-
                                 <button
                                     type="button"
                                     wire:click="edit({{ $item->id }})"
@@ -211,7 +194,6 @@
                                 >
                                     Edit
                                 </button>
-
                                 <button
                                     type="button"
                                     wire:click="deleteItem({{ $item->id }})"
@@ -336,7 +318,6 @@
                     >
                         Categories
                     </button>
-
                     <button
                         type="button"
                         wire:click="manageVendors({{ $item->id }})"
@@ -344,7 +325,6 @@
                     >
                         Vendors
                     </button>
-
                     <button
                         type="button"
                         wire:click="edit({{ $item->id }})"
@@ -352,7 +332,6 @@
                     >
                         Edit
                     </button>
-
                     <button
                         type="button"
                         wire:click="deleteItem({{ $item->id }})"
@@ -361,7 +340,6 @@
                     >
                         Delete
                     </button>
-
                 </div>
             </div>
         @empty

@@ -8,44 +8,30 @@
         </p>
     </div>
     <div class="space-y-4">
-
         @if (count($requests) > 0)
-
             @foreach ($requests as $request)
-
                 <div
                     class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
                     wire:key="request-{{ $request->id }}"
                 >
-
                     {{-- =====================================================
                         Header
                     ====================================================== --}}
                     <div class="border-b border-gray-100 px-4 py-4 sm:px-5">
-
                         <div class="flex items-start justify-between gap-3">
-
                             <div class="min-w-0 flex-1">
-
                                 <div class="flex flex-wrap items-center gap-2">
-
                                     <h2 class="text-sm font-semibold text-gray-900 sm:text-base">
                                         {{ $request->request_no }}
                                     </h2>
-
                                     <span class="rounded-full bg-yellow-50 px-2.5 py-1 text-[10px] font-medium text-yellow-700 sm:text-xs">
                                         Pending
                                     </span>
-
                                 </div>
-
-
                                 <div class="mt-1.5 text-xs text-gray-500 sm:text-sm">
-
                                     <span>
                                         Requested by
                                     </span>
-
                                     <button
                                         x-on:click="$dispatch('open-user-request-history', {
                                             userId: {{ $request->user->id }}
@@ -55,14 +41,10 @@
                                     >
                                         {{ $request->user->name }}
                                     </button>
-
-
                                     @if ($request->department)
-
                                         <span class="mx-1 text-gray-300">
                                             ·
                                         </span>
-
                                         <button
                                             x-on:click="$dispatch('open-department-request-history', {
                                                 departmentId: {{ $request->department->id }}
@@ -72,57 +54,38 @@
                                         >
                                             {{ $request->department->name }}
                                         </button>
-
                                     @endif
-
                                 </div>
-
                             </div>
-
-
                             <div class="shrink-0 text-right text-[11px] text-gray-400 sm:text-sm sm:text-gray-500">
-
                                 {{ $request->created_at->format('Y-m-d') }}
-
                                 <div class="sm:hidden">
                                     {{ $request->created_at->format('H:i') }}
                                 </div>
-
                                 <span class="hidden sm:inline">
                                     {{ $request->created_at->format('H:i') }}
                                 </span>
-
                             </div>
-
                         </div>
-
                     </div>
-
-
                     {{-- =====================================================
                         Items
                     ====================================================== --}}
                     <div class="divide-y divide-gray-100">
-
                         @foreach ($request->audit_workflow->purchaseWorkflowItems as $workflowItem)
-
                             @php
                                 $purchaseItem = $workflowItem->purchaseItem;
                                 $item = $purchaseItem->item;
                                 $itemVendor = $purchaseItem->itemVendor;
                             @endphp
-
-
                             <div
                                 class="px-4 py-4 sm:px-5"
                                 wire:key="workflow-item-{{ $workflowItem->id }}"
                             >
-
                                 {{-- =================================================
                                     DESKTOP
                                 ================================================== --}}
                                 <div class="hidden items-center gap-4 md:flex">
-
                                     {{-- Image --}}
                                     <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
 
@@ -133,13 +96,9 @@
                                             alt="{{ $purchaseItem->item_name }}"
                                             class="h-full w-full object-cover"
                                         >
-
                                     </div>
-
-
                                     {{-- Item Info --}}
                                     <div class="min-w-0 flex-1">
-
                                         <button
                                             x-on:click="$dispatch('open-item', {
                                                 itemId: {{ $purchaseItem->item_id }}
@@ -149,40 +108,28 @@
                                         >
                                             {{ $purchaseItem->item_name }}
                                         </button>
-
-
                                         <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
-
                                             <span>
                                                 SKU:
                                                 {{ $purchaseItem->sku }}
                                             </span>
-
                                             <span class="text-gray-300">
                                                 |
                                             </span>
-
                                             <span>
                                                 Qty:
                                                 <span class="font-semibold text-gray-700">
                                                     {{ $purchaseItem->quantity }}
                                                 </span>
                                             </span>
-
                                         </div>
-
                                     </div>
-
-
                                     {{-- Vendor --}}
                                     <div class="w-52 min-w-0 shrink-0">
-
                                         <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                             Vendor
                                         </div>
-
                                         @if ($itemVendor)
-
                                             <button
                                                 x-on:click="$dispatch('open-vendor', {
                                                     vendorId: {{ $itemVendor->vendor_id }}
@@ -192,32 +139,20 @@
                                             >
                                                 {{ $purchaseItem->vendor_name }}
                                             </button>
-
                                         @else
-
                                             <div class="mt-0.5 text-sm text-gray-500">
                                                 {{ $purchaseItem->vendor_name ?: '-' }}
                                             </div>
-
                                         @endif
-
-
                                         <div class="mt-1 text-xs text-gray-500">
-
                                             Unit Price:
-
                                             <span class="font-semibold text-gray-900">
                                                 {{ number_format($purchaseItem->unit_price, 2) }}
                                             </span>
-
                                         </div>
-
                                     </div>
-
-
                                     {{-- Actions --}}
                                     <div class="flex shrink-0 items-center gap-2">
-
                                         <x-deny-button
                                             type="button"
                                             wire:click="openDenyModal({{ $workflowItem->id }})"
@@ -226,8 +161,6 @@
                                         >
                                             Deny
                                         </x-deny-button>
-
-
                                         <x-approve-button
                                             type="button"
                                             wire:click="approveItem({{ $workflowItem->id }})"
@@ -237,23 +170,16 @@
                                         >
                                             Approve
                                         </x-approve-button>
-
                                     </div>
-
                                 </div>
-
-
                                 {{-- =================================================
                                     MOBILE
                                 ================================================== --}}
                                 <div class="md:hidden">
-
                                     {{-- Item Header --}}
                                     <div class="flex items-start gap-3">
-
                                         {{-- Image --}}
                                         <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
-
                                             <img
                                                 src="{{ $item?->primaryImage
                                                     ? Storage::url($item->primaryImage->path)
@@ -261,13 +187,9 @@
                                                 alt="{{ $purchaseItem->item_name }}"
                                                 class="h-full w-full object-cover"
                                             >
-
                                         </div>
-
-
                                         {{-- Item Name / SKU --}}
                                         <div class="min-w-0 flex-1">
-
                                             <button
                                                 x-on:click="$dispatch('open-item', {
                                                     itemId: {{ $purchaseItem->item_id }}
@@ -277,64 +199,41 @@
                                             >
                                                 {{ $purchaseItem->item_name }}
                                             </button>
-
-
                                             <div class="mt-1 truncate text-xs text-gray-500">
-
                                                 SKU:
                                                 {{ $purchaseItem->sku }}
-
                                             </div>
-
                                         </div>
-
                                     </div>
-
-
                                     {{-- Item Details --}}
                                     <div class="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-gray-50 p-3">
-
                                         {{-- Quantity --}}
                                         <div class="min-w-0">
-
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Qty
                                             </div>
-
                                             <div class="mt-1 text-sm font-semibold text-gray-900">
                                                 {{ $purchaseItem->quantity }}
                                             </div>
-
                                         </div>
-
-
                                         {{-- Unit Price --}}
                                         <div class="min-w-0">
-
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Unit Price
                                             </div>
-
                                             <div class="mt-1 truncate text-sm font-semibold text-gray-900">
                                                 {{ number_format($purchaseItem->unit_price, 2) }}
                                             </div>
-
                                         </div>
-
-
                                         {{-- Amount --}}
                                         <div class="min-w-0">
-
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Amount
                                             </div>
-
                                             <div class="mt-1 truncate text-sm font-semibold text-gray-900">
                                                 {{ number_format($purchaseItem->amount, 2) }}
                                             </div>
-
                                         </div>
-
                                     </div>
                                     {{-- Vendor --}}
                                     <div class="mt-3">

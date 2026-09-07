@@ -16,9 +16,7 @@
     }"
 >
     <x-categories />
-
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
         {{-- Header --}}
         <div class="mb-6">
             <div class="flex items-center gap-2 text-sm text-gray-500">
@@ -26,7 +24,6 @@
                     Items
                 </span>
             </div>
-
             <div class="mt-3 flex items-end justify-between gap-4">
                 <div class="min-w-0">
                     @if (filled($search))
@@ -65,7 +62,6 @@
                 "
             >
                 @foreach ($items as $item)
-
                     <div
                         wire:key="item-{{ $item['id'] }}"
                         x-data="itemCard({
@@ -93,10 +89,8 @@
                             sm:hover:shadow-lg
                         "
                     >
-
                         {{-- Image --}}
                         <div class="relative aspect-square overflow-hidden bg-gray-100">
-
                             <img
                                 src="{{ $item['image'] }}"
                                 alt="{{ $item['name'] }}"
@@ -112,7 +106,6 @@
                                     sm:group-hover:scale-[1.03]
                                 "
                             >
-
                             {{-- Image Overlay --}}
                             <div
                                 class="
@@ -187,7 +180,6 @@
                         </div>
                         {{-- Info --}}
                         <div class="p-3.5">
-
                             <h2
                                 class="
                                     min-h-[2.5rem]
@@ -200,13 +192,11 @@
                             >
                                 {{ $item['name'] }}
                             </h2>
-
                             @if ($item['sku'])
                                 <p class="mt-1 truncate text-xs text-gray-400">
                                     {{ $item['sku'] }}
                                 </p>
                             @endif
-
                             {{-- Quantity --}}
                             <div class="mt-3 flex items-center justify-between">
                                 <span class="text-xs font-medium text-gray-400">
@@ -316,7 +306,6 @@
                                     active:scale-[0.98]
                                 "
                             >
-
                                 <svg
                                     class="h-4 w-4"
                                     fill="none"
@@ -330,18 +319,14 @@
                                         d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13L17 13M9 21a1 1 0 1 1-2 0m10 0a1 1 0 1 1-2 0"
                                     />
                                 </svg>
-
                                 <span>
                                     Add to Cart
                                 </span>
-
                             </button>
-
                         </div>
                     </div>
                 @endforeach
             </div>
-
             {{-- Infinite Scroll --}}
             @if ($hasMore)
                 <div
@@ -367,21 +352,17 @@
                                 stroke="currentColor"
                                 stroke-width="4"
                             />
-
                             <path
                                 class="opacity-75"
                                 fill="currentColor"
                                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                             />
                         </svg>
-
                         Loading...
                     </div>
                 </div>
             @endif
-
         @else
-
             {{-- Empty --}}
             <div
                 class="

@@ -48,7 +48,7 @@
                     </h1>
 
                     <p class="mt-1 text-sm text-gray-500">
-                        {{ $items->total() }} items
+                        {{ $total }} items
                     </p>
                 </div>
             </div>
@@ -56,7 +56,7 @@
 
 
         {{-- Items --}}
-        @if ($items->isNotEmpty())
+        @if (count($items))
 
             <div
                 class="
@@ -73,7 +73,7 @@
 
                     <a
                         href="#"
-                        wire:key="item-{{ $item->id }}"
+                        wire:key="item-{{ $item['id'] }}"
                         class="
                             group
                             overflow-hidden
@@ -90,44 +90,21 @@
 
                         {{-- Image --}}
                         <div class="aspect-square overflow-hidden bg-gray-100">
-
-                            @php
-                                $image = $item->itemImages->first();
-                            @endphp
-
-                            @if ($image)
-                                <img
-                                    src="{{ Storage::url($image->path) }}"
-                                    alt="{{ $item->name }}"
-                                    class="
-                                        h-full
-                                        w-full
-                                        object-cover
-                                        transition
-                                        duration-300
-                                        group-hover:scale-105
-                                    "
-                                >
-                            @else
-                                <div class="flex h-full w-full items-center justify-center">
-                                    <svg
-                                        class="h-12 w-12 text-gray-300"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="1.5"
-                                            d="m3 16 5-5a2 2 0 0 1 3 0l2 2 2-2a2 2 0 0 1 3 0l3 3M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"
-                                        />
-                                    </svg>
-                                </div>
-                            @endif
-
+                            <img
+                                src="{{ $item['image'] }}"
+                                alt="{{ $item['name'] }}"
+                                loading="lazy"
+                                decoding="async"
+                                class="
+                                    h-full
+                                    w-full
+                                    object-cover
+                                    transition
+                                    duration-300
+                                    group-hover:scale-105
+                                "
+                            >
                         </div>
-
 
                         {{-- Info --}}
                         <div class="p-3">
@@ -141,12 +118,12 @@
                                     text-gray-900
                                 "
                             >
-                                {{ $item->name }}
+                                {{ $item['name'] }}
                             </h2>
 
-                            @if ($item->sku)
+                            @if ($item['sku'])
                                 <p class="mt-1 truncate text-xs text-gray-500">
-                                    {{ $item->sku }}
+                                    {{ $item['sku'] }}
                                 </p>
                             @endif
 
@@ -158,11 +135,42 @@
 
             </div>
 
+            {{-- Infinite Scroll --}}
+            @if ($hasMore)
+                <div
+                    x-data
+                    x-intersect:enter.margin.500px="$wire.loadMore()"
+                    class="flex min-h-24 items-center justify-center"
+                >
+                    <div
+                        wire:loading
+                        wire:target="loadMore"
+                        class="flex items-center gap-2 text-sm text-gray-500"
+                    >
+                        <svg
+                            class="h-5 w-5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            />
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                        </svg>
 
-            {{-- Pagination --}}
-            <div class="mt-8">
-                {{ $items->links() }}
-            </div>
+                        Loading...
+                    </div>
+                </div>
+            @endif
 
         @else
 
@@ -189,7 +197,7 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.5"
-                        d="m3 16 5-5a2 2 0 0 1 3 0l2 2 2-2a2 2 0 0 1 3 0l3 3M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Z"
+                        d="m3 16 5-5a2 2 0 0 1 3 0l2 2 2-2a2 2 0 0 1 3 0l3 3M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2v10a2 2 0 0 0-2 2Z"
                     />
                 </svg>
 
@@ -203,7 +211,19 @@
 
                 <a
                     href="{{ route('items') }}"
-                    class="mt-5 inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                    class="
+                        mt-5
+                        inline-flex
+                        items-center
+                        rounded-lg
+                        bg-gray-900
+                        px-4
+                        py-2
+                        text-sm
+                        font-medium
+                        text-white
+                        hover:bg-gray-800
+                    "
                 >
                     View all items
                 </a>

@@ -8,4 +8,8 @@ class Warehouse extends Model
 {
     use SoftDeletes;
     protected $guarded = [];
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class);
+    }
 }

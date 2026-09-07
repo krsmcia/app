@@ -61,4 +61,12 @@ class Item extends Model
     {
         return $this->belongsToMany(Category::class,'item_categories')->withTimestamps();
     }
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class);
+    }
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 }

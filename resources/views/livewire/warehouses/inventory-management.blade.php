@@ -209,7 +209,7 @@
                             {{-- Available --}}
                             <td class="px-5 py-4 text-right">
                                 <span class="text-sm font-semibold text-gray-900">
-                                    {{ number_format($stock->available_quantity, 2) }}
+                                    {{ number_format($stock->quantity - $stock->reserved_quantity, 2) }}
                                 </span>
                             </td>
                             {{-- Reorder --}}

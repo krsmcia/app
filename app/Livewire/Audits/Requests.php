@@ -88,11 +88,53 @@ class Requests extends Component
             $workflowItems = collect();
 
             if ($workflow) {
+
                 $workflowItems = $workflow->purchaseWorkflowItems
                     ->filter(function ($workflowItem) {
                         return $workflowItem->status === 'pending';
                     });
+
+                $request->items = $request->purchaseItems->map(
+                    function ($purchaseItem) use ($workflowItems) {
+
+                        $item = $purchaseItem->item;
+
+                        $workflowItem = $purchaseItem->purchaseWorkflowItems
+                            ->first(function ($item) {
+                                return $item->status === 'pending';
+                            });
+
+                        return [
+                            'workflow_item' => $workflowItem,
+                            'purchase_item' => $purchaseItem,
+                            'item' => $item,
+
+                            'image' => $item?->primaryImage
+                                ? \Storage::url($item->primaryImage->path)
+                                : asset('images/default-item.png'),
+
+                            'item_name' => $purchaseItem->item_name,
+                            'sku' => $purchaseItem->sku,
+
+                            'quantity' => $purchaseItem->quantity ?? 0,
+                            'vendor_name' => $purchaseItem->vendor_name,
+                            'unit_price' => $purchaseItem->unit_price ?? 0,
+
+                            'preferred_vendor' => $workflowItem?->preferred_vendor,
+                        ];
+                    }
+                );
+
+                // ⭐ 현재 audit pending item들의 실제 구매금액 합계
+                $request->audit_total = $request->items->sum(function ($item) {
+                    return ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0);
+                });
+            } else {
+                $request->items = collect();
+                $request->audit_total = 0;
             }
+
+            return $request;
 
             $request->items = $request->purchaseItems->map(
                 function ($purchaseItem) use ($workflowItems) {

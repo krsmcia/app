@@ -135,7 +135,7 @@
                                 Total:
                             </span>
                             <span class="font-semibold text-gray-900">
-                                {{ number_format($request->audit_workflow->procurement_total, 2) }}
+                                {{ number_format($request->audit_total, 2) }}
                             </span>
                             <x-button
                                 type="button"

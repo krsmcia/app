@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseRequest extends Model
 {
     protected $guarded = [];
-    protected $casts = [
-        'total_amount' => 'decimal:2',
-    ];
     public function user()
     {
         return $this->belongsTo(User::class);

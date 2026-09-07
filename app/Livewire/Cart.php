@@ -48,9 +48,6 @@ class Cart extends Component
                         'amount' => null,
                     ]);
                 }
-                $purchaseRequest->update([
-                    'total_amount' => $totalAmount,
-                ]);
                 $nextStep = $this->nextApprovalStep($user);
                 if (!$nextStep) {
                     throw new \RuntimeException(

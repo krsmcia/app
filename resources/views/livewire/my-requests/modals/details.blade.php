@@ -102,7 +102,7 @@
                             </div>
 
                             <div class="text-xl font-bold text-gray-900">
-                                ₱{{ number_format($request->total_amount ?? 0, 2) }}
+                                ₱수정필요
                             </div>
 
                         </div>

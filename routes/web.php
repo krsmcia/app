@@ -52,6 +52,7 @@ Route::middleware([
         Route::get('/items', Livewire\Procurements\Items::class)->name('items');
         Route::get('/vendors', Livewire\Procurements\Vendors::class)->name('vendors');
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
+        Route::get('/approved', Livewire\Procurements\Approved::class)->name('approved');
     });
     Route::middleware(['department:audit'])->prefix('audits')->name('audits.')->group(function () {
         Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
@@ -59,6 +60,9 @@ Route::middleware([
     Route::middleware(['department:warehouse'])->prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');
         Route::get('/inventory-management', Livewire\Warehouses\InventoryManagement::class)->name('inventory-management');
+    });
+    Route::middleware(['department:accounting'])->prefix('accountings')->name('accountings.')->group(function () {
+        Route::get('/requests', Livewire\Accountings\Requests::class)->name('requests');
     });
     /*
     |--------------------------------------------------------------------------

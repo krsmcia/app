@@ -21,6 +21,7 @@ return new class extends Migration
                 'transfer_in',
                 'transfer_out',
                 'adjustment',
+                'rent',
                 'return',
             ]);
             $table->decimal('quantity', 12, 2);

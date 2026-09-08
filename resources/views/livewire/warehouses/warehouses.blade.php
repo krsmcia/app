@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto px-4 pt-6 pb-28">
+<div class="max-w-7xl mx-auto px-4 pt-6 pb-28">
     <div class="space-y-6">
         {{-- Header --}}
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -6,7 +6,6 @@
                 <h1 class="text-2xl font-semibold text-gray-900">
                     Warehouses
                 </h1>
-
                 <p class="mt-1 text-sm text-gray-500">
                     Manage your warehouse locations and availability.
                 </p>
@@ -26,16 +25,12 @@
                         d="M12 4v16m8-8H4"
                     />
                 </svg>
-
                 Add Warehouse
             </button>
         </div>
-
-
         {{-- Filters --}}
         <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="flex flex-col gap-3 sm:flex-row">
-
                 {{-- Search --}}
                 <div class="relative flex-1">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -53,7 +48,6 @@
                             />
                         </svg>
                     </div>
-
                     <input
                         wire:model.live.debounce.300ms="search"
                         type="text"
@@ -62,7 +56,6 @@
                             focus:border-emerald-500 focus:ring-emerald-500"
                     >
                 </div>
-
                 {{-- Status --}}
                 <select
                     wire:model.live="statusFilter"
@@ -73,16 +66,11 @@
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                 </select>
-
             </div>
         </div>
-
-
         {{-- Desktop Table --}}
         <div class="hidden overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:block">
-
             <table class="min-w-full divide-y divide-gray-200">
-
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -106,33 +94,25 @@
                         </th>
                     </tr>
                 </thead>
-
                 <tbody class="divide-y divide-gray-100">
-
                     @forelse ($warehouses as $warehouse)
-
                         <tr wire:key="warehouse-{{ $warehouse->id }}" class="hover:bg-gray-50">
-
                             <td class="whitespace-nowrap px-6 py-4">
                                 <span class="font-mono text-sm font-medium text-gray-900">
                                     {{ $warehouse->code }}
                                 </span>
                             </td>
-
                             <td class="px-6 py-4">
                                 <div class="font-medium text-gray-900">
                                     {{ $warehouse->name }}
                                 </div>
                             </td>
-
                             <td class="max-w-md px-6 py-4">
                                 <p class="truncate text-sm text-gray-500">
                                     {{ $warehouse->description ?: '—' }}
                                 </p>
                             </td>
-
                             <td class="whitespace-nowrap px-6 py-4">
-
                                 <button
                                     wire:click="toggleStatus({{ $warehouse->id }})"
                                     type="button"
@@ -149,13 +129,68 @@
                                         </span>
                                     @endif
                                 </button>
-
                             </td>
-
                             <td class="whitespace-nowrap px-6 py-4 text-right">
-
                                 <div class="flex justify-end gap-2">
-
+                                    <a
+                                        href="{{ route('warehouses.stock-in', ['code' => $warehouse->code]) }}"
+                                        class="rounded-lg p-2 text-gray-500 transition hover:bg-emerald-50 hover:text-emerald-600"
+                                        title="Stock In"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M12 4v16m8-8H4"
+                                            />
+                                        </svg>
+                                    </a>
+                                    {{-- Stock Out --}}
+                                    <a
+                                        href="{{ route('warehouses.stock-out', ['code' => $warehouse->code]) }}"
+                                        class="rounded-lg p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
+                                        title="Stock Out"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M20 12H4"
+                                            />
+                                        </svg>
+</a>
+                                    <a
+                                        href=""
+                                        class="rounded-lg p-2 text-gray-500 transition hover:bg-purple-50 hover:text-purple-600"
+                                        title="Rent"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M20 7H4m16 0v12H4V7m16 0-2-3H6L4 7m6 4h4"
+                                            />
+                                        </svg>
+                                    </a>
+                                    {{-- Return --}}
+                                    <button
+                                        wire:click="returnStock({{ $warehouse->id }})"
+                                        type="button"
+                                        class="rounded-lg p-2 text-gray-500 transition hover:bg-amber-50 hover:text-amber-600"
+                                        title="Return"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M9 14 4 9l5-5m-5 5h11a6 6 0 0 1 6 6v1"
+                                            />
+                                        </svg>
+                                    </button>
                                     <button
                                         wire:click="edit({{ $warehouse->id }})"
                                         type="button"
@@ -171,35 +206,12 @@
                                             />
                                         </svg>
                                     </button>
-
-                                    <button
-                                        wire:click="delete({{ $warehouse->id }})"
-                                        wire:confirm="Are you sure you want to delete this warehouse?"
-                                        type="button"
-                                        class="rounded-lg p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600"
-                                        title="Delete"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="m19 7-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 0 1 2-2h2a1 1 0 0 1 2 2v3m-9 0h12"
-                                            />
-                                        </svg>
-                                    </button>
-
                                 </div>
-
                             </td>
-
                         </tr>
-
                     @empty
-
                         <tr>
                             <td colspan="5" class="px-6 py-16 text-center">
-
                                 <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                                     <svg
                                         class="h-6 w-6 text-gray-400"
@@ -215,27 +227,18 @@
                                         />
                                     </svg>
                                 </div>
-
                                 <h3 class="mt-3 text-sm font-medium text-gray-900">
                                     No warehouses found
                                 </h3>
-
                                 <p class="mt-1 text-sm text-gray-500">
                                     Create your first warehouse to get started.
                                 </p>
-
                             </td>
                         </tr>
-
                     @endforelse
-
                 </tbody>
-
             </table>
-
         </div>
-
-
         {{-- Mobile Cards --}}
         <div class="space-y-3 md:hidden">
 
@@ -282,15 +285,6 @@
                                 class="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
                             >
                                 Edit
-                            </button>
-
-                            <button
-                                wire:click="delete({{ $warehouse->id }})"
-                                wire:confirm="Are you sure you want to delete this warehouse?"
-                                type="button"
-                                class="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                            >
-                                Delete
                             </button>
 
                         </div>

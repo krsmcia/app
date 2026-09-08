@@ -60,6 +60,8 @@ Route::middleware([
     Route::middleware(['department:warehouse'])->prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');
         Route::get('/inventory-management', Livewire\Warehouses\InventoryManagement::class)->name('inventory-management');
+        Route::get('/stock-in/{code}', Livewire\Warehouses\StockIn::class)->name('stock-in');
+        Route::get('/stock-out/{code}', Livewire\Warehouses\StockOut::class)->name('stock-out');
     });
     Route::middleware(['department:accounting'])->prefix('accountings')->name('accountings.')->group(function () {
         Route::get('/requests', Livewire\Accountings\Requests::class)->name('requests');

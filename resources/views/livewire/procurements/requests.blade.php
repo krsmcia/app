@@ -367,7 +367,7 @@
                 type="button"
                 wire:click="closeVendorModal"
             >
-                Cancel
+                Close
             </x-secondary-button>
             <x-button
                 type="button"

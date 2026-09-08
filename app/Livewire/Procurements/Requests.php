@@ -126,8 +126,6 @@ class Requests extends Component
                     'is_preferred' => ((int) $itemVendorId === (int) $primaryVendorId),
                 ]);
         }
-
-        $this->closeVendorModal();
     }
     public function removeVendor(int $itemVendorId): void
     {

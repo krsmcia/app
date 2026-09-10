@@ -91,6 +91,7 @@
                         >
                             <option value="in">Stock In</option>
                             <option value="out">Stock Out</option>
+                            <option value="rent">Rent</option>
                             <option value="return">Return</option>
                             <option value="adjustment">Adjustment</option>
                         </select>
@@ -146,7 +147,7 @@
                             </p>
                         @enderror
                     </div>
-                    @if (in_array($type, ['out', 'return']))
+                    @if (in_array($type, ['out', 'rent', 'return']))
                         <div class="relative">
                             <label
                                 for="movement-user-search"
@@ -213,7 +214,6 @@
 
             </div>
 
-
             {{-- Movement History --}}
             <div>
                 <div class="mb-3">
@@ -247,6 +247,10 @@
 
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         User
+                                    </th>
+
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                        Checker
                                     </th>
 
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -293,8 +297,56 @@
                                             {{ number_format($movement->balance_after, 2) }}
                                         </td>
 
+                                        <td class="whitespace-nowrap px-4 py-3">
+                                            @if ($movement->user)
+                                                <div class="flex items-center gap-2.5">
+                                                    <img
+                                                        src="{{ $movement->user->profile_photo_url }}"
+                                                        alt="{{ $movement->user->name }}"
+                                                        class="h-8 w-8 rounded-full object-cover"
+                                                    >
+                                                    <div class="min-w-0">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $movement->user->name }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500">
+                                                            {{ $movement->user->email }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-sm text-gray-500">
+                                                    System
+                                                </span>
+                                            @endif
+                                        </td>
+
                                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                                            {{ $movement->user?->name ?? 'System' }}
+                                            @if($movement->warehouseUser)
+                                                <div class="flex items-center gap-2">
+                                                    @if ($movement->warehouseUser)
+                                                        <img
+                                                            src="{{ $movement->warehouseUser->profile_photo_url }}"
+                                                            alt="{{ $movement->warehouseUser->name }}"
+                                                            class="h-7 w-7 rounded-full object-cover"
+                                                        >
+                                                        <div class="min-w-0">
+                                                            <span class="text-sm text-gray-700">
+                                                                {{ $movement->warehouseUser->name }}
+                                                            </span>
+                                                            <div class="text-xs text-gray-500">
+                                                                {{ $movement->user->email }}
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-sm text-gray-400">System</span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <span class="text-sm text-gray-500">
+                                                    System
+                                                </span>
+                                            @endif
                                         </td>
 
                                         <td class="max-w-xs px-4 py-3 text-sm text-gray-600">

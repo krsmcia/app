@@ -92,35 +92,35 @@
                 this.showToast('error', 'No items to save.');
                 return;
             }
+
             if (this.saving) {
                 return;
             }
+
             this.saving = true;
+
             try {
                 await this.$wire.save(this.scannedItems);
-                this.scannedItems = [];
-                this.showToast(
-                    'success',
-                    'Stock in completed successfully.'
-                );
-                this.focusScanner();
             } catch (error) {
                 console.error(error);
-                this.showToast(
-                    'error',
-                    'Failed to save stock in.'
-                );
-            } finally {
                 this.saving = false;
             }
         },
     }"
     x-on:item-found.window="addItem($event.detail.item)"
-    x-on:item-not-found.window="
-        itemNotFound($event.detail.message)
+    x-on:item-not-found.window="itemNotFound($event.detail.message)"
+    x-on:stock-out-saved.window="
+        scannedItems = [];
+        saving = false;
+        showToast('success', $event.detail.message);
+        focusScanner();
+    "
+    x-on:stock-out-error.window="
+        saving = false;
+        showToast('error', $event.detail.message);
     "
 >
-    <x-slot name="header"><h1 class="font-bold text-2xl">{{$warehouse->name}}</h1> {{__('Stock-In')}}</x-slot>
+    <x-slot name="header"><h1 class="font-bold text-2xl">{{$warehouse->name}}</h1> {{__('Stock-Out')}}</x-slot>
     {{-- Barcode Scanner --}}
     <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div class="mb-2 flex items-center justify-between">
@@ -265,7 +265,6 @@
                                 class="h-full w-full object-cover"
                             >
                         </template>
-
                         <template x-if="!item.image_url">
                             <div class="flex h-full items-center justify-center">
                                 <span class="text-xs text-gray-400">
@@ -356,7 +355,6 @@
             <span x-show="!saving">
                 Save Stock Out
             </span>
-
             <span x-show="saving">
                 Saving...
             </span>

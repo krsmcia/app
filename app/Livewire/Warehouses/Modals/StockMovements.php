@@ -107,7 +107,7 @@ class StockMovements extends Component
         $this->validate([
             'type' => [
                 'required',
-                'in:in,out,adjustment,return',
+                'in:in,out,adjustment,rent,return',
             ],
             'quantity' => [
                 'required',
@@ -135,44 +135,59 @@ class StockMovements extends Component
 
             return;
         }
-        DB::transaction(function () {
-            $stock = Stock::query()
-                ->whereKey($this->stockId)
-                ->lockForUpdate()
-                ->firstOrFail();
-            $quantity = (float) $this->quantity;
-            $newBalance = match ($this->type) {
-                'in', 'return' => $stock->quantity + $quantity,
-                'out' => $stock->quantity - $quantity,
-                'adjustment' => $quantity,
-            };
-            if ($newBalance < 0) {
-                $this->addError(
-                    'quantity',
-                    'Insufficient stock quantity.'
-                );
-                throw new \RuntimeException('Insufficient stock.');
-            }
-            $stock->update([
-                'quantity' => $newBalance,
-            ]);
-            StockMovement::create([
-                'item_id' => $stock->item_id,
-                'warehouse_id' => $stock->warehouse_id,
-                'type' => $this->type,
-                'quantity' => $quantity,
-                'balance_after' => $newBalance,
-                'warehouse_user_id' => auth()->id(),
-                'user_id' => in_array($this->type, ['out', 'return'])
-                    ? $this->movementUserId
-                    : auth()->id(),
-                'remark' => $this->remark ?: null,
-            ]);
-            $this->stock = $stock->fresh([
-                'item',
-                'warehouse',
-            ]);
-        });
+        try {
+            DB::transaction(function () {
+                $stock = Stock::query()
+                    ->whereKey($this->stockId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $quantity = (float) $this->quantity;
+
+                $newBalance = match ($this->type) {
+                    'in', 'return' => $stock->quantity + $quantity,
+                    'out' => $stock->quantity - $quantity,
+                    'adjustment' => $quantity,
+                };
+
+                if ($newBalance < 0) {
+                    throw new \RuntimeException(
+                        'Insufficient stock quantity.'
+                    );
+                }
+
+                $stock->update([
+                    'quantity' => $newBalance,
+                ]);
+
+                StockMovement::create([
+                    'item_id' => $stock->item_id,
+                    'warehouse_id' => $stock->warehouse_id,
+                    'type' => $this->type,
+                    'quantity' => $quantity,
+                    'balance_after' => $newBalance,
+                    'warehouse_user_id' => auth()->id(),
+                    'user_id' => in_array($this->type, ['out', 'return'])
+                        ? $this->movementUserId
+                        : auth()->id(),
+                    'remark' => $this->remark ?: null,
+                ]);
+
+                $this->stock = $stock->fresh([
+                    'item',
+                    'warehouse',
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            $this->addError('quantity', $e->getMessage());
+
+            $this->dispatch(
+                'stock-movement-error',
+                message: $e->getMessage()
+            );
+
+            return;
+        }
         $this->dispatch('stock-updated');
         $this->resetForm();
         // 새 movement가 추가됐으므로 최신 기록이 있는 1페이지로

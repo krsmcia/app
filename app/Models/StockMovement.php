@@ -11,6 +11,11 @@ class StockMovement extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function warehouseUser()
+    {
+        return $this->belongsTo(User::class, 'warehouse_user_id');
+    }
     
     public function item()
     {

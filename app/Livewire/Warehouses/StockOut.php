@@ -12,16 +12,13 @@ use Livewire\Component;
 class StockOut extends Component
 {
     public $warehouse;
-
     public function mount($code)
     {
         $this->warehouse = Warehouse::where('code', $code)->firstOrFail();
     }
-
     public function findItemByBarcode(string $barcode): void
     {
         $item = Item::where('barcode', trim($barcode))->first();
-
         if (!$item) {
             $this->dispatch(
                 'item-not-found',
@@ -30,7 +27,6 @@ class StockOut extends Component
 
             return;
         }
-
         $this->dispatch(
             'item-found',
             item: [
@@ -42,7 +38,6 @@ class StockOut extends Component
             ]
         );
     }
-
     public function save(array $items): void
     {
         if (empty($items)) {
@@ -53,42 +48,34 @@ class StockOut extends Component
 
             return;
         }
-
         try {
             DB::transaction(function () use ($items) {
                 foreach ($items as $item) {
                     $itemId = (int) ($item['id'] ?? 0);
                     $quantity = (float) ($item['quantity'] ?? 0);
-
                     if ($itemId <= 0 || $quantity <= 0) {
                         continue;
                     }
-
                     $stock = Stock::where('item_id', $itemId)
                         ->where('warehouse_id', $this->warehouse->id)
                         ->lockForUpdate()
                         ->first();
-
                     if (!$stock) {
                         throw new \RuntimeException(
                             "Stock not found for item ID: {$itemId}."
                         );
                     }
-
                     $availableQuantity =
                         $stock->quantity - $stock->reserved_quantity;
-
                     if ($availableQuantity < $quantity) {
                         throw new \RuntimeException(
-                            "Insufficient stock. " .
+                            "Stock out failed for {$stock->item->name}. " .
                             "Available: {$availableQuantity}, " .
                             "Requested: {$quantity}."
                         );
                     }
-
                     $stock->quantity -= $quantity;
                     $stock->save();
-
                     StockMovement::create([
                         'item_id' => $itemId,
                         'warehouse_id' => $this->warehouse->id,
@@ -102,12 +89,10 @@ class StockOut extends Component
                     ]);
                 }
             });
-
             $this->dispatch(
                 'stock-out-saved',
                 message: 'Stock out completed successfully.'
             );
-
         } catch (\Throwable $e) {
             $this->dispatch(
                 'stock-out-error',
@@ -115,7 +100,6 @@ class StockOut extends Component
             );
         }
     }
-
     public function render()
     {
         return view('livewire.warehouses.stock-out');

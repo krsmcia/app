@@ -663,7 +663,7 @@ class Items extends Component
                     'min:0',
                 ],
                 'disbursement_type_id' => [
-                    'nullable',
+                    'required',
                     'integer',
                     'exists:disbursement_types,id',
                 ],

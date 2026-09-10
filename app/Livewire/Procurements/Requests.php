@@ -8,6 +8,7 @@ use App\Models\ItemVendor;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
+use App\Models\DisbursementType;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
@@ -53,6 +54,8 @@ class Requests extends Component
                 'unit_price' => $itemVendor->unit_price,
                 'minimum_order_qty' => $itemVendor->minimum_order_qty,
                 'lead_time' => $itemVendor->lead_time,
+                'disbursement_type_id' => $itemVendor->disbursement_type_id,
+                'payment_details' => $itemVendor->payment_details,
                 'is_preferred' => (bool) $itemVendor->is_preferred,
             ];
         }
@@ -95,37 +98,98 @@ class Requests extends Component
             ->keys()
             ->first();
 
+        // 모든 Vendor 데이터 validation
+        foreach ($this->vendorForms as $itemVendorId => $data) {
+
+            $validated = validator(
+                $data,
+                [
+                    'vendor_sku' => [
+                        'nullable',
+                        'string',
+                        'max:100',
+                    ],
+
+                    'unit_price' => [
+                        'nullable',
+                        'numeric',
+                        'min:0',
+                    ],
+
+                    'minimum_order_qty' => [
+                        'required',
+                        'integer',
+                        'min:1',
+                    ],
+
+                    'lead_time' => [
+                        'nullable',
+                        'integer',
+                        'min:0',
+                    ],
+
+                    'disbursement_type_id' => [
+                        'required',
+                        'integer',
+                        'exists:disbursement_types,id',
+                    ],
+
+                    'payment_details' => [
+                        'nullable',
+                        'string',
+                        'max:65535',
+                    ],
+                ]
+            )->validate();
+
+            ItemVendor::query()
+                ->where('id', $itemVendorId)
+                ->where('item_id', $this->selectedItemId)
+                ->update([
+                    'vendor_sku' => filled($validated['vendor_sku'] ?? null)
+                        ? trim($validated['vendor_sku'])
+                        : null,
+
+                    'unit_price' => filled($validated['unit_price'] ?? null)
+                        ? $validated['unit_price']
+                        : null,
+
+                    'minimum_order_qty' => (int) $validated['minimum_order_qty'],
+
+                    'lead_time' => filled($validated['lead_time'] ?? null)
+                        ? (int) $validated['lead_time']
+                        : null,
+
+                    'disbursement_type_id' => (int) $validated['disbursement_type_id'],
+
+                    'payment_details' => filled($validated['payment_details'] ?? null)
+                        ? trim($validated['payment_details'])
+                        : null,
+                ]);
+        }
+
+        // Preferred Vendor 처리
         ItemVendor::query()
             ->where('item_id', $this->selectedItemId)
             ->update([
                 'is_preferred' => false,
             ]);
 
-        foreach ($this->vendorForms as $itemVendorId => $data) {
-
+        if ($primaryVendorId) {
             ItemVendor::query()
-                ->where('id', $itemVendorId)
+                ->where('id', $primaryVendorId)
                 ->where('item_id', $this->selectedItemId)
                 ->update([
-                    'vendor_sku' => filled($data['vendor_sku'] ?? null)
-                        ? trim($data['vendor_sku'])
-                        : null,
-
-                    'unit_price' => filled($data['unit_price'] ?? null)
-                        ? $data['unit_price']
-                        : null,
-
-                    'minimum_order_qty' => filled($data['minimum_order_qty'] ?? null)
-                        ? (int) $data['minimum_order_qty']
-                        : 1,
-
-                    'lead_time' => filled($data['lead_time'] ?? null)
-                        ? (int) $data['lead_time']
-                        : null,
-
-                    'is_preferred' => ((int) $itemVendorId === (int) $primaryVendorId),
+                    'is_preferred' => true,
                 ]);
         }
+
+        $this->reloadVendorItem();
+
+        session()->flash(
+            'success',
+            'Vendor information updated successfully.'
+        );
     }
     public function removeVendor(int $itemVendorId): void
     {
@@ -218,6 +282,8 @@ class Requests extends Component
             'unit_price' => null,
             'minimum_order_qty' => 1,
             'lead_time' => null,
+            'disbursement_type_id' => null,
+            'payment_details' => null,
             'is_preferred' => $isFirstVendor,
         ]);
 
@@ -247,6 +313,8 @@ class Requests extends Component
                         'unit_price' => $itemVendor->unit_price,
                         'minimum_order_qty' => $itemVendor->minimum_order_qty,
                         'lead_time' => $itemVendor->lead_time,
+                        'disbursement_type_id' => $itemVendor->disbursement_type_id,
+                        'payment_details' => $itemVendor->payment_details,
                         'is_preferred' => (bool) $itemVendor->is_preferred,
                     ],
                 ];
@@ -286,7 +354,8 @@ class Requests extends Component
                     !$itemVendor ||
                     !$itemVendor->vendor ||
                     !filled($itemVendor->unit_price) ||
-                    (float) $itemVendor->unit_price <= 0
+                    (float) $itemVendor->unit_price <= 0 ||
+                    !$itemVendor->disbursement_type_id
                 ) {
                     abort(
                         422,
@@ -311,6 +380,8 @@ class Requests extends Component
                     'vendor_sku' => $itemVendor->vendor_sku,
                     'unit_price' => $unitPrice,
                     'amount' => $amount,
+                    'disbursement_type_name' => $itemVendor->disbursementType->name,
+                    'payment_details' => $itemVendor->payment_details
                 ]);
 
                 /*
@@ -409,6 +480,7 @@ class Requests extends Component
                         $workflowItem->preferred_vendor
                         && filled($workflowItem->preferred_vendor->unit_price)
                         && (float) $workflowItem->preferred_vendor->unit_price > 0
+                        && filled($workflowItem->preferred_vendor->disbursement_type_id)
                 );
             $workflow->procurement_total =
                 $workflow->purchaseWorkflowItems->sum(function ($workflowItem) {
@@ -420,8 +492,14 @@ class Requests extends Component
                 });
         });
 
+        $disbursementTypes = DisbursementType::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         return view('livewire.procurements.requests', [
             'requests' => $requests,
+            'disbursementTypes' => $disbursementTypes,
         ]);
     }
 }

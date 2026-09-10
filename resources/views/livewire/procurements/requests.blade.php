@@ -243,7 +243,7 @@
                             @endif
                         </div>
                         {{-- Vendor fields --}}
-                        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <div class="mt-4 grid grid-cols-2 gap-3">
                             {{-- Vendor SKU --}}
                             <div>
                                 <label class="block text-xs font-medium text-gray-500">
@@ -296,6 +296,53 @@
                                         days
                                     </span>
                                 </div>
+                            </div>
+                            {{-- Disbursement Type --}}
+                            <div class="col-span-2">
+                                <label class="block text-xs font-medium text-gray-500">
+                                    Disbursement Type
+                                    <span class="text-red-500">*</span>
+                                </label>
+
+                                <select
+                                    wire:model.defer="vendorForms.{{ $itemVendorId }}.disbursement_type_id"
+                                    class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm
+                                        focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    <option value="">Select type</option>
+
+                                    @foreach ($disbursementTypes as $type)
+                                        <option value="{{ $type->id }}">
+                                            {{ $type->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                @error("vendorForms.$itemVendorId.disbursement_type_id")
+                                    <p class="mt-1 text-xs text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+                            {{-- Payment Details --}}
+                            <div class="col-span-2">
+                                <label class="block text-xs font-medium text-gray-500">
+                                    Payment Details
+                                </label>
+
+                                <textarea
+                                    wire:model.defer="vendorForms.{{ $itemVendorId }}.payment_details"
+                                    rows="2"
+                                    placeholder="e.g. BDO Bank / Account Name / Account Number"
+                                    class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm
+                                        focus:border-indigo-500 focus:ring-indigo-500"
+                                ></textarea>
+
+                                @error("vendorForms.$itemVendorId.payment_details")
+                                    <p class="mt-1 text-xs text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                         </div>
                     </div>

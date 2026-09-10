@@ -15,4 +15,8 @@ class ItemVendor extends Model
     {
         return $this->belongsTo(Vendor::class);
     }
+    public function disbursementType()
+    {
+        return $this->belongsTo(DisbursementType::class);
+    }
 }

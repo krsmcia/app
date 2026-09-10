@@ -17,6 +17,7 @@ class DisbursementTypeSeeder extends Seeder
             ['name' => 'Cash', 'requires_account' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Creadit Card', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Check', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'GCASH', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

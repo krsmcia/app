@@ -19,6 +19,8 @@ return new class extends Migration
             $table->decimal('unit_price', 12, 2)->nullable();
             $table->unsignedInteger('minimum_order_qty')->default(1);
             $table->unsignedInteger('lead_time')->nullable();
+            $table->foreignId('disbursement_type_id')->nullable()->constrained()->nullOnDelete();
+            $table->text('payment_details')->nullable();
             $table->boolean('is_preferred')->default(false);
             $table->timestamps();
             $table->unique(['item_id', 'vendor_id']);

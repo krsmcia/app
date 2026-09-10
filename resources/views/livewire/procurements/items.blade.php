@@ -1367,6 +1367,65 @@
                                                 </p>
                                             @enderror
                                         </div>
+                                        {{-- Disbursement Type --}}
+                                        <div class="col-span-2">
+                                            <label
+                                                class="mb-1 block text-xs
+                                                    font-medium text-gray-500"
+                                            >
+                                                Disbursement Type
+                                            </label>
+
+                                            <select
+                                                wire:model.defer="vendorForms.{{ $vendor->id }}.disbursement_type_id"
+                                                class="block w-full rounded-md
+                                                    border-gray-300 text-sm shadow-sm
+                                                    focus:border-indigo-500
+                                                    focus:ring-indigo-500"
+                                            >
+                                                <option value="">
+                                                    Select disbursement type
+                                                </option>
+
+                                                @foreach ($disbursementTypes as $disbursementType)
+                                                    <option value="{{ $disbursementType->id }}">
+                                                        {{ $disbursementType->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+
+                                            @error("vendorForms.{$vendor->id}.disbursement_type_id")
+                                                <p class="mt-1 text-xs text-red-600">
+                                                    {{ $message }}
+                                                </p>
+                                            @enderror
+                                        </div>
+
+                                        {{-- Payment Details --}}
+                                        <div class="col-span-2">
+                                            <label
+                                                class="mb-1 block text-xs
+                                                    font-medium text-gray-500"
+                                            >
+                                                Payment Details
+                                            </label>
+
+                                            <textarea
+                                                wire:model.defer="vendorForms.{{ $vendor->id }}.payment_details"
+                                                rows="2"
+                                                placeholder="e.g. Bank transfer, COD, 30-day terms..."
+                                                class="block w-full rounded-md
+                                                    border-gray-300 text-sm shadow-sm
+                                                    focus:border-indigo-500
+                                                    focus:ring-indigo-500"
+                                            ></textarea>
+
+                                            @error("vendorForms.{$vendor->id}.payment_details")
+                                                <p class="mt-1 text-xs text-red-600">
+                                                    {{ $message }}
+                                                </p>
+                                            @enderror
+                                        </div>
                                     </div>
                                     {{-- Save --}}
                                     <div class="mt-4 flex justify-end">

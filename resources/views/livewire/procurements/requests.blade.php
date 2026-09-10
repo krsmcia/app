@@ -231,18 +231,16 @@
                                     ? 'Primary Vendor'
                                     : 'Set as Primary' }}
                             </button>
-                            {{--
-                                @if (!$vendor['is_preferred'])
-                                    <button
-                                        type="button"
-                                        wire:click="removeVendor({{ $itemVendorId }})"
-                                        wire:confirm="Are you sure you want to remove this vendor?"
-                                        class="text-xs font-medium text-red-600 hover:text-red-700"
-                                    >
-                                        Remove
-                                    </button>
-                                @endif
-                            --}}
+                            @if (!$vendor['is_preferred'])
+                                <button
+                                    type="button"
+                                    wire:click="removeVendor({{ $itemVendorId }})"
+                                    wire:confirm="Are you sure you want to remove this vendor?"
+                                    class="text-xs font-medium text-red-600 hover:text-red-700"
+                                >
+                                    Remove
+                                </button>
+                            @endif
                         </div>
                         {{-- Vendor fields --}}
                         <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

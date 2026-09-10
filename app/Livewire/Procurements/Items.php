@@ -7,6 +7,7 @@ use App\Models\Item;
 use App\Models\ItemImage;
 use App\Models\Vendor;
 use App\Models\Category;
+use App\Models\DisbursementType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -511,6 +512,8 @@ class Items extends Component
                     : null,
                 'minimum_order_qty' => $vendor->pivot->minimum_order_qty ?? 1,
                 'lead_time' => $vendor->pivot->lead_time,
+                'disbursement_type_id' => $vendor->pivot->disbursement_type_id ?? null,
+                'payment_details' => $vendor->pivot->payment_details ?? '',
             ];
         }
     }
@@ -605,31 +608,34 @@ class Items extends Component
         if (! $this->vendorItemId) {
             return;
         }
-
         $item = Item::findOrFail($this->vendorItemId);
-
         abort_unless(
             $item->vendors()
                 ->where('vendor_id', $vendorId)
                 ->exists(),
             404
         );
-
         $form = $this->vendorForms[$vendorId] ?? [];
-
         // 빈 문자열을 null로 변환
         $form['vendor_sku'] = blank($form['vendor_sku'] ?? null)
             ? null
             : $form['vendor_sku'];
-
         $form['unit_price'] = blank($form['unit_price'] ?? null)
             ? null
             : $form['unit_price'];
-
         $form['lead_time'] = blank($form['lead_time'] ?? null)
             ? null
             : $form['lead_time'];
-
+        $form['disbursement_type_id'] = blank(
+            $form['disbursement_type_id'] ?? null
+        )
+            ? null
+            : $form['disbursement_type_id'];
+        $form['payment_details'] = blank(
+            $form['payment_details'] ?? null
+        )
+            ? null
+            : $form['payment_details'];
         $validated = validator(
             $form,
             [
@@ -656,6 +662,17 @@ class Items extends Component
                     'integer',
                     'min:0',
                 ],
+                'disbursement_type_id' => [
+                    'nullable',
+                    'integer',
+                    'exists:disbursement_types,id',
+                ],
+
+                'payment_details' => [
+                    'nullable',
+                    'string',
+                    'max:65535',
+                ],
             ]
         )->validate();
 
@@ -666,6 +683,8 @@ class Items extends Component
                 'unit_price' => $validated['unit_price'] ?? null,
                 'minimum_order_qty' => $validated['minimum_order_qty'],
                 'lead_time' => $validated['lead_time'] ?? null,
+                'disbursement_type_id' => $validated['disbursement_type_id'] ?? null,
+                'payment_details' => $validated['payment_details'] ?? null,
             ]
         );
 
@@ -818,6 +837,10 @@ class Items extends Component
 
     public function render()
     {
+        $disbursementTypes = DisbursementType::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
         $items = Item::query()
             ->with([
                 'primaryImage',
@@ -892,6 +915,7 @@ class Items extends Component
             [
                 'items' => $items,
                 'categories' => $categories,
+                'disbursementTypes' => $disbursementTypes,
             ]
         );
     }

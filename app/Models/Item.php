@@ -49,6 +49,8 @@ class Item extends Model
                 'unit_price',
                 'minimum_order_qty',
                 'lead_time',
+                'disbursement_type_id',
+                'payment_details',
                 'is_preferred',
             ])
             ->withTimestamps();

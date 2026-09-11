@@ -56,6 +56,9 @@ class PendingApproval extends Component
             return null;
         }
 
+        $departmentIds = $user->departments()
+            ->pluck('departments.id');
+
         return PurchaseWorkflowItem::query()
             ->with([
                 'purchaseItem.item.primaryImage',
@@ -67,17 +70,18 @@ class PendingApproval extends Component
             ->where('status', 'pending')
             ->whereHas('purchaseWorkflow', function ($query) use (
                 $workflowStep,
+                $departmentIds,
                 $user
             ) {
                 $query
                     ->where('step', $workflowStep)
                     ->where('status', 'pending')
-                    ->whereHas('purchaseRequest', function ($query) use ($user) {
+                    ->whereHas('purchaseRequest', function ($query) use (
+                        $departmentIds,
+                        $user
+                    ) {
                         $query
-                            ->where(
-                                'department_id',
-                                $user->current_department_id
-                            )
+                            ->whereIn('department_id', $departmentIds)
                             ->where('user_id', '!=', $user->id);
                     });
             })
@@ -197,11 +201,16 @@ class PendingApproval extends Component
 
         abort_unless($step, 403);
 
+        // 사용자가 소속된 모든 department
+        $departmentIds = $user->departments()
+            ->pluck('departments.id');
+
         DB::transaction(function () use (
             $user,
             $requestId,
             $step,
-            $action
+            $action,
+            $departmentIds
         ) {
 
             /*
@@ -212,7 +221,7 @@ class PendingApproval extends Component
             * 1. item status = pending
             * 2. workflow step = 현재 승인 단계
             * 3. workflow status = pending
-            * 4. request가 현재 사용자의 department
+            * 4. request가 사용자가 소속된 department
             * 5. 자기 자신의 request가 아님
             */
             $items = PurchaseWorkflowItem::query()
@@ -221,7 +230,8 @@ class PendingApproval extends Component
                 ->whereHas('purchaseWorkflow', function ($query) use (
                     $user,
                     $requestId,
-                    $step
+                    $step,
+                    $departmentIds
                 ) {
                     $query
                         ->where('step', $step)
@@ -229,13 +239,14 @@ class PendingApproval extends Component
 
                         ->whereHas('purchaseRequest', function ($query) use (
                             $user,
-                            $requestId
+                            $requestId,
+                            $departmentIds
                         ) {
                             $query
                                 ->whereKey($requestId)
-                                ->where(
+                                ->whereIn(
                                     'department_id',
-                                    $user->current_department_id
+                                    $departmentIds
                                 )
                                 ->where(
                                     'user_id',
@@ -250,7 +261,8 @@ class PendingApproval extends Component
 
             /*
             * 처리할 pending item이 없다면
-            * 이미 승인/거절된 request라는 뜻이다.
+            * 이미 승인/거절되었거나
+            * 사용자가 승인할 수 없는 request
             */
             abort_if($items->isEmpty(), 404);
 
@@ -295,8 +307,6 @@ class PendingApproval extends Component
 
             /*
             * 승인된 item만 다음 단계로 전달
-            *
-            * rejected item은 절대 다음 단계로 넘어가지 않는다.
             */
             $this->createNextWorkflow($workflow);
         });
@@ -308,10 +318,16 @@ class PendingApproval extends Component
         $user = Auth::user();
         $approvalStep = $this->approvalStep($user);
         $requests = collect();
-        if ($approvalStep && $user->current_department_id) {
+
+        // 사용자가 소속된 모든 department ID
+        $departmentIds = $user->departments()
+            ->pluck('departments.id');
+
+        if ($approvalStep && $departmentIds->isNotEmpty()) {
             $requests = PurchaseRequest::query()
-                ->where('department_id', $user->current_department_id)
+                ->whereIn('department_id', $departmentIds)
                 ->where('user_id', '!=', $user->id)
+
                 // 현재 승인 단계의 pending workflow가 존재해야 함
                 ->whereHas('purchaseWorkflows', function ($query) use ($approvalStep) {
                     $query
@@ -321,23 +337,15 @@ class PendingApproval extends Component
                             $query->where('status', 'pending');
                         });
                 })
+
                 ->with([
                     'user',
                     'department',
-                    // ⭐ 현재 승인 단계에서 pending인 item만 로딩
+
+                    // 현재 승인 단계에서 pending인 item만 로딩
                     'purchaseItems' => function ($query) use ($approvalStep) {
-                        $query->whereHas('purchaseWorkflowItems', function ($query) use ($approvalStep) {
-                            $query
-                                ->where('status', 'pending')
-                                ->whereHas('purchaseWorkflow', function ($query) use ($approvalStep) {
-                                    $query
-                                        ->where('step', $approvalStep)
-                                        ->where('status', 'pending');
-                                });
-                        })
-                        ->with([
-                            'item.primaryImage',
-                            'purchaseWorkflowItems' => function ($query) use ($approvalStep) {
+                        $query
+                            ->whereHas('purchaseWorkflowItems', function ($query) use ($approvalStep) {
                                 $query
                                     ->where('status', 'pending')
                                     ->whereHas('purchaseWorkflow', function ($query) use ($approvalStep) {
@@ -345,9 +353,22 @@ class PendingApproval extends Component
                                             ->where('step', $approvalStep)
                                             ->where('status', 'pending');
                                     });
-                            },
-                        ]);
+                            })
+                            ->with([
+                                'item.primaryImage',
+
+                                'purchaseWorkflowItems' => function ($query) use ($approvalStep) {
+                                    $query
+                                        ->where('status', 'pending')
+                                        ->whereHas('purchaseWorkflow', function ($query) use ($approvalStep) {
+                                            $query
+                                                ->where('step', $approvalStep)
+                                                ->where('status', 'pending');
+                                        });
+                                },
+                            ]);
                     },
+
                     'purchaseWorkflows',
                 ])
                 ->latest()

@@ -54,18 +54,25 @@ Route::middleware([
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
         Route::get('/approved', Livewire\Procurements\Approved::class)->name('approved');
     });
-    Route::middleware(['department:audit'])->prefix('audits')->name('audits.')->group(function () {
-        Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
-    });
     Route::middleware(['department:warehouse'])->prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');
         Route::get('/inventory-management', Livewire\Warehouses\InventoryManagement::class)->name('inventory-management');
         Route::get('/stock-in/{code}', Livewire\Warehouses\StockIn::class)->name('stock-in');
         Route::get('/stock-out/{code}', Livewire\Warehouses\StockOut::class)->name('stock-out');
     });
+    Route::middleware(['department:audit'])->prefix('audits')->name('audits.')->group(function () {
+        Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
+    });
+    Route::middleware(['role:super-admin|head'])->group(function () {
+        Route::get('/heads/requests', Livewire\Heads\Requests::class)->name('heads.requests');
+    });
+    Route::middleware(['role:super-admin|admin'])->group(function () {
+        Route::get('/admins/requests', Livewire\Admins\Requests::class)->name('admins.requests');
+    });
     Route::middleware(['department:accounting'])->prefix('accountings')->name('accountings.')->group(function () {
         Route::get('/requests', Livewire\Accountings\Requests::class)->name('requests');
     });
+    
     /*
     |--------------------------------------------------------------------------
     | Items

@@ -6,90 +6,22 @@
         @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'procurement'))
             <x-procurement-anchors />
         @endif
+        @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'warehouse'))
+            <x-warehouse-anchors />
+        @endif
         @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'audit'))
             <x-audit-anchors />
+        @endif
+        @if(auth()->user()->hasRole(['super-admin', 'head']))
+            <x-head-anchors />
+        @endif
+        @if(auth()->user()->hasRole(['super-admin', 'admin']))
+            <x-admin-anchors />
         @endif
         @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'accounting'))
             <x-accounting-anchors />
         @endif
-        @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'warehouse'))
-            <x-warehouse-anchors />
-        @endif
-        {{-- New Request --}}
-        <a
-            href="{{ route('items') }}"
-            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
-                transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
-                sm:p-5 lg:aspect-auto lg:p-6"
-        >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5 text-emerald-600 sm:size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                </svg>
-            </div>
-            <h2 class="mt-4 text-base font-semibold leading-5 text-emerald-600 sm:mt-5 sm:text-lg">
-                New Request
-            </h2>
-            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
-                Submit a new purchasing request for your department.
-            </p>
-            <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
-                Create request
-                <span class="transition group-hover:ml-1">→</span>
-            </div>
-        </a>
-        {{-- My Requests --}}
-        <a
-            href="{{route('my-requests')}}"
-            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
-                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
-                sm:p-5 lg:aspect-auto lg:p-6"
-        >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 sm:h-11 sm:w-11">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5 text-slate-600 sm:size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5
-                        a1.125 1.125 0 01-1.125-1.125v-1.5
-                        a3.375 3.375 0 00-3.375-3.375H8.25
-                        m0 0H6.375A2.625 2.625 0 003.75 4.875v14.25
-                        a2.625 2.625 0 002.625 2.625h10.5
-                        a2.625 2.625 0 002.625-2.625V15
-                        M8.25 3.75H9m-1.5 9h7.5m-7.5 3h4.5"
-                    />
-                </svg>
-            </div>
-            <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
-                My Requests
-            </h2>
-            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
-                View and manage the purchasing requests you have submitted.
-            </p>
-            <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
-                View requests
-                <span class="transition group-hover:ml-1">→</span>
-            </div>
-        </a>
-        @if(!auth()->user()->hasRole('staff'))
+        @if(!auth()->user()->hasRole(['staff', 'head']))
             {{-- Pending Approval --}}
             <a
                 href="{{route('pending-approval')}}"
@@ -125,40 +57,6 @@
                 </div>
             </a>
         @endif
-        {{-- Purchasing History --}}
-        <a
-            href=""
-            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
-                transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-md
-                sm:p-5 lg:aspect-auto lg:p-6"
-        >
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 sm:h-11 sm:w-11">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="size-5 text-purple-600 sm:size-6"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M9 12.75L11.25 15 15 9.75m-3-7.5a9 9 0 110 18 9 9 0 010-18z"
-                    />
-                </svg>
-            </div>
-            <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
-                Purchasing History
-            </h2>
-            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
-                Review completed and previously processed requests.
-            </p>
-            <div class="mt-auto pt-3 text-xs font-semibold text-slate-600 sm:text-sm">
-                View history
-                <span class="transition group-hover:ml-1">→</span>
-            </div>
-        </a>
         @if(auth()->user()->hasRole(['supervisor', 'team-leader']))
             {{-- Requests to Review --}}
             <a
@@ -237,6 +135,120 @@
                 </div>
             </a>
         @endif
+        {{-- New Request --}}
+        <a
+            href="{{ route('items') }}"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
+        >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-5 text-emerald-600 sm:size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                </svg>
+            </div>
+            <h2 class="mt-4 text-base font-semibold leading-5 text-emerald-600 sm:mt-5 sm:text-lg">
+                New Request
+            </h2>
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                Submit a new purchasing request for your department.
+            </p>
+            <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
+                Create request
+                <span class="transition group-hover:ml-1">→</span>
+            </div>
+        </a>
+        {{-- My Requests --}}
+        <a
+            href="{{route('my-requests')}}"
+            class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+                sm:p-5 lg:aspect-auto lg:p-6"
+        >
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 sm:h-11 sm:w-11">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-5 text-slate-600 sm:size-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5
+                        a1.125 1.125 0 01-1.125-1.125v-1.5
+                        a3.375 3.375 0 00-3.375-3.375H8.25
+                        m0 0H6.375A2.625 2.625 0 003.75 4.875v14.25
+                        a2.625 2.625 0 002.625 2.625h10.5
+                        a2.625 2.625 0 002.625-2.625V15
+                        M8.25 3.75H9m-1.5 9h7.5m-7.5 3h4.5"
+                    />
+                </svg>
+            </div>
+            <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+                My Requests
+            </h2>
+            <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                View and manage the purchasing requests you have submitted.
+            </p>
+            <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
+                View requests
+                <span class="transition group-hover:ml-1">→</span>
+            </div>
+        </a>
+        
+
+        {{-- Purchasing History --}}
+        {{--
+            <a
+                href=""
+                class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                    transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-md
+                    sm:p-5 lg:aspect-auto lg:p-6"
+            >
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 sm:h-11 sm:w-11">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-5 text-purple-600 sm:size-6"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 12.75L11.25 15 15 9.75m-3-7.5a9 9 0 110 18 9 9 0 010-18z"
+                        />
+                    </svg>
+                </div>
+                <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
+                    Purchasing History
+                </h2>
+                <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+                    Review completed and previously processed requests.
+                </p>
+                <div class="mt-auto pt-3 text-xs font-semibold text-slate-600 sm:text-sm">
+                    View history
+                    <span class="transition group-hover:ml-1">→</span>
+                </div>
+            </a>
+        --}}
+        
+        
     </div>
     <div class="mt-10 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div class="flex items-center justify-between border-b border-gray-200 px-6 py-5">

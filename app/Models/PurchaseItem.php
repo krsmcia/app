@@ -30,4 +30,8 @@ class PurchaseItem extends Model
             PurchaseWorkflowItem::class
         );
     }
+    public function disbursementType()
+    {
+        return $this->belongsTo(DisbursementType::class);
+    }
 }

@@ -23,10 +23,7 @@
                                             {{ $request->request_no }}
                                         </span>
                                         <span class="text-xs text-gray-500">
-                                            {{ $request->count() }} items
-                                        </span>
-                                        <span class="text-xs text-gray-500">
-                                            {{ $request->count() }} pending items
+                                            {{ $request->purchaseItems()->count() }} items
                                         </span>
                                     </div>
                                     <x-button

@@ -1,309 +1,455 @@
-<div class="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-    {{-- Header --}}
+<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-gray-900">
-            Approved Purchase Items
+            Budget Requests
         </h1>
-
         <p class="mt-1 text-sm text-gray-500">
-            Purchase items approved by the procurement team.
+            Purchase requests waiting for budget processing.
         </p>
     </div>
-    {{-- Search --}}
-    <div class="mb-5">
-        <div class="relative w-full sm:max-w-md">
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="search"
-                placeholder="Search item or SKU..."
-                class="w-full rounded-lg border-gray-300 py-2.5 pl-10 pr-4 text-sm shadow-sm
-                       focus:border-indigo-500 focus:ring-indigo-500"
-            >
-            <svg
-                class="absolute left-3 top-3 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.04 6.04a7.5 7.5 0 0 0 10.61 10.61Z"
-                />
-            </svg>
-        </div>
-    </div>
-    {{-- DESKTOP --}}
-    <div class="hidden overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm lg:block">
-        {{-- Table Header --}}
-        <div class="grid grid-cols-[minmax(280px,2.5fr)_1.2fr_1.2fr_1.4fr_110px]
-                    items-center
-                    border-b border-gray-200
-                    bg-gray-50
-                    px-5 py-3">
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Item
-            </div>
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Requester
-            </div>
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Department
-            </div>
-            <div class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Purchase
-            </div>
-            <div class="text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Status
-            </div>
-        </div>
-        {{-- Rows --}}
-        <div class="divide-y divide-gray-100">
-            @forelse($items as $workflowItem)
+    <div class="space-y-4">
+        @if (count($requests) > 0)
+            @foreach ($requests as $request)
                 @php
-                    $purchaseItem = $workflowItem->purchaseItem;
-                    $item = $purchaseItem?->item;
-                    $vendor = $purchaseItem?->itemVendor?->vendor;
-                    $request = $workflowItem->purchaseWorkflow?->purchaseRequest;
-
-                    $quantity = (int) ($purchaseItem?->quantity ?? 0);
-                    $unitPrice = (float) ($purchaseItem?->unit_price ?? 0);
-                    $amount = (float) ($purchaseItem?->amount ?? 0);
+                    $allCash = $request->audit_workflow->purchaseWorkflowItems
+                        ->every(fn ($workflowItem) =>
+                            $workflowItem->purchaseItem->disbursement_type_name === 'Cash'
+                        );
                 @endphp
                 <div
-                    class="grid grid-cols-[minmax(280px,2.5fr)_1.2fr_1.2fr_1.4fr_110px]
-                        items-center
-                        px-5 py-4
-                        transition-colors
-                        hover:bg-gray-50"
+                    class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                    wire:key="request-{{ $request->id }}"
                 >
-                    {{-- ================================================= --}}
-                    {{-- ITEM --}}
-                    {{-- ================================================= --}}
-                    <div class="flex min-w-0 items-center gap-3">
-                        {{-- Image --}}
-                        <div
-                            class="h-12 w-12 shrink-0 overflow-hidden rounded-lg
-                                border border-gray-200 bg-gray-50"
-                        >
-                            <img
-                                src="{{ $item?->image_url ?? asset('images/default-item.png') }}"
-                                alt="{{ $item?->name ?? 'Item' }}"
-                                class="h-full w-full object-cover"
-                                loading="lazy"
-                            >
-                        </div>
-                        {{-- Information --}}
-                        <div class="min-w-0">
-                            <div class="truncate text-sm font-semibold text-gray-900">
-                                {{ $item?->name ?? 'Unknown Item' }}
-                            </div>
-                            <div class="mt-0.5 truncate text-xs text-gray-500">
-                                <span class="text-gray-400">SKU:</span>
-                                {{ $item?->sku ?? '-' }}
-                            </div>
-                            <div class="mt-0.5 truncate text-xs text-gray-500">
-                                <span class="text-gray-400">Vendor:</span>
-                                {{ $vendor?->name ?? '-' }}
-                            </div>
-                        </div>
-                    </div>
-                    {{-- ================================================= --}}
-                    {{-- REQUESTER --}}
-                    {{-- ================================================= --}}
-                    <div class="min-w-0 pr-4">
-                        <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                            Requested by
-                        </div>
-                        <div class="mt-1 truncate text-sm font-medium text-gray-700">
-                            {{ $request?->user?->name ?? '-' }}
-                        </div>
-                    </div>
-                    {{-- ================================================= --}}
-                    {{-- DEPARTMENT --}}
-                    {{-- ================================================= --}}
-                    <div class="min-w-0 pr-4">
-                        <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                            Department
-                        </div>
-                        <div class="mt-1 truncate text-sm font-medium text-gray-700">
-                            {{ $request?->department?->name ?? '-' }}
-                        </div>
-                    </div>
-                    {{-- ================================================= --}}
-                    {{-- PURCHASE --}}
-                    {{-- ================================================= --}}
-                    <div class="flex items-center gap-5">
-                        {{-- Quantity --}}
-                        <div class="min-w-[45px]">
-                            <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                                Qty
-                            </div>
-                            <div class="mt-1 text-sm font-semibold text-gray-800">
-                                {{ number_format($quantity) }}
-                            </div>
-                        </div>
-                        {{-- Unit Price --}}
-                        <div class="min-w-[85px]">
-                            <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                                Unit Price
-                            </div>
-                            <div class="mt-1 text-sm text-gray-700">
-                                {{ number_format($unitPrice, 2) }}
-                            </div>
-                        </div>
-                        {{-- Total --}}
-                        <div class="min-w-[90px]">
-                            <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                                Total
-                            </div>
-                            <div class="mt-1 text-sm font-semibold text-gray-900">
-                                {{ number_format($amount, 2) }}
-                            </div>
-                        </div>
-                    </div>
-                    {{-- ================================================= --}}
-                    {{-- STATUS --}}
-                    {{-- ================================================= --}}
-                    <div class="flex justify-center">
-                        <span
-                            class="inline-flex items-center rounded-full
-                                bg-green-100 px-2.5 py-1
-                                text-xs font-medium text-green-700"
-                        >
-                            <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                            Approved
-                        </span>
-                    </div>
-                </div>
-            @empty
-                <div class="px-6 py-12 text-center">
-                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                        <svg
-                            class="h-6 w-6 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="1.8"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                            />
-                        </svg>
-                    </div>
-                    <div class="mt-3 text-sm font-medium text-gray-900">
-                        No approved purchase items
-                    </div>
-                    <div class="mt-1 text-sm text-gray-500">
-                        There are currently no purchase items approved by procurement.
-                    </div>
-                </div>
-            @endforelse
-        </div>
-    </div>
-    {{-- MOBILE / TABLET --}}
-    <div class="space-y-3 lg:hidden">
-        @forelse($items as $workflowItem)
-            @php
-                $purchaseItem = $workflowItem->purchaseItem;
-                $item = $purchaseItem?->item;
-                $vendor = $purchaseItem?->itemVendor?->vendor;
-                $request = $workflowItem->purchaseWorkflow?->purchaseRequest;
-            @endphp
-            <div
-                class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm
-                       transition hover:border-gray-300"
-            >
-                {{-- Item Header --}}
-                <div class="flex items-start gap-3">
-                    <div
-                        class="h-14 w-14 shrink-0 overflow-hidden rounded-lg
-                               border border-gray-200 bg-gray-50"
-                    >
-                        <img
-                            src="{{ $item?->image_url ?? asset('images/default-item.png') }}"
-                            alt="{{ $item?->name ?? 'Item' }}"
-                            class="h-full w-full object-cover"
-                            loading="lazy"
-                        >
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="min-w-0">
-                                <div class="truncate text-sm font-semibold text-gray-900">
-                                    {{ $item?->name ?? 'Unknown Item' }}
+                    {{-- =====================================================
+                        Header
+                    ====================================================== --}}
+                    <div class="border-b border-gray-100 px-4 py-4 sm:px-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h2 class="text-sm font-semibold text-gray-900 sm:text-base">
+                                        {{ $request->request_no }}
+                                    </h2>
+                                    <span class="rounded-full bg-yellow-50 px-2.5 py-1 text-[10px] font-medium text-yellow-700 sm:text-xs">
+                                        Pending
+                                    </span>
                                 </div>
-                                <div class="mt-1 text-xs text-gray-500">
-                                    SKU: {{ $item?->sku ?? '-' }}
+                                <div class="mt-1.5 text-xs text-gray-500 sm:text-sm sm:flex gap-2">
+                                    <span>
+                                        Requested by
+                                    </span>
+                                    <p
+                                        class="font-medium text-gray-700"
+                                        wire:loading.attr="disabled"
+                                    >
+                                        {{ $request->user->name }}
+                                        @if ($request->department)
+                                            <span class="mx-1 text-gray-300">
+                                                ·
+                                            </span>
+                                            <span
+                                                class="font-medium text-gray-700"
+                                            >
+                                                {{ $request->department->name }}
+                                            </span>
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
-                            <span
-                                class="inline-flex shrink-0 items-center rounded-full
-                                       bg-green-100 px-2.5 py-1
-                                       text-[11px] font-medium text-green-700"
+                            <div class="shrink-0 text-right text-[11px] text-gray-400 sm:text-sm sm:text-gray-500">
+                                {{ $request->created_at->format('Y-m-d') }}
+                                <div class="sm:hidden">
+                                    {{ $request->created_at->format('H:i') }}
+                                </div>
+                                <span class="hidden sm:inline">
+                                    {{ $request->created_at->format('H:i') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- =====================================================
+                        Items
+                    ====================================================== --}}
+                    <div class="divide-y divide-gray-100">
+                        @foreach ($request->audit_workflow->purchaseWorkflowItems as $workflowItem)
+                            @php
+                                $purchaseItem = $workflowItem->purchaseItem;
+                                $item = $purchaseItem->item;
+                                $itemVendor = $purchaseItem->itemVendor;
+                            @endphp
+                            <div
+                                class="px-4 py-4 sm:px-5"
+                                wire:key="workflow-item-{{ $workflowItem->id }}"
                             >
-                                Approved
-                            </span>
+                                {{-- =================================================
+                                    DESKTOP
+                                ================================================== --}}
+                                <div class="hidden items-center gap-4 md:flex justify-between">
+                                    <div class="flex items-center gap-4">
+                                        {{-- Image --}}
+                                        <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                            <img
+                                                src="{{ $item?->primaryImage
+                                                    ? Storage::url($item->primaryImage->path)
+                                                    : asset('images/default-item.png') }}"
+                                                alt="{{ $purchaseItem->item_name }}"
+                                                class="h-full w-full object-cover"
+                                            >
+                                        </div>
+                                        {{-- Item Info --}}
+                                        <div class="">
+                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                Name
+                                            </div>
+                                            <span
+                                                x-on:click="$dispatch('open-item', {
+                                                    itemId: {{ $purchaseItem->item_id }}
+                                                })"
+                                                class="block max-w-full truncate text-sm font-medium text-gray-900 hover:text-gray-700"
+                                                wire:loading.attr="disabled"
+                                            >
+                                                {{ $purchaseItem->item_name }}
+                                            </span>
+                                            {{-- Vendor --}}
+                                            <div class="w-52 min-w-0 shrink-0">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Vendor
+                                                </div>
+                                                @if ($itemVendor)
+                                                    <span
+                                                        x-on:click="$dispatch('open-vendor', {
+                                                            vendorId: {{ $itemVendor->vendor_id }}
+                                                        })"
+                                                        class="mt-0.5 block w-full truncate text-left text-sm font-medium text-gray-700 hover:text-gray-900"
+                                                        wire:loading.attr="disabled"
+                                                    >
+                                                        {{ $purchaseItem->vendor_name }}
+                                                    </span>
+                                                @else
+                                                    <div class="mt-0.5 text-sm text-gray-500">
+                                                        {{ $purchaseItem->vendor_name ?: '-' }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                                                <span>
+                                                    {{ $purchaseItem->sku }}
+                                                </span>
+                                                <span class="text-gray-300">
+                                                    |
+                                                </span>
+                                                <span>
+                                                    Qty:
+                                                    <span class="font-semibold text-gray-700">
+                                                        {{ $purchaseItem->quantity }}
+                                                    </span>
+                                                </span>
+                                                <span class="text-gray-300">
+                                                    |
+                                                </span>
+                                                <span>
+                                                    Unit Price:
+                                                    <span class="font-semibold text-gray-900">
+                                                        {{ number_format($purchaseItem->unit_price, 2) }}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="w-[240px] shrink-0 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-right">
+                                            {{-- Payment Type --}}
+                                            <div class="flex items-center justify-end gap-2">
+                                                <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                                    Payment
+                                                </span>
+                                                <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
+                                                    Cash
+                                                </span>
+                                            </div>
+                                            {{-- Amount --}}
+                                            <div class="mt-1 whitespace-nowrap text-2xl font-extrabold leading-tight tracking-tight text-gray-900">
+                                                ₱{{ number_format($purchaseItem->amount, 2) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- Actions --}}
+                                    <div class="flex shrink-0 items-center gap-2">
+                                        <x-approve-button
+                                            type="button"
+                                            wire:click="releaseCash({{ $workflowItem->id }})"
+                                            wire:confirm="Are you sure you want to approve this item?"
+                                            wire:loading.attr="disabled"
+                                            wire:target="releaseCash({{ $workflowItem->id }})"
+                                        >
+                                            {{__('Released Cash')}}
+                                        </x-approve-button>
+                                        <x-approve-button
+                                            type="button"
+                                            wire:click="openPlaceOrderModal({{ $workflowItem->id }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="openPlaceOrderModal({{ $workflowItem->id }})"
+                                        >
+                                            {{ __('Place Order') }}
+                                        </x-approve-button>
+                                    </div>
+                                </div>
+                                {{-- =================================================
+                                    MOBILE
+                                ================================================== --}}
+                                <div class="md:hidden">
+                                    {{-- Item Header --}}
+                                    <div class="flex items-start gap-3">
+                                        {{-- Image --}}
+                                        <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                            <img
+                                                src="{{ $item?->primaryImage
+                                                    ? Storage::url($item->primaryImage->path)
+                                                    : asset('images/default-item.png') }}"
+                                                alt="{{ $purchaseItem->item_name }}"
+                                                class="h-full w-full object-cover"
+                                            >
+                                        </div>
+                                        {{-- Item Name / SKU --}}
+                                        <div class="min-w-0 flex-1">
+                                            <button
+                                                x-on:click="$dispatch('open-item', {
+                                                    itemId: {{ $purchaseItem->item_id }}
+                                                })"
+                                                class="block w-full truncate text-left text-sm font-semibold text-gray-900"
+                                                wire:loading.attr="disabled"
+                                            >
+                                                {{ $purchaseItem->item_name }}
+                                            </button>
+                                            <div class="mt-1 truncate text-xs text-gray-500">
+                                                {{ $purchaseItem->sku }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- Item Details --}}
+                                    <div class="mt-3 rounded-lg bg-gray-50 p-3">
+                                        {{-- Quantity / Unit Price --}}
+                                        <div class="grid grid-cols-2 gap-4">
+                                            {{-- Quantity --}}
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                                    Qty
+                                                </div>
+                                                <div class="mt-1 text-sm font-semibold text-gray-900">
+                                                    {{ number_format($purchaseItem->quantity) }}
+                                                </div>
+                                            </div>
+                                            {{-- Unit Price --}}
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                                    Unit Price
+                                                </div>
+
+                                                <div class="mt-1 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                                    ₱{{ number_format($purchaseItem->unit_price, 2) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{-- Amount --}}
+                                        <div class="mt-3 border-t border-gray-200 pt-3">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                                                    Amount to Release
+                                                </div>
+
+                                                <div class="whitespace-nowrap text-xl font-extrabold leading-tight tracking-tight text-emerald-800">
+                                                    ₱{{ number_format($purchaseItem->amount, 2) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- Vendor --}}
+                                    <div class="mt-3">
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Vendor
+                                        </div>
+                                        @if ($itemVendor)
+                                            <button
+                                                x-on:click="$dispatch('open-vendor', {
+                                                    vendorId: {{ $itemVendor->vendor_id }}
+                                                })"
+                                                class="mt-0.5 block max-w-full truncate text-left text-sm font-medium text-gray-700"
+                                                wire:loading.attr="disabled"
+                                            >
+                                                {{ $purchaseItem->vendor_name }}
+                                            </button>
+                                        @else
+                                            <div class="mt-0.5 text-sm text-gray-500">
+                                                {{ $purchaseItem->vendor_name ?: '-' }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    {{-- Mobile Actions --}}
+                                    <div class="mt-4">
+                                        <x-approve-button
+                                            type="button"
+                                            wire:click="releaseCash({{ $workflowItem->id }})"
+                                            wire:confirm="Are you sure you want to approve this item?"
+                                            wire:loading.attr="disabled"
+                                            wire:target="releaseCash({{ $workflowItem->id }})"
+                                            class="w-full"
+                                        >
+                                            {{__('Released Cash')}}
+                                        </x-approve-button>
+                                    </div>
+                                </div>
+                                <div class="mt-3 border-t border-gray-100 pt-3">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Status
+                                        </div>
+                                        @if ($workflowItem->status === 'pending')
+                                            <span class="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase text-amber-700">
+                                                Pending
+                                            </span>
+                                        @elseif ($workflowItem->status === 'ordered')
+                                            <span class="rounded-full bg-blue-100 px-2.5 py-1 text-[10px] font-bold uppercase text-blue-700">
+                                                Ordered
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if ($workflowItem->status === 'pending')
+                                        <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Payment Details
+                                        </div>
+
+                                        <div class="mt-1 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                                            <div class="break-words whitespace-pre-wrap leading-relaxed">
+                                                {{ $purchaseItem->payment_details ?: '-' }}
+                                            </div>
+                                        </div>
+                                    @elseif ($workflowItem->status === 'ordered')
+                                        <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                                            Order History
+                                        </div>
+
+                                        <div class="mt-1 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                                            <div class="break-words whitespace-pre-wrap leading-relaxed">
+                                                {{ $purchaseItem->remark ?: '-' }}
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    {{-- =====================================================
+                        Footer
+                    ====================================================== --}}
+                    <div class="border-t border-gray-100 bg-gray-50 px-4 py-4 sm:px-5">
+                        {{-- Desktop Footer --}}
+                        <div class="hidden sm:flex items-center justify-end gap-4">
+                            <div class="text-right">
+                                <div class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                    Total Amount to Release
+                                </div>
+                                <div class="mt-0.5 whitespace-nowrap text-3xl font-extrabold leading-none tracking-tight text-gray-900">
+                                    ₱{{ number_format($request->audit_total, 2) }}
+                                </div>
+                            </div>
                         </div>
-                        <div class="mt-2 truncate text-xs text-gray-500">
-                            Vendor: {{ $vendor?->name ?? '-' }}
+                        {{-- Mobile Footer --}}
+                        <div class="sm:hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                            <div class="min-w-0 rounded-lg bg-emerald-50 p-3">
+                                <div class="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">
+                                    Amount
+                                </div>
+                                <div class="mt-1 whitespace-nowrap text-xl font-extrabold leading-tight tracking-tight text-emerald-800">
+                                    ₱{{ number_format($request->audit_total, 2) }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                {{-- Information --}}
-                <div class="mt-4 grid grid-cols-2 gap-2">
-                    <div class="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                            Requester
-                        </div>
-                        <div class="mt-0.5 truncate text-xs font-medium text-gray-700">
-                            {{ $request?->user?->name ?? '-' }}
-                        </div>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                            Department
-                        </div>
-                        <div class="mt-0.5 truncate text-xs font-medium text-gray-700">
-                            {{ $request?->department?->name ?? '-' }}
-                        </div>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                            Quantity
-                        </div>
-                        <div class="mt-0.5 text-xs font-semibold text-gray-900">
-                            {{ $purchaseItem?->quantity ?? 0 }}
-                        </div>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 px-3 py-2.5">
-                        <div class="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-                            Amount
-                        </div>
-                        <div class="mt-0.5 text-xs font-semibold text-gray-900">
-                            {{ number_format((float) ($purchaseItem?->amount ?? 0), 2) }}
-                        </div>
-                    </div>
-                </div>
+            @endforeach
+            {{-- Pagination --}}
+            <div class="mt-6">
+                {{ $requests->links() }}
             </div>
-        @empty
-            <div class="rounded-xl border border-gray-200 bg-white px-5 py-12 text-center shadow-sm">
+        @else
+            <div class="rounded-lg border border-dashed border-gray-300 bg-white px-6 py-12 text-center">
                 <div class="text-sm font-medium text-gray-900">
-                    No approved purchase items
+                    No pending budget requests.
                 </div>
                 <div class="mt-1 text-sm text-gray-500">
-                    There are currently no purchase items approved by procurement.
+                    There are currently no purchase requests waiting for budget.
                 </div>
             </div>
-        @endforelse
+        @endif
     </div>
-    {{-- Pagination --}}
-    @if($items->hasPages())
-        <div class="mt-4">
-            {{ $items->links() }}
-        </div>
-    @endif
+    <x-dialog-modal wire:model.live="placeOrderModal">
+        <x-slot name="title">
+            <div>
+                <div class="text-lg font-semibold text-gray-900">
+                    Complete Order Item
+                </div>
+                <p class="mt-1 text-sm text-gray-500">
+                    Please provide the payment or accounting information for this item.
+                </p>
+            </div>
+        </x-slot>
+        <x-slot name="content">
+            <div class="space-y-5">
+                {{-- Remark --}}
+                <div
+                    x-data="{
+                        count: {{ strlen($remark ?? '') }}
+                    }"
+                >
+                    <label
+                        for="remark"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                        {{ __('Remark') }}
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        id="remark"
+                        wire:model.defer="remark"
+                        x-on:input="count = $event.target.value.length"
+                        rows="4"
+                        maxlength="500"
+                        class="mt-2 block w-full rounded-lg border-gray-300 text-sm shadow-sm
+                            focus:border-emerald-500 focus:ring-emerald-500"
+                        placeholder="e.g. Transaction number, voucher number, approval number..."
+                    ></textarea>
+                    @error('remark')
+                        <p class="mt-1.5 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    <div class="mt-1 text-right text-xs text-gray-400">
+                        <span x-text="count"></span>/500
+                    </div>
+                </div>
+            </div>
+        </x-slot>
+        <x-slot name="footer">
+            <div class="flex w-full justify-end gap-2">
+                <x-secondary-button
+                    type="button"
+                    wire:click="$set('placeOrderModal', false)"
+                    wire:loading.attr="disabled"
+                >
+                    Cancel
+                </x-secondary-button>
+                <x-approve-button
+                    type="button"
+                    wire:click="complete"
+                    wire:loading.attr="disabled"
+                    wire:target="complete"
+                >
+                    <span wire:loading.remove wire:target="complete">
+                        {{ __('Complete Purchase') }}
+                    </span>
+                    <span wire:loading wire:target="complete">
+                        {{ __('Processing...') }}
+                    </span>
+                </x-approve-button>
+            </div>
+        </x-slot>
+    </x-dialog-modal>
 </div>

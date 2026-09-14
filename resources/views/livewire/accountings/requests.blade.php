@@ -34,7 +34,7 @@
                                         Pending
                                     </span>
                                 </div>
-                                <div class="mt-1.5 text-xs text-gray-500 sm:text-sm flex gap-2">
+                                <div class="mt-1.5 text-xs text-gray-500 sm:text-sm sm:flex gap-2">
                                     <span>
                                         Requested by
                                     </span>
@@ -43,17 +43,17 @@
                                         wire:loading.attr="disabled"
                                     >
                                         {{ $request->user->name }}
+                                        @if ($request->department)
+                                            <span class="mx-1 text-gray-300">
+                                                ·
+                                            </span>
+                                            <span
+                                                class="font-medium text-gray-700"
+                                            >
+                                                {{ $request->department->name }}
+                                            </span>
+                                        @endif
                                     </p>
-                                    @if ($request->department)
-                                        <span class="mx-1 text-gray-300">
-                                            ·
-                                        </span>
-                                        <p
-                                            class="font-medium text-gray-700"
-                                        >
-                                            {{ $request->department->name }}
-                                        </p>
-                                    @endif
                                 </div>
                             </div>
                             <div class="shrink-0 text-right text-[11px] text-gray-400 sm:text-sm sm:text-gray-500">
@@ -133,7 +133,6 @@
                                             </div>
                                             <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
                                                 <span>
-                                                    SKU:
                                                     {{ $purchaseItem->sku }}
                                                 </span>
                                                 <span class="text-gray-300">
@@ -204,7 +203,7 @@
                                                 type="button"
                                                 wire:click="openRemarkModal({{ $workflowItem->id }})"
                                                 wire:loading.attr="disabled"
-                                                wire:target="releaseCash({{ $workflowItem->id }})"
+                                                wire:target="openRemarkModal({{ $workflowItem->id }})"
                                             >
                                                 {{__('Release')}}
                                             </x-approve-button>
@@ -239,7 +238,6 @@
                                                 {{ $purchaseItem->item_name }}
                                             </button>
                                             <div class="mt-1 truncate text-xs text-gray-500">
-                                                SKU:
                                                 {{ $purchaseItem->sku }}
                                             </div>
                                         </div>
@@ -308,16 +306,28 @@
                                     </div>
                                     {{-- Mobile Actions --}}
                                     <div class="mt-4">
-                                        <x-approve-button
-                                            type="button"
-                                            wire:click="releaseCash({{ $workflowItem->id }})"
-                                            wire:confirm="Are you sure you want to approve this item?"
-                                            wire:loading.attr="disabled"
-                                            wire:target="releaseCash({{ $workflowItem->id }})"
-                                            class="w-full justify-center"
-                                        >
-                                            {{__('Released Cash')}}
-                                        </x-approve-button>
+                                        @if($purchaseItem->disbursement_type_name == 'Cash')
+                                            <x-approve-button
+                                                type="button"
+                                                wire:click="releaseCash({{ $workflowItem->id }})"
+                                                wire:confirm="Are you sure you want to approve this item?"
+                                                wire:loading.attr="disabled"
+                                                wire:target="releaseCash({{ $workflowItem->id }})"
+                                                class="w-full"
+                                            >
+                                                {{__('Released Cash')}}
+                                            </x-approve-button>
+                                        @else
+                                            <x-approve-button
+                                                type="button"
+                                                wire:click="openRemarkModal({{ $workflowItem->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="openRemarkModal({{ $workflowItem->id }})"
+                                                class="w-full"
+                                            >
+                                                {{__('Release')}}
+                                            </x-approve-button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -432,7 +442,7 @@
                         wire:model.defer="remark"
                         x-on:input="count = $event.target.value.length"
                         rows="4"
-                        maxlength="2000"
+                        maxlength="500"
                         class="mt-2 block w-full rounded-lg border-gray-300 text-sm shadow-sm
                             focus:border-emerald-500 focus:ring-emerald-500"
                         placeholder="e.g. Transaction number, voucher number, approval number..."
@@ -445,7 +455,7 @@
                     @enderror
 
                     <div class="mt-1 text-right text-xs text-gray-400">
-                        <span x-text="count"></span>/2000
+                        <span x-text="count"></span>/500
                     </div>
                 </div>
 

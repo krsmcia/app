@@ -554,6 +554,9 @@
                                                         @php
                                                             $itemStatusClasses = match ($workflowItem->status) {
                                                                 'approved' => 'bg-green-100 text-green-700',
+                                                                'purchased' => 'bg-green-100 text-green-700',
+                                                                'fund released' => 'bg-green-100 text-green-700',
+                                                                'ordered' => 'bg-green-100 text-green-700',
                                                                 'rejected' => 'bg-red-100 text-red-700',
                                                                 'pending' => 'bg-yellow-100 text-yellow-700',
                                                                 default => 'bg-gray-100 text-gray-600',
@@ -705,49 +708,37 @@
                                                     <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">
                                                         Acted At
                                                     </th>
-
                                                 </tr>
-
                                             </thead>
-
-
                                             <tbody class="divide-y divide-gray-100">
-
                                                 @foreach ($workflow->purchaseWorkflowItems as $workflowItem)
-
                                                     @php
                                                         $itemStatusClasses = match ($workflowItem->status) {
                                                             'approved' => 'bg-green-100 text-green-700',
+                                                            'purchased' => 'bg-green-100 text-green-700',
+                                                            'fund released' => 'bg-green-100 text-green-700',
+                                                            'ordered' => 'bg-green-100 text-green-700',
                                                             'rejected' => 'bg-red-100 text-red-700',
                                                             'pending' => 'bg-yellow-100 text-yellow-700',
                                                             default => 'bg-gray-100 text-gray-600',
                                                         };
                                                     @endphp
-
                                                     <tr>
-
                                                         <td class="px-3 py-2 text-sm text-gray-700">
                                                             {{ $workflowItem->purchaseItem?->item_name ?? '-' }}
                                                         </td>
-
                                                         <td class="px-3 py-2 text-right text-sm text-gray-700">
                                                             {{ number_format($workflowItem->purchaseItem?->quantity ?? 0) }}
                                                         </td>
-
                                                         <td class="px-3 py-2 text-center">
-
                                                             <span class="rounded-full px-2 py-1 text-xs font-medium {{ $itemStatusClasses }}">
                                                                 {{ ucfirst($workflowItem->status) }}
                                                             </span>
-
                                                         </td>
-
                                                         <td class="whitespace-nowrap px-3 py-2 text-right text-xs text-gray-500">
                                                             {{ $workflowItem->acted_at?->format('M d, Y h:i A') ?? '-' }}
                                                         </td>
-
                                                     </tr>
-
                                                 @endforeach
 
                                             </tbody>

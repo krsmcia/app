@@ -10,56 +10,106 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithoutUrlPagination;
+use Livewire\WithFileUploads;
 
 class Approved extends Component
 {
-    use WithPagination, WithoutUrlPagination;
+    use WithPagination, WithoutUrlPagination, WithFileUploads;
 
+    public ?int $selectedWorkflowItemId = null;
     public string $search = '';
     public string $remark = '';
-    public $remarkModal;
+    public bool $remarkModal = false;
+    public bool $showCashReleaseModal = false;
 
-    public function updatingSearch(): void
-    {
-        $this->resetPage();
-    }
-
-    public bool $placeOrderModal = false;
-    public ?int $selectedWorkflowItemId = null;
-    public string $purchaseReference = '';
+    public bool $showAttachReceiptModal = false;
+    public $recipientPhoto;
+    
     public function openPlaceOrderModal(int $workflowItemId): void
     {
         $this->selectedWorkflowItemId = $workflowItemId;
-        $this->purchaseReference = '';
-        $this->placeOrderModal = true;
+        $this->remark = '';
+        $this->remarkModal = true;
     }
-    public function purchaseItem(): void
+    public function purchaseItem()
     {
         $this->validate([
-            'purchaseReference' => ['required', 'string', 'max:255'],
+            'remark' => ['required', 'string', 'max:500'],
         ]);
-
         $workflowItem = PurchaseWorkflowItem::with('purchaseItem')
             ->findOrFail($this->selectedWorkflowItemId);
-
         abort_unless($workflowItem->status === 'pending', 403);
-
         DB::transaction(function () use ($workflowItem) {
             $workflowItem->update([
                 'status' => 'ordered',
                 'acted_at' => now(),
             ]);
             $workflowItem->purchaseItem->update([
-                'remark' => $this->purchaseReference,
+                'remark' => $this->remark,
             ]);
         });
         $this->reset([
-            'placeOrderModal',
+            'remarkModal',
             'selectedWorkflowItemId',
-            'purchaseReference',
+            'remark',
         ]);
     }
 
+    //Upload receiver photo
+    
+    
+    public function openCashReleaseModal(int $workflowItemId): void
+    {
+        $this->selectedWorkflowItemId = $workflowItemId;
+        $this->resetValidation();
+        $this->showCashReleaseModal = true;
+    }
+    public function openAttachReceiptModal(int $workflowItemId): void
+    {
+        $this->selectedWorkflowItemId = $workflowItemId;
+        $this->recipientPhoto = null;
+
+        $this->resetValidation();
+
+        $this->showAttachReceiptModal = true;
+
+        $this->dispatch('reset-recipient-photo');
+    }
+    public function releaseCash(): void
+    {
+        $this->validate([
+            'recipientPhoto' => [
+                'required',
+                'image',
+                'max:5120',
+            ],
+        ]);
+        $workflowItem = PurchaseWorkflowItem::with('purchaseItem')
+            ->findOrFail($this->selectedWorkflowItemId);
+        abort_unless($workflowItem->status === 'pending', 403);
+        DB::transaction(function () use ($workflowItem) {
+            $path = $this->recipientPhoto->store(
+                'procurements/cash-receipts',
+                'public'
+            );
+            $workflowItem->update([
+                'status' => 'completed',
+                'acted_at' => now(),
+            ]);
+            $workflowItem->purchaseItem->update([
+                'cash_recipient_photo' => $path,
+            ]);
+        });
+        $this->reset([
+            'showCashReleaseModal',
+            'selectedWorkflowItemId',
+            'recipientPhoto',
+        ]);
+    }
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
     public function render()
     {
         $requests = PurchaseRequest::query()

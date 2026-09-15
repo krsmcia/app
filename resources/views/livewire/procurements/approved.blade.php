@@ -175,10 +175,9 @@
                                     <div class="flex shrink-0 items-center gap-2">
                                         <x-approve-button
                                             type="button"
-                                            wire:click="releaseCash({{ $workflowItem->id }})"
-                                            wire:confirm="Are you sure you want to approve this item?"
+                                            wire:click="openAttachReceiptModal({{ $workflowItem->id }})"
                                             wire:loading.attr="disabled"
-                                            wire:target="releaseCash({{ $workflowItem->id }})"
+                                            wire:target="openAttachReceiptModal({{ $workflowItem->id }})"
                                         >
                                             {{__('Released Cash')}}
                                         </x-approve-button>
@@ -315,9 +314,8 @@
                                         <div class="mt-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                             Payment Details
                                         </div>
-
                                         <div class="mt-1 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
-                                            <div class="break-words whitespace-pre-wrap leading-relaxed">
+                                            <div class="">
                                                 {{ $purchaseItem->payment_details ?: '-' }}
                                             </div>
                                         </div>
@@ -380,7 +378,7 @@
             </div>
         @endif
     </div>
-    <x-dialog-modal wire:model.live="placeOrderModal">
+    <x-dialog-modal wire:model.live="remarkModal">
         <x-slot name="title">
             <div>
                 <div class="text-lg font-semibold text-gray-900">
@@ -431,7 +429,7 @@
             <div class="flex w-full justify-end gap-2">
                 <x-secondary-button
                     type="button"
-                    wire:click="$set('placeOrderModal', false)"
+                    wire:click="$set('remarkModal', false)"
                     wire:loading.attr="disabled"
                 >
                     Cancel
@@ -449,6 +447,246 @@
                         {{ __('Processing...') }}
                     </span>
                 </x-approve-button>
+            </div>
+        </x-slot>
+    </x-dialog-modal>
+    <x-dialog-modal wire:model.live="showAttachReceiptModal">
+        <x-slot name="title">
+            <div>
+                <div class="text-lg font-semibold text-gray-900">
+                    Complete Order Item
+                </div>
+
+                <p class="mt-1 text-sm text-gray-500">
+                    Please provide the payment or accounting information for this item.
+                </p>
+            </div>
+        </x-slot>
+
+        <x-slot name="content">
+            {{-- Receipt Photo --}}
+            <div
+                x-data="{
+                    photoName: null,
+                    photoPreview: null,
+                    resetPhoto() {
+                        this.photoName = null;
+                        this.photoPreview = null;
+
+                        if (this.$refs.photo) {
+                            this.$refs.photo.value = '';
+                        }
+                    },
+                    resizeImage(file) {
+                        return new Promise((resolve, reject) => {
+                            const maxSize = 1024;
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                const img = new Image();
+                                img.onload = () => {
+                                    let width = img.width;
+                                    let height = img.height;
+                                    if (width > maxSize || height > maxSize) {
+                                        if (width > height) {
+                                            height = Math.round(
+                                                height * (maxSize / width)
+                                            );
+                                            width = maxSize;
+                                        } else {
+                                            width = Math.round(
+                                                width * (maxSize / height)
+                                            );
+                                            height = maxSize;
+                                        }
+                                    }
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(
+                                        img,
+                                        0,
+                                        0,
+                                        width,
+                                        height
+                                    );
+                                    canvas.toBlob(
+                                        (blob) => {
+                                            if (!blob) {
+                                                reject(
+                                                    new Error('Image resize failed.')
+                                                );
+                                                return;
+                                            }
+                                            resolve(
+                                                new File(
+                                                    [blob],
+                                                    file.name.replace(
+                                                        /\.[^/.]+$/,
+                                                        '.jpg'
+                                                    ),
+                                                    {
+                                                        type: 'image/jpeg',
+                                                    }
+                                                )
+                                            );
+                                        },
+                                        'image/jpeg',
+                                        0.85
+                                    );
+                                };
+                                img.onerror = reject;
+                                img.src = event.target.result;
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                }"
+                x-init="
+                    $refs.photo.addEventListener('change', async (event) => {
+                        const originalFile = event.target.files[0];
+                        if (!originalFile) {
+                            return;
+                        }
+                        const resizedFile = await resizeImage(originalFile);
+                        photoName = resizedFile.name;
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            photoPreview = e.target.result;
+                        };
+                        reader.readAsDataURL(resizedFile);
+
+                        $wire.upload(
+                            'recipientPhoto',
+                            resizedFile
+                        );
+                    });
+
+                    window.addEventListener('reset-recipient-photo', () => {
+                        resetPhoto();
+                    });
+                "
+            >
+
+                {{-- Hidden file input --}}
+                <input
+                    type="file"
+                    id="photo"
+                    class="hidden"
+                    x-ref="photo"
+                    accept="image/*"
+                    capture="environment"
+                />
+                <label
+                        for="photo"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                    {{ __('Receipt Photo') }}
+                    <span class="text-red-500">*</span>
+                </label>
+
+                {{-- Preview --}}
+                <div
+                    class="mt-2"
+                    x-show="photoPreview"
+                    x-cloak
+                >
+                    <img
+                        :src="photoPreview"
+                        alt="Receipt preview"
+                        class="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                    >
+                </div>
+
+                {{-- Select / Take Photo --}}
+                <x-secondary-button
+                    class="mt-2 me-2"
+                    type="button"
+                    x-on:click.prevent="$refs.photo.click()"
+                >
+                    <span x-show="!photoPreview">
+                        {{ __('Add Receipt Photo') }}
+                    </span>
+
+                    <span x-show="photoPreview">
+                        {{ __('Replace Receipt Photo') }}
+                    </span>
+                </x-secondary-button>
+
+                <x-input-error
+                    for="recipientPhoto"
+                    class="mt-2"
+                />
+            </div>
+
+
+            {{-- Remark --}}
+            <div class="mt-5 space-y-5">
+                <div
+                    x-data="{
+                        count: {{ strlen($remark ?? '') }}
+                    }"
+                >
+                    <label
+                        for="remark"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                        {{ __('Remark') }}
+                        <span class="text-red-500">*</span>
+                    </label>
+
+                    <textarea
+                        id="remark"
+                        wire:model.defer="remark"
+                        x-on:input="count = $event.target.value.length"
+                        rows="4"
+                        maxlength="500"
+                        class="mt-2 block w-full rounded-lg border-gray-300 text-sm shadow-sm
+                            focus:border-emerald-500 focus:ring-emerald-500"
+                        placeholder="e.g. Transaction number, voucher number, approval number..."
+                    ></textarea>
+
+                    @error('remark')
+                        <p class="mt-1.5 text-xs text-red-600">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                    <div class="mt-1 text-right text-xs text-gray-400">
+                        <span x-text="count"></span>/500
+                    </div>
+                </div>
+            </div>
+
+        </x-slot>
+
+        <x-slot name="footer">
+            <div class="flex w-full justify-end gap-2">
+
+                <x-secondary-button
+                    type="button"
+                    wire:click="$set('showAttachReceiptModal', false)"
+                    wire:loading.attr="disabled"
+                >
+                    Cancel
+                </x-secondary-button>
+
+                <x-approve-button
+                    type="button"
+                    wire:click="releaseCash"
+                    wire:loading.attr="disabled"
+                    wire:target="releaseCash"
+                >
+                    <span wire:loading.remove wire:target="releaseCash">
+                        {{ __('Complete Purchase') }}
+                    </span>
+
+                    <span wire:loading wire:target="releaseCash">
+                        {{ __('Processing...') }}
+                    </span>
+                </x-approve-button>
+
             </div>
         </x-slot>
     </x-dialog-modal>

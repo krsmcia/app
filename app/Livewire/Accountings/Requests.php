@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-
+use App\Services\PurchaseWorkflowService;
+use Livewire\Attributes\On;
 class Requests extends Component
 {
     use WithPagination;
@@ -28,11 +29,9 @@ class Requests extends Component
         $this->validate([
             'remark' => 'required|string|max:500',
         ]);
-
         if (!$this->releaseWorkflowItemId) {
             return;
         }
-
         $workflowItem = PurchaseWorkflowItem::query()
             ->with([
                 'purchaseWorkflow',
@@ -46,21 +45,16 @@ class Requests extends Component
                     ->where('status', 'pending');
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflowItem) {
-
             $purchaseItem = $workflowItem->purchaseItem;
-
             $isCash = strcasecmp(
                 trim($purchaseItem->disbursement_type_name ?? ''),
                 'cash'
             ) === 0;
-
             $workflowItem->update([
                 'status' => $isCash ? 'fund released' : 'purchased',
                 'acted_at' => now(),
             ]);
-
             // 실제 구매 상태 기록
             $workflowItem->purchaseActions()->create([
                 'action' => $isCash ? 'pending' : 'purchased',
@@ -68,137 +62,28 @@ class Requests extends Component
                 'acted_at' => now(),
                 'comment' => $this->remark,
             ]);
-
-            // Accounting workflow가 모두 처리됐는지 확인
-            $this->completeAccountingWorkflowIfFinished(
-                $workflowItem->purchaseWorkflow
-            );
+            app(PurchaseWorkflowService::class)->completeAccountingWorkflowIfFinished($workflowItem->purchaseWorkflow);
         });
-
         $this->reset([
             'remarkModal',
             'remark',
             'releaseWorkflowItemId',
         ]);
-
         $this->dispatch('approval-updated');
     }
-    //purchase fulfillment
-    public function releaseCash(int $workflowItemId): void
+    private function roundCashAmount(float $amount): int
     {
-        $workflowItem = PurchaseWorkflowItem::query()
-            ->with('purchaseWorkflow')
-            ->whereKey($workflowItemId)
-            ->where('status', 'pending')
-            ->whereHas('purchaseWorkflow', function ($query) {
-                $query
-                    ->where('step', 'accounting')
-                    ->where('status', 'pending');
-            })
-            ->firstOrFail();
-        DB::transaction(function () use ($workflowItem) {
-            $workflowItem->update([
-                'status' => 'fund released',
-                'acted_at' => now(),
-            ]);
-            $workflowItem->purchaseActions()->create([
-                'action' => 'fund released',
-                'acted_by' => Auth::id(),
-                'acted_at' => now(),
-            ]);
-            // Cash 지급은 아직 실제 구매 전
-            // purchase_items.status = pending 유지
-            $this->completeAccountingWorkflowIfFinished(
-                $workflowItem->purchaseWorkflow,
-                'purchase fulfillment'
-            );
-        });
-        $this->dispatch('approval-updated');
-    }
-    private function completeAccountingWorkflowIfFinished(
-        PurchaseWorkflow $workflow
-    ): void {
-        $hasPendingItems = $workflow->purchaseWorkflowItems()
-            ->where('status', 'pending')
-            ->exists();
+        $whole = floor($amount);
+        $decimal = $amount - $whole;
 
-        if ($hasPendingItems) {
-            return;
-        }
-        $workflow->update([
-            'status' => 'completed',
-            'acted_at' => now(),
-        ]);
-        $this->createFundReleasedWorkflow($workflow);
+        return $decimal >= 0.45
+            ? (int) $whole + 1
+            : (int) $whole;
     }
-    private function createFundReleasedWorkflow(PurchaseWorkflow $workflow): void
+    #[On('cash-released')]
+    public function refreshRequests(): void
     {
-        $purchaseRequest = $workflow->purchaseRequest;
-        $cashItems = $workflow->purchaseWorkflowItems()
-            ->with('purchaseItem')
-            ->where('status', 'fund released')
-            ->get()
-            ->filter(function ($workflowItem) {
-                return strcasecmp(
-                    trim($workflowItem->purchaseItem->disbursement_type_name ?? ''),
-                    'cash'
-                ) === 0;
-            });
-        if ($cashItems->isEmpty()) {
-            return;
-        }
-        // fund released workflow 생성
-        $nextWorkflow = $purchaseRequest->purchaseWorkflows()->create([
-            'step' => 'fund released',
-            'status' => 'pending',
-        ]);
-        // 모든 cash item을 pending으로 생성
-        foreach ($cashItems as $workflowItem) {
-            $nextWorkflow->purchaseWorkflowItems()->create([
-                'purchase_item_id' => $workflowItem->purchase_item_id,
-                'status' => 'pending',
-            ]);
-        }
-    }
-    private function createNextWorkflow(
-        PurchaseWorkflow $workflow,
-        string $step
-    ): void {
-        $purchaseRequest = $workflow->purchaseRequest;
-
-        $approvedItems = $workflow->purchaseWorkflowItems()
-            ->where('status', 'approved')
-            ->get();
-
-        if ($approvedItems->isEmpty()) {
-            return;
-        }
-
-        /*
-        * Fund Release
-        * → 실제 구매 완료
-        * → 별도의 pending workflow를 만들 필요 없음
-        */
-        if ($step === 'fund release') {
-            return;
-        }
-
-        /*
-        * Purchase Fulfillment
-        * → 아직 구매 완료가 아니므로
-        * → 다음 단계 workflow 생성
-        */
-        $nextWorkflow = $purchaseRequest->purchaseWorkflows()->create([
-            'step' => $step,
-            'status' => 'pending',
-        ]);
-
-        foreach ($approvedItems as $workflowItem) {
-            $nextWorkflow->purchaseWorkflowItems()->create([
-                'purchase_item_id' => $workflowItem->purchase_item_id,
-                'status' => 'pending',
-            ]);
-        }
+        // render()가 다시 실행되도록 상태만 갱신
     }
     public function render()
     {
@@ -206,6 +91,7 @@ class Requests extends Component
             ->with([
                 'user',
                 'department',
+
                 'purchaseWorkflows' => function ($query) {
                     $query
                         ->where('step', 'accounting')
@@ -217,6 +103,7 @@ class Requests extends Component
                                     ->with([
                                         'purchaseItem.item.primaryImage',
                                         'purchaseItem.itemVendor.vendor',
+                                        'purchaseItem.itemVendor.disbursementType',
                                     ]);
                             },
                         ]);
@@ -232,37 +119,85 @@ class Requests extends Component
             })
             ->latest()
             ->paginate(12);
-        $requests->getCollection()->transform(
-            function ($request) {
-                $workflow = $request->purchaseWorkflows->first();
-                $request->audit_workflow = $workflow;
-                if (!$workflow) {
-                    $request->audit_total = 0;
 
-                    return $request;
-                }
-                /*
-                 * Audit 화면에는 pending item만 존재
-                 */
-                $request->items = $workflow->purchaseWorkflowItems;
-                /*
-                 * 중요:
-                 *
-                 * Audit에서는 vendor의 현재 가격을 다시 계산하지 않는다.
-                 *
-                 * Procurement 단계에서 purchase_items.amount에
-                 * 확정된 snapshot 가격이 저장되어 있기 때문이다.
-                 */
-                $request->audit_total = $workflow->purchaseWorkflowItems
-                    ->sum(function ($workflowItem) {
+        $requests->getCollection()->transform(function ($request) {
+            $workflow = $request->purchaseWorkflows->first();
 
-                        $purchaseItem = $workflowItem->purchaseItem;
+            $request->account_workflow = $workflow;
 
-                        return (float) ($purchaseItem->amount ?? 0);
-                    });
+            if (!$workflow) {
+                $request->items = collect();
+                $request->account_total = 0;
+
                 return $request;
             }
-        );
+
+            /*
+            * Accounting 화면의 pending items
+            */
+            $request->items = $workflow->purchaseWorkflowItems->map(
+                function ($workflowItem) {
+                    $purchaseItem = $workflowItem->purchaseItem;
+
+                    $amount = (float) ($purchaseItem->amount ?? 0);
+                    $quantity = (int) ($purchaseItem->quantity ?? 1);
+                    $discount = (float) ($purchaseItem->discount ?? 0);
+                    $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
+
+                    /*
+                    * Original price
+                    * 단가 × 수량
+                    */
+                    $originalTotal = $amount * $quantity;
+
+                    /*
+                    * 실제 계산 금액
+                    */
+                    $calculatedTotal =
+                        $originalTotal
+                        + $shippingFee
+                        - $discount;
+
+                    /*
+                    * Disbursement type 확인
+                    */
+                    $disbursementType = $purchaseItem->itemVendor?->disbursementType;
+
+                    $isCash = strtolower(
+                        trim($disbursementType?->name ?? '')
+                    ) === 'cash';
+
+                    /*
+                    * Cash인 경우에만 소수점 올림
+                    */
+                    $releaseTotal = $isCash
+                        ? $this->roundCashAmount($calculatedTotal)
+                        : $calculatedTotal;
+
+                    /*
+                    * Blade에서 사용
+                    */
+                    $workflowItem->original_total = $originalTotal;
+                    $workflowItem->calculated_total = $calculatedTotal;
+                    $workflowItem->release_total = $releaseTotal;
+                    $workflowItem->is_cash = $isCash;
+
+                    return $workflowItem;
+                }
+            );
+
+            /*
+            * 각 item의 release 금액 합산
+            */
+            $request->account_total = $request->items->sum(
+                fn ($workflowItem) => $workflowItem->release_total
+            );
+
+            $request->account_total = max(0, $request->account_total);
+
+            return $request;
+        });
+
         return view('livewire.accountings.requests', [
             'requests' => $requests,
         ]);

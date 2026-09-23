@@ -389,9 +389,16 @@ class Requests extends Component
 
                         $purchaseItem = $workflowItem->purchaseItem;
 
-                        return (float) ($purchaseItem->amount ?? 0);
+                        $amount = (float) ($purchaseItem->amount ?? 0);
+                        $discount = (float) ($purchaseItem->discount ?? 0);
+                        $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
+
+                        return $amount - $discount + $shippingFee;
                     });
 
+                $request->audit_total -= (float) ($request->discount ?? 0);
+                $request->audit_total = max(0, $request->audit_total);
+                
                 return $request;
             }
         );

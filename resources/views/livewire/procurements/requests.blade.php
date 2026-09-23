@@ -14,7 +14,71 @@
                     $workflow = $request->purchaseWorkflows
                         ->firstWhere('step', 'procurement');
                 @endphp
-                <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+                <div
+                    x-data="{
+                        requestDiscount: {{ (float) ($requestDiscounts[$request->id] ?? 0) }},
+
+                        items: {
+                            @foreach ($workflow->purchaseWorkflowItems as $workflowItem)
+                                {{ $workflowItem->id }}: {
+                                    amount: {{ (float) (
+                                        $workflowItem->purchaseItem?->quantity
+                                        * ($workflowItem->preferred_vendor?->unit_price ?? 0)
+                                    ) }},
+                                    shippingFee: {{ (float) ($itemAdjustments[$workflowItem->id]['shipping_fee'] ?? 0) }},
+                                    discount: {{ (float) ($itemAdjustments[$workflowItem->id]['discount'] ?? 0) }},
+                                },
+                            @endforeach
+                        },
+
+                        number(value) {
+                            return parseFloat(
+                                String(value ?? 0).replace(/,/g, '')
+                            ) || 0;
+                        },
+
+                        get subtotal() {
+                            return Object.values(this.items).reduce((sum, item) => {
+                                const amount = this.number(item.amount);
+                                const shippingFee = this.number(item.shippingFee);
+                                const discount = this.number(item.discount);
+
+                                return sum + Math.max(
+                                    0,
+                                    amount + shippingFee - discount
+                                );
+                            }, 0);
+                        },
+
+                        get total() {
+                            return Math.max(
+                                0,
+                                this.subtotal - this.number(this.requestDiscount)
+                            );
+                        },
+
+                        money(value) {
+                            return this.number(value).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        },
+                        validateRequestDiscount() {
+                            const discount = this.number(this.requestDiscount);
+                            const subtotal = this.number(this.subtotal);
+
+                            if (discount > subtotal) {
+                                alert(
+                                    `Request discount cannot be greater than ${this.money(subtotal)}.`
+                                );
+
+                                this.requestDiscount = '';
+                            }
+                        },
+                        
+                    }"
+                    class="rounded-lg border border-gray-200 bg-white shadow-sm"
+                >
                     {{-- Header --}}
                     <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
                         <div>
@@ -46,128 +110,505 @@
                             @php
                                 $item = $workflowItem->purchaseItem;
                                 $preferredVendor = $workflowItem->preferred_vendor;
+
+                                $unitPrice = $preferredVendor?->unit_price !== null
+                                    ? (float) $preferredVendor->unit_price
+                                    : 0;
+
+                                $shippingFee = (float) (
+                                    $itemAdjustments[$workflowItem->id]['shipping_fee'] ?? 0
+                                );
+
+                                $itemDiscount = (float) (
+                                    $itemAdjustments[$workflowItem->id]['discount'] ?? 0
+                                );
+
+                                $itemAmount = $item && $unitPrice > 0
+                                    ? $item->quantity * $unitPrice
+                                    : 0;
+
+                                $itemTotal = max(
+                                    0,
+                                    $itemAmount + $shippingFee - $itemDiscount
+                                );
                             @endphp
-                            <div class="px-4 py-4 sm:px-5" wire:key="workflow-{{$workflowItem->id}}">
-                                <div class="flex items-center gap-3 sm:gap-4">
-                                    {{-- Image --}}
-                                    <div class="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100 sm:h-14 sm:w-14">
-                                        <img
-                                            src="{{ $item?->item?->primaryImage
-                                                ? Storage::url($item->item->primaryImage->path)
-                                                : asset('images/default-item.png') }}"
-                                            alt="{{ $item?->item?->item_name }}"
-                                            class="h-full w-full object-cover"
+
+                            <div
+                                class="px-4 py-4 sm:px-5"
+                                wire:key="workflow-{{ $workflowItem->id }}"
+                            >
+                                {{-- =========================================================
+                                    Desktop: Everything in ONE ROW
+                                ========================================================== --}}
+                                <div
+                                    @if ($preferredVendor)
+                                        x-data="{
+                                            get itemData() {
+                                                return items[{{ $workflowItem->id }}];
+                                            },
+
+                                            number(value) {
+                                                return parseFloat(
+                                                    String(value ?? 0).replace(/,/g, '')
+                                                ) || 0;
+                                            },
+
+                                            get total() {
+                                                const amount = this.number(this.itemData.amount);
+                                                const shippingFee = this.number(this.itemData.shippingFee);
+                                                const discount = this.number(this.itemData.discount);
+
+                                                return Math.max(
+                                                    0,
+                                                    amount + shippingFee - discount
+                                                );
+                                            },
+
+                                            money(value) {
+                                                return this.number(value).toLocaleString('en-US', {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2
+                                                });
+                                            },
+
+                                            validateDiscount() {
+                                                const amount = this.number(this.itemData.amount);
+                                                const shippingFee = this.number(this.itemData.shippingFee);
+                                                const discount = this.number(this.itemData.discount);
+
+                                                const maxDiscount = amount + shippingFee;
+
+                                                if (discount > maxDiscount) {
+                                                    alert(
+                                                        `Item discount cannot be greater than ${this.money(maxDiscount)}.`
+                                                    );
+                                                    this.itemData.shippingFee = '';
+                                                    this.itemData.discount = '';
+                                                }
+                                            }
+                                        }"
+                                    @endif
+                                >
+                                    {{-- Desktop --}}
+                                    <div
+                                        class="hidden xl:grid xl:grid-cols-[56px_minmax(180px,1.7fr)_minmax(120px,1.2fr)_90px_100px_100px_110px_110px_120px] sm:items-center sm:gap-3"
+                                    >
+                                        {{-- Image --}}
+                                        <div
+                                            class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100"
                                         >
-                                    </div>
-                                    {{-- Item Info --}}
-                                    <div class="min-w-0 flex-1">
-                                        <div class="truncate text-sm font-medium text-gray-900 sm:text-base">
-                                            {{ $item?->item?->item_name }}
+                                            <img
+                                                src="{{ $item?->item?->primaryImage
+                                                    ? Storage::url($item->item->primaryImage->path)
+                                                    : asset('images/default-item.png') }}"
+                                                alt="{{ $item?->item?->item_name }}"
+                                                class="h-full w-full object-cover"
+                                            >
                                         </div>
-                                        {{-- SKU + Quantity --}}
-                                        <div class="mt-0.5 flex items-center gap-3 text-xs text-gray-500">
-                                            <span>
-                                                SKU: {{ $item?->item?->sku }}
-                                            </span>
-                                            <span class="text-gray-300">|</span>
-                                            <span>
-                                                Qty:
-                                                <span class="font-semibold text-gray-700">
-                                                    {{ $item->quantity }}
+                                        {{-- Item Info --}}
+                                        <div class="min-w-0">
+                                            <div class="truncate text-sm font-semibold text-gray-900">
+                                                {{ $item?->item?->item_name }}
+                                            </div>
+                                            <div class="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                                                <span>
+                                                    SKU:
+                                                    <span class="font-medium text-gray-600">
+                                                        {{ $item?->item?->sku }}
+                                                    </span>
                                                 </span>
-                                            </span>
+                                                <span class="text-gray-300">•</span>
+                                                <span>
+                                                    Qty:
+                                                    <span class="font-semibold text-gray-700">
+                                                        {{ $item?->quantity }}
+                                                    </span>
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    {{-- Preferred Vendor --}}
-                                    <div class="hidden w-40 shrink-0 sm:block">
-                                        @if ($preferredVendor)
-                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                        {{-- Vendor --}}
+                                        <div class="min-w-0">
+                                            <div class="text-[10px] font-medium uppercase tracking-wider text-gray-400">
                                                 Vendor
                                             </div>
-                                            <div class="truncate text-sm font-medium text-gray-700">
-                                                {{ $preferredVendor->vendor->name }}
+                                            @if ($preferredVendor)
+                                                <div
+                                                    class="mt-0.5 truncate text-sm font-semibold text-gray-800"
+                                                    title="{{ $preferredVendor->vendor->name }}"
+                                                >
+                                                    {{ $preferredVendor->vendor->name }}
+                                                </div>
+                                            @else
+                                                <div class="mt-0.5 text-sm text-gray-400">
+                                                    No vendor
+                                                </div>
+                                            @endif
+                                        </div>
+                                        {{-- Unit Price --}}
+                                        <div>
+                                            <div class="text-[10px] text-gray-400">
+                                                Unit Price
                                             </div>
-                                            <div class="mt-1 text-sm">
-                                                @if ($preferredVendor->unit_price !== null && (float) $preferredVendor->unit_price > 0)
-                                                    <div class="mt-1 text-sm">
-                                                        <span class="text-gray-400">Unit Price:</span>
-                                                        <span class="font-semibold text-gray-900">
-                                                            {{ number_format($preferredVendor->unit_price, 2) }}
+                                            @if ($unitPrice > 0)
+                                                <div class="mt-0.5 text-sm font-semibold text-gray-900">
+                                                    {{ number_format($unitPrice, 2) }}
+                                                </div>
+                                            @else
+                                                <div class="mt-0.5 text-sm font-medium text-red-600">
+                                                    No price
+                                                </div>
+                                            @endif
+                                        </div>
+                                        {{-- Amount --}}
+                                        <div>
+                                            <div class="text-[10px] text-gray-400">
+                                                Amount
+                                            </div>
+
+                                            <div class="mt-0.5 text-sm font-semibold text-gray-900">
+                                                {{ number_format($itemAmount, 2) }}
+                                            </div>
+                                        </div>
+
+                                        {{-- Item Total --}}
+                                        <div>
+                                            <div class="text-[10px] text-gray-400">
+                                                Item Total
+                                            </div>
+
+                                            @if ($preferredVendor)
+                                                <div
+                                                    x-text="money(total)"
+                                                    class="mt-0.5 text-sm font-semibold text-gray-900"
+                                                ></div>
+                                            @else
+                                                <div class="mt-0.5 text-sm text-gray-400">
+                                                    —
+                                                </div>
+                                            @endif
+                                        </div>
+                                        {{-- Shipping Fee --}}
+                                        <div>
+                                            @if ($preferredVendor && $unitPrice > 0)
+                                                <label class="block text-[10px] font-medium text-gray-400">
+                                                    Shipping
+                                                </label>
+
+                                                <input
+                                                    type="tel"
+                                                    x-mask:dynamic="$money($input, '.', ',', 2)"
+                                                    x-model="itemData.shippingFee"
+                                                    @input="validateDiscount()"
+                                                    class="mt-1 block w-full rounded-md border-gray-300
+                                                        px-2 py-1.5 text-right text-sm shadow-sm
+                                                        focus:border-indigo-500 focus:ring-indigo-500"
+                                                    placeholder="0.00"
+                                                >
+                                            @else
+                                                <div class="text-[10px] text-gray-400">
+                                                    Shipping
+                                                </div>
+
+                                                <div class="mt-1 text-sm text-gray-300">
+                                                    —
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        {{-- Discount --}}
+                                        <div>
+                                            @if ($preferredVendor && $unitPrice > 0)
+                                                <label class="block text-[10px] font-medium text-gray-400">
+                                                    Discount
+                                                </label>
+                                                <input
+                                                    type="tel"
+                                                    x-mask:dynamic="$money($input, '.', ',', 2)"
+                                                    x-model="itemData.discount"
+                                                    @input="validateDiscount()"
+                                                    class="mt-1 block w-full rounded-md border-gray-300
+                                                        px-2 py-1.5 text-right text-sm shadow-sm
+                                                        focus:border-indigo-500 focus:ring-indigo-500"
+                                                    placeholder="0.00"
+                                                >
+                                            @else
+                                                <div class="text-[10px] text-gray-400">
+                                                    Discount
+                                                </div>
+                                                <div class="mt-1 text-sm text-gray-300">
+                                                    —
+                                                </div>
+                                            @endif
+                                        </div>
+                                        {{-- Manage Vendors --}}
+                                        <div class="flex justify-end">
+                                            <button
+                                                type="button"
+                                                wire:click="openVendorModal({{ $item->item_id }})"
+                                                class="inline-flex items-center justify-center rounded-md border
+                                                    border-gray-300 bg-white px-3 py-2 text-xs font-medium
+                                                    text-gray-700 shadow-sm transition hover:bg-gray-50
+                                                    whitespace-nowrap"
+                                            >
+                                                Manage Vendors
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {{-- =========================================================
+                                        Mobile
+                                    ========================================================== --}}
+                                    <div class="xl:hidden space-y-4">
+                                        {{-- Top: Image + Item + Vendors --}}
+                                        <div class="flex items-start gap-3">
+                                            {{-- Image --}}
+                                            <div
+                                                class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100"
+                                            >
+                                                <img
+                                                    src="{{ $item?->item?->primaryImage
+                                                        ? Storage::url($item->item->primaryImage->path)
+                                                        : asset('images/default-item.png') }}"
+                                                    alt="{{ $item?->item?->item_name }}"
+                                                    class="h-full w-full object-cover"
+                                                >
+                                            </div>
+                                            {{-- Item Info --}}
+                                            <div class="min-w-0 flex-1">
+                                                <div class="text-sm font-semibold text-gray-900">
+                                                    {{ $item?->item?->item_name }}
+                                                </div>
+
+                                                <div class="mt-1 text-xs text-gray-500">
+                                                    SKU:
+                                                    <span class="font-medium">
+                                                        {{ $item?->item?->sku }}
+                                                    </span>
+
+                                                    <span class="mx-1 text-gray-300">•</span>
+
+                                                    Qty:
+                                                    <span class="font-semibold text-gray-700">
+                                                        {{ $item?->quantity }}
+                                                    </span>
+                                                </div>
+
+                                                <div class="mt-2">
+                                                    @if ($preferredVendor)
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-[11px] text-gray-400">
+                                                                Vendor
+                                                            </span>
+
+                                                            <span class="truncate text-xs font-medium text-gray-700">
+                                                                {{ $preferredVendor->vendor->name }}
+                                                            </span>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-xs text-gray-400">
+                                                            No vendor selected
                                                         </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            {{-- Manage Vendors --}}
+                                            <button
+                                                type="button"
+                                                wire:click="openVendorModal({{ $item->item_id }})"
+                                                class="shrink-0 rounded-md border border-gray-300
+                                                    bg-white px-2.5 py-2 text-xs font-medium
+                                                    text-gray-700 shadow-sm hover:bg-gray-50"
+                                            >
+                                                Vendors
+                                            </button>
+                                        </div>
+
+
+                                        @if ($preferredVendor)
+
+                                            {{-- Price / Amount / Total --}}
+                                            <div class="rounded-lg border border-gray-100 bg-gray-50/70 p-3">
+
+                                                <div class="grid grid-cols-2 gap-3">
+
+                                                    {{-- Unit Price --}}
+                                                    <div>
+                                                        <div class="text-[11px] text-gray-400">
+                                                            Unit Price
+                                                        </div>
+
+                                                        <div class="mt-0.5 text-sm font-semibold text-gray-900">
+                                                            {{ number_format($unitPrice, 2) }}
+                                                        </div>
                                                     </div>
-                                                @else
-                                                    <div class="mt-1 text-sm font-medium text-red-600">
-                                                        No price set
+
+                                                    {{-- Amount --}}
+                                                    <div>
+                                                        <div class="text-[11px] text-gray-400">
+                                                            Amount
+                                                        </div>
+
+                                                        <div class="mt-0.5 text-sm font-semibold text-gray-900">
+                                                            {{ number_format($itemAmount, 2) }}
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Item Total --}}
+                                                    <div class="col-span-2">
+                                                        <div class="text-[11px] text-gray-400">
+                                                            Item Total
+                                                        </div>
+
+                                                        <div
+                                                            x-text="money(total)"
+                                                            class="mt-0.5 text-sm font-semibold text-gray-900"
+                                                        ></div>
+                                                    </div>
+
+                                                </div>
+
+                                                {{-- Adjustments --}}
+                                                @if ($unitPrice > 0)
+                                                    <div class="mt-4 grid grid-cols-1 gap-3">
+
+                                                        {{-- Shipping --}}
+                                                        <div>
+                                                            <label class="block text-xs font-medium text-gray-500">
+                                                                Shipping Fee
+                                                            </label>
+
+                                                            <input
+                                                                type="tel"
+                                                                x-mask:dynamic="$money($input, '.', ',', 2)"
+                                                                x-model="itemData.shippingFee"
+                                                                @input="validateDiscount()"
+                                                                class="mt-1 block w-full rounded-md border-gray-300
+                                                                    text-right text-sm shadow-sm
+                                                                    focus:border-indigo-500 focus:ring-indigo-500"
+                                                                placeholder="0.00"
+                                                            >
+                                                        </div>
+
+                                                        {{-- Discount --}}
+                                                        <div>
+                                                            <label class="block text-xs font-medium text-gray-500">
+                                                                Item Discount
+                                                            </label>
+
+                                                            <input
+                                                                type="tel"
+                                                                x-mask:dynamic="$money($input, '.', ',', 2)"
+                                                                x-model="itemData.discount"
+                                                                @input="validateDiscount()"
+                                                                class="mt-1 block w-full rounded-md border-gray-300
+                                                                    text-right text-sm shadow-sm
+                                                                    focus:border-indigo-500 focus:ring-indigo-500"
+                                                                placeholder="0.00"
+                                                            >
+                                                        </div>
+
                                                     </div>
                                                 @endif
+
                                             </div>
+
                                         @else
-                                            <div class="text-sm text-gray-400">
-                                                No vendor
+
+                                            {{-- No Vendor --}}
+                                            <div
+                                                class="rounded-lg border border-dashed border-gray-200
+                                                    bg-gray-50 px-4 py-3"
+                                            >
+                                                <div class="text-sm text-gray-500">
+                                                    No vendor selected.
+                                                </div>
+
+                                                <div class="mt-0.5 text-xs text-gray-400">
+                                                    Select a preferred vendor before approving this request.
+                                                </div>
                                             </div>
+
                                         @endif
+
                                     </div>
-                                    {{-- Manage Vendors --}}
-                                    <div class="shrink-0">
-                                        <button
-                                            type="button"
-                                            wire:click="openVendorModal({{ $item->item_id }})"
-                                            class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                        >
-                                            <span class="sm:hidden">
-                                                Vendors
-                                            </span>
-                                            <span class="hidden sm:inline">
-                                                Manage Vendors
-                                            </span>
-                                        </button>
-                                    </div>
-                                </div>
-                                {{-- Mobile Vendor --}}
-                                <div class="mt-2 pl-[60px] sm:hidden">
-                                    @if ($preferredVendor)
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="text-[11px] text-gray-400">
-                                                Vendor:
-                                            </span>
-                                            <span class="truncate text-xs font-medium text-gray-700">
-                                                {{ $preferredVendor->vendor->name }}
-                                            </span>
-                                        </div>
-                                    @else
-                                        <div class="text-xs text-gray-400">
-                                            No vendor selected
-                                        </div>
-                                    @endif
+
                                 </div>
                             </div>
                         @endforeach
                     </div>
-                    {{-- Footer --}}
-                    <div class="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-3">
-                        @if ($request->remark)
-                            <div class="text-sm text-gray-600">
-                                <span class="font-medium">Remark:</span>
-                                {{ $request->remark }}
+                    {{-- Request Discount --}}
+                    <div class="border-t border-gray-100 bg-white px-4 py-4 sm:px-5">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <div class="text-sm font-medium text-gray-700">
+                                    Request Discount
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    Additional discount applied to the total purchase amount
+                                </div>
                             </div>
-                        @else
-                            <div></div>
-                        @endif
-                        <div class="text-sm flex-none flex items-center gap-2">
-                            <span class="text-gray-500">
-                                Total:
-                            </span>
-                            <span class="font-semibold text-gray-900">
-                                {{ number_format($workflow->procurement_total, 2) }}
-                            </span>
-                            <x-button
-                                type="button"
-                                wire:click="approve({{ $workflow->id }})"
-                                :disabled="!$workflow->can_approve"
-                                class="{{ !$workflow->can_approve ? 'opacity-50 cursor-not-allowed' : '' }}"
-                            >
-                                Approved
-                            </x-button>
+
+                            <div class="w-40">
+                                <input
+                                    type="tel"
+                                    x-mask:dynamic="$money($input, '.', ',', 2)"
+                                    x-model="requestDiscount"
+                                    @input="validateRequestDiscount()"
+                                    class="block w-full rounded-md border-gray-300
+                                        text-right text-sm shadow-sm
+                                        focus:border-indigo-500 focus:ring-indigo-500"
+                                    placeholder="0.00"
+                                >
+                            </div>
+                        </div>
+                    </div>
+                    {{-- Footer --}}
+                    <div class="border-t border-gray-100 bg-gray-50 px-4 py-4 sm:px-5">
+
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                            {{-- Remark --}}
+                            <div class="min-w-0">
+                                @if ($request->remark)
+                                    <div class="text-sm text-gray-600">
+                                        <span class="font-medium">Remark:</span>
+                                        {{ $request->remark }}
+                                    </div>
+                                @else
+                                    <div class="hidden sm:block"></div>
+                                @endif
+                            </div>
+
+                            {{-- Total + Approve --}}
+                            <div class="flex items-center justify-between gap-3 sm:justify-end">
+
+                                <div class="shrink-0 text-right">
+                                    <div class="text-xs text-gray-500">
+                                        Total
+                                    </div>
+
+                                    <div
+                                        x-text="money(total)"
+                                        class="text-base font-bold text-gray-900 sm:text-sm"
+                                    ></div>
+                                </div>
+
+                                <x-button
+                                    type="button"
+                                    @click="
+                                        $wire.approve(
+                                            {{ $workflow->id }},
+                                            requestDiscount,
+                                            items
+                                        )
+                                    "
+                                    :disabled="!$workflow->can_approve"
+                                    class="shrink-0 {{ !$workflow->can_approve ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                >
+                                    Approved
+                                </x-button>
+
+                            </div>
                         </div>
                     </div>
                 </div>

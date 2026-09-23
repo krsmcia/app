@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cash_releases', function (Blueprint $table) {
+        Schema::create('purchase_item_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_action_id')->constrained()->cascadeOnDelete();
-            $table->string('receipt_photo_path', 2048)->nullable();
+            $table->foreignId('purchase_item_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('transaction_id')->constrained()->cascadeOnDelete();
+            $table->decimal('amount', 15, 2);
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cash_releases');
+        Schema::dropIfExists('purchase_item_transactions');
     }
 };

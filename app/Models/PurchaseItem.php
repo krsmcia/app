@@ -34,4 +34,29 @@ class PurchaseItem extends Model
     {
         return $this->belongsTo(DisbursementType::class);
     }
+    public function purchaseItemTransactions()
+    {
+        return $this->hasMany(PurchaseItemTransaction::class);
+    }
+    public function latestPurchaseItemTransaction()
+    {
+        return $this->hasOne(
+            PurchaseItemTransaction::class
+        )->latestOfMany();
+    }
+    public function latestMoneyTransaction()
+    {
+        return $this->hasOne(
+            PurchaseItemTransaction::class
+        )
+            ->whereHas('transaction', function ($query) {
+                $query->whereIn('type', [
+                    'released',
+                    'transfer',
+                    'returned',
+                    'adjustment',
+                ]);
+            })
+            ->latestOfMany();
+    }
 }

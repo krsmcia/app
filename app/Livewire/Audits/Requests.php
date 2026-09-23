@@ -300,7 +300,6 @@ class Requests extends Component
             ->with([
                 'user',
                 'department',
-
                 'purchaseWorkflows' => function ($query) {
                     $query
                         ->where('step', 'audit')
@@ -340,27 +339,19 @@ class Requests extends Component
 
                     return $request;
                 }
-
-                /*
-                 * Audit 화면에는 pending item만 존재
-                 */
                 $request->items = $workflow->purchaseWorkflowItems;
-
-                /*
-                 * 중요:
-                 *
-                 * Audit에서는 vendor의 현재 가격을 다시 계산하지 않는다.
-                 *
-                 * Procurement 단계에서 purchase_items.amount에
-                 * 확정된 snapshot 가격이 저장되어 있기 때문이다.
-                 */
                 $request->audit_total = $workflow->purchaseWorkflowItems
                     ->sum(function ($workflowItem) {
 
                         $purchaseItem = $workflowItem->purchaseItem;
 
-                        return (float) ($purchaseItem->amount ?? 0);
+                        $amount = (float) ($purchaseItem->amount ?? 0);
+                        $discount = (float) ($purchaseItem->discount ?? 0);
+                        $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
+
+                        return $amount - $discount + $shippingFee;
                     });
+                $request->audit_total = max(0, $request->audit_total);
 
                 return $request;
             }

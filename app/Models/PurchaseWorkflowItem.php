@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class PurchaseWorkflowItem extends Model
 {
     protected $guarded = [];
@@ -28,5 +28,9 @@ class PurchaseWorkflowItem extends Model
     public function purchaseActions()
     {
         return $this->hasMany(PurchaseAction::class);
+    }
+    public function receivedItemPhotos()
+    {
+        return $this->hasManyThrough(ReceivedItemPhoto::class, PurchaseAction::class);
     }
 }

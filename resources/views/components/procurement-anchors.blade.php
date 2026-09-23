@@ -195,3 +195,94 @@
         </span>
     </div>
 </a>
+{{-- Ordered Purchases --}}
+<a
+    href="{{ route('procurements.ordered') }}"
+    class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+        transition hover:-translate-y-1 hover:border-amber-200 hover:shadow-md
+        sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 sm:h-11 sm:w-11">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5 text-amber-600 sm:size-6"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M2.25 3.75h1.386a1.5 1.5 0 011.455 1.136l.357 1.428
+                m0 0L6.75 14.25h10.878a1.5 1.5 0 001.455-1.136l1.026-4.5
+                a1.5 1.5 0 00-1.455-1.818H5.448z"
+            />
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 19.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z
+                M18 19.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"
+            />
+        </svg>
+    </div>
+
+    <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+        Ordered Purchases
+    </h2>
+
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        View orders that have been placed but have not yet been paid.
+    </p>
+
+    <div class="mt-auto pt-3 text-xs font-semibold text-amber-600 sm:text-sm">
+        View ordered
+        <span class="transition group-hover:ml-1">
+            →
+        </span>
+    </div>
+</a>
+
+{{-- Purchased Purchases --}}
+<a
+    href="{{ route('procurements.purchased') }}"
+    class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+        transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md
+        sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 sm:h-11 sm:w-11">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5 text-emerald-600 sm:size-6"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 6v12m-3-3 3 3 3-3
+                M6.75 4.5h10.5A2.25 2.25 0 0119.5 6.75v10.5
+                a2.25 2.25 0 01-2.25 2.25H6.75
+                A2.25 2.25 0 014.5 17.25V6.75
+                A2.25 2.25 0 016.75 4.5z"
+            />
+        </svg>
+    </div>
+
+    <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+        Purchased Purchases
+    </h2>
+
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        View purchases that have been paid and recorded for procurement tracking.
+    </p>
+
+    <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
+        View purchased
+        <span class="transition group-hover:ml-1">
+            →
+        </span>
+    </div>
+</a>

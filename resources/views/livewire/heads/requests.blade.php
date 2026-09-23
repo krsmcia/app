@@ -77,7 +77,14 @@
                                 $purchaseItem = $workflowItem->purchaseItem;
                                 $item = $purchaseItem->item;
                                 $itemVendor = $purchaseItem->itemVendor;
+
+                                $baseAmount = (float) ($purchaseItem->amount ?? 0);
+                                $itemDiscount = (float) ($purchaseItem->discount ?? 0);
+                                $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
+
+                                $finalAmount = $baseAmount - $itemDiscount + $shippingFee;
                             @endphp
+
                             <div
                                 class="px-4 py-4 sm:px-5"
                                 wire:key="workflow-item-{{ $workflowItem->id }}"
@@ -86,9 +93,9 @@
                                     DESKTOP
                                 ================================================== --}}
                                 <div class="hidden items-center gap-4 md:flex">
+
                                     {{-- Image --}}
                                     <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
-
                                         <img
                                             src="{{ $item?->primaryImage
                                                 ? Storage::url($item->primaryImage->path)
@@ -97,6 +104,7 @@
                                             class="h-full w-full object-cover"
                                         >
                                     </div>
+
                                     {{-- Item Info --}}
                                     <div class="min-w-0 flex-1">
                                         <button
@@ -108,14 +116,15 @@
                                         >
                                             {{ $purchaseItem->item_name }}
                                         </button>
+
                                         <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
                                             <span>
                                                 SKU:
                                                 {{ $purchaseItem->sku }}
                                             </span>
-                                            <span class="text-gray-300">
-                                                |
-                                            </span>
+
+                                            <span class="text-gray-300">|</span>
+
                                             <span>
                                                 Qty:
                                                 <span class="font-semibold text-gray-700">
@@ -124,11 +133,13 @@
                                             </span>
                                         </div>
                                     </div>
+
                                     {{-- Vendor --}}
-                                    <div class="w-52 min-w-0 shrink-0">
+                                    <div class="w-40 min-w-0 shrink-0">
                                         <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                             Vendor
                                         </div>
+
                                         @if ($itemVendor)
                                             <button
                                                 x-on:click="$dispatch('open-vendor', {
@@ -140,27 +151,83 @@
                                                 {{ $purchaseItem->vendor_name }}
                                             </button>
                                         @else
-                                            <div class="mt-0.5 text-sm text-gray-500">
+                                            <div class="mt-0.5 truncate text-sm text-gray-500">
                                                 {{ $purchaseItem->vendor_name ?: '-' }}
                                             </div>
                                         @endif
-                                        <div class="mt-1 text-xs text-gray-500">
-                                            Unit Price:
-                                            <span class="font-semibold text-gray-900">
-                                                {{ number_format($purchaseItem->unit_price, 2) }}
-                                            </span>
+                                    </div>
+
+                                    {{-- Unit Price --}}
+                                    <div class="w-24 shrink-0 text-right">
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Unit
+                                        </div>
+
+                                        <div class="mt-0.5 text-sm font-medium text-gray-900">
+                                            {{ number_format($purchaseItem->unit_price, 2) }}
                                         </div>
                                     </div>
+
+                                    {{-- Amount --}}
+                                    <div class="w-24 shrink-0 text-right">
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Amount
+                                        </div>
+
+                                        <div class="mt-0.5 text-sm font-medium text-gray-900">
+                                            {{ number_format($baseAmount, 2) }}
+                                        </div>
+                                    </div>
+
+                                    {{-- Adjustments --}}
+                                    <div class="w-28 shrink-0 text-right">
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Adjustments
+                                        </div>
+
+                                        <div class="mt-0.5 space-x-1 text-xs whitespace-nowrap">
+                                            @if ($itemDiscount > 0)
+                                                <span class="font-medium text-gray-600">
+                                                    -{{ number_format($itemDiscount, 2) }}
+                                                </span>
+                                            @endif
+
+                                            @if ($shippingFee > 0)
+                                                <span class="font-medium text-gray-600">
+                                                    +{{ number_format($shippingFee, 2) }}
+                                                </span>
+                                            @endif
+
+                                            @if ($itemDiscount <= 0 && $shippingFee <= 0)
+                                                <span class="text-gray-400">
+                                                    -
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    {{-- Final Amount --}}
+                                    <div class="w-28 shrink-0 text-right">
+                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                            Final
+                                        </div>
+
+                                        <div class="mt-0.5 text-sm font-bold text-gray-900">
+                                            {{ number_format($finalAmount, 2) }}
+                                        </div>
+                                    </div>
+
                                     {{-- Actions --}}
                                     <div class="flex shrink-0 items-center gap-2">
                                         <x-deny-button
                                             type="button"
                                             wire:click="openDenyModal({{ $workflowItem->id }})"
                                             wire:loading.attr="disabled"
-                                            wire:target="deny({{ $workflowItem->id }})"
+                                            wire:target="deny"
                                         >
                                             Deny
                                         </x-deny-button>
+
                                         <x-approve-button
                                             type="button"
                                             wire:click="approveItem({{ $workflowItem->id }})"
@@ -172,12 +239,15 @@
                                         </x-approve-button>
                                     </div>
                                 </div>
+
                                 {{-- =================================================
                                     MOBILE
                                 ================================================== --}}
                                 <div class="md:hidden">
+
                                     {{-- Item Header --}}
                                     <div class="flex items-start gap-3">
+
                                         {{-- Image --}}
                                         <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
                                             <img
@@ -188,6 +258,7 @@
                                                 class="h-full w-full object-cover"
                                             >
                                         </div>
+
                                         {{-- Item Name / SKU --}}
                                         <div class="min-w-0 flex-1">
                                             <button
@@ -199,47 +270,98 @@
                                             >
                                                 {{ $purchaseItem->item_name }}
                                             </button>
+
                                             <div class="mt-1 truncate text-xs text-gray-500">
                                                 SKU:
                                                 {{ $purchaseItem->sku }}
                                             </div>
                                         </div>
                                     </div>
+
                                     {{-- Item Details --}}
-                                    <div class="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-gray-50 p-3">
+                                    <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-gray-50 p-3">
+
                                         {{-- Quantity --}}
                                         <div class="min-w-0">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Qty
                                             </div>
+
                                             <div class="mt-1 text-sm font-semibold text-gray-900">
                                                 {{ $purchaseItem->quantity }}
                                             </div>
                                         </div>
+
                                         {{-- Unit Price --}}
-                                        <div class="min-w-0">
+                                        <div class="min-w-0 text-right">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Unit Price
                                             </div>
+
                                             <div class="mt-1 truncate text-sm font-semibold text-gray-900">
                                                 {{ number_format($purchaseItem->unit_price, 2) }}
                                             </div>
                                         </div>
+
                                         {{-- Amount --}}
                                         <div class="min-w-0">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Amount
                                             </div>
+
                                             <div class="mt-1 truncate text-sm font-semibold text-gray-900">
-                                                {{ number_format($purchaseItem->amount, 2) }}
+                                                {{ number_format($baseAmount, 2) }}
+                                            </div>
+                                        </div>
+
+                                        {{-- Discount --}}
+                                        <div class="min-w-0 text-right">
+                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                Discount
+                                            </div>
+
+                                            <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                                @if ($itemDiscount > 0)
+                                                    -{{ number_format($itemDiscount, 2) }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Shipping --}}
+                                        <div class="min-w-0">
+                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                Shipping
+                                            </div>
+
+                                            <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                                @if ($shippingFee > 0)
+                                                    +{{ number_format($shippingFee, 2) }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Final --}}
+                                        <div class="min-w-0 text-right">
+                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                Final
+                                            </div>
+
+                                            <div class="mt-1 truncate text-sm font-bold text-gray-900">
+                                                {{ number_format($finalAmount, 2) }}
                                             </div>
                                         </div>
                                     </div>
+
                                     {{-- Vendor --}}
                                     <div class="mt-3">
                                         <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                             Vendor
                                         </div>
+
                                         @if ($itemVendor)
                                             <button
                                                 x-on:click="$dispatch('open-vendor', {
@@ -256,17 +378,19 @@
                                             </div>
                                         @endif
                                     </div>
+
                                     {{-- Mobile Actions --}}
                                     <div class="mt-4 grid grid-cols-2 gap-2">
                                         <x-deny-button
                                             type="button"
                                             wire:click="openDenyModal({{ $workflowItem->id }})"
                                             wire:loading.attr="disabled"
-                                            wire:target="deny({{ $workflowItem->id }})"
+                                            wire:target="deny"
                                             class="w-full justify-center"
                                         >
                                             Deny
                                         </x-deny-button>
+
                                         <x-approve-button
                                             type="button"
                                             wire:click="approveItem({{ $workflowItem->id }})"
@@ -285,10 +409,10 @@
                     {{-- =====================================================
                         Footer
                     ====================================================== --}}
-                    <div class="border-t border-gray-100 bg-gray-50 px-4 py-4 sm:px-5">
+                    <div class="border-t border-gray-100 bg-gray-50 px-4 py-3 sm:px-5">
                         {{-- Remark --}}
                         @if ($request->remark)
-                            <div class="mb-3 rounded-md bg-white px-3 py-2 text-xs text-gray-600 sm:mb-0 sm:max-w-xl sm:bg-transparent sm:px-0 sm:py-0 sm:text-sm">
+                            <div class="mb-3 text-xs text-gray-500 sm:text-sm">
                                 <span class="font-medium text-gray-700">
                                     Remark:
                                 </span>
@@ -296,42 +420,96 @@
                             </div>
                         @endif
                         {{-- Desktop Footer --}}
-                        <div class="hidden items-center justify-end gap-2 sm:flex">
-                            <span class="mr-1 text-sm text-gray-500">
-                                Total:
-                            </span>
-                            <span class="mr-2 text-sm font-semibold text-gray-900">
-                                {{ number_format($request->head_total, 2) }}
-                            </span>
-                            <x-deny-button
-                                type="button"
-                                wire:click="denyAll({{ $request->head_workflow->id }})"
-                                wire:confirm="Are you sure you want to deny all items?"
-                                wire:loading.attr="disabled"
-                                wire:target="denyAll({{ $request->head_workflow->id }})"
-                            >
-                                Deny All
-                            </x-deny-button>
-                            <x-approve-button
-                                type="button"
-                                wire:click="approve({{ $request->head_workflow->id }})"
-                                wire:confirm="Are you sure you want to approve all items?"
-                                wire:loading.attr="disabled"
-                                wire:target="approve({{ $request->head_workflow->id }})"
-                            >
-                                Approve All
-                            </x-approve-button>
+                        <div class="hidden items-center justify-between gap-4 sm:flex">
+                            {{-- Summary --}}
+                            <div class="flex items-center gap-5 text-sm">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs text-gray-400">
+                                        Items
+                                    </span>
+                                    <span class="font-medium text-gray-700">
+                                        {{ number_format(
+                                            $request->head_total + (float) ($request->discount ?? 0),
+                                            2
+                                        ) }}
+                                    </span>
+                                </div>
+                                @if ((float) ($request->discount ?? 0) > 0)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs text-gray-400">
+                                            Discount
+                                        </span>
+                                        <span class="font-medium text-gray-600">
+                                            -{{ number_format($request->discount, 2) }}
+                                        </span>
+                                    </div>
+                                @endif
+                                <div class="h-5 w-px bg-gray-200"></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-medium text-gray-600">
+                                        Total
+                                    </span>
+                                    <span class="text-base font-bold text-gray-900">
+                                        {{ number_format($request->head_total, 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                            {{-- Actions --}}
+                            <div class="flex shrink-0 items-center gap-2">
+                                <x-deny-button
+                                    type="button"
+                                    wire:click="denyAll({{ $request->head_workflow->id }})"
+                                    wire:confirm="Are you sure you want to deny all items?"
+                                    wire:loading.attr="disabled"
+                                    wire:target="denyAll({{ $request->head_workflow->id }})"
+                                >
+                                    Deny All
+                                </x-deny-button>
+                                <x-approve-button
+                                    type="button"
+                                    wire:click="approve({{ $request->head_workflow->id }})"
+                                    wire:confirm="Are you sure you want to approve all items?"
+                                    wire:loading.attr="disabled"
+                                    wire:target="approve({{ $request->head_workflow->id }})"
+                                >
+                                    Approve All
+                                </x-approve-button>
+                            </div>
                         </div>
                         {{-- Mobile Footer --}}
                         <div class="sm:hidden">
+                            {{-- Summary --}}
                             <div class="flex items-center justify-between">
-                                <span class="text-xs text-gray-500">
-                                    Total
-                                </span>
-                                <span class="text-base font-semibold text-gray-900">
-                                    {{ number_format($request->head_total, 2) }}
-                                </span>
+                                <div class="flex items-center gap-3 text-xs text-gray-500">
+                                    <span>
+                                        Items
+                                        <span class="ml-1 font-medium text-gray-700">
+                                            {{ number_format(
+                                                $request->head_total + (float) ($request->discount ?? 0),
+                                                2
+                                            ) }}
+                                        </span>
+                                    </span>
+                                    @if ((float) ($request->discount ?? 0) > 0)
+                                        <span class="text-gray-300">|</span>
+                                        <span>
+                                            Discount
+                                            <span class="ml-1 font-medium text-gray-700">
+                                                -{{ number_format($request->discount, 2) }}
+                                            </span>
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                        Total
+                                    </div>
+                                    <div class="text-base font-bold text-gray-900">
+                                        {{ number_format($request->head_total, 2) }}
+                                    </div>
+                                </div>
                             </div>
+                            {{-- Actions --}}
                             <div class="mt-3 grid grid-cols-2 gap-2">
                                 <x-deny-button
                                     type="button"

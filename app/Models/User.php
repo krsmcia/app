@@ -88,4 +88,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(PurchaseRequest::class);
     }
+    public function purchaseActions()
+    {
+        return $this->hasMany(PurchaseAction::class, 'acted_by');
+    }
 }

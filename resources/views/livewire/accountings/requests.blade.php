@@ -11,10 +11,13 @@
         @if (count($requests) > 0)
             @foreach ($requests as $request)
                 @php
-                    $allCash = $request->audit_workflow->purchaseWorkflowItems
-                        ->every(fn ($workflowItem) =>
-                            $workflowItem->purchaseItem->disbursement_type_name === 'Cash'
-                        );
+                    $hasCash = $request->account_workflow->purchaseWorkflowItems
+                        ->contains(function ($workflowItem) {
+                            return strcasecmp(
+                                trim($workflowItem->purchaseItem->disbursement_type_name ?? ''),
+                                'cash'
+                            ) === 0;
+                        });
                 @endphp
                 <div
                     class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
@@ -71,11 +74,17 @@
                         Items
                     ====================================================== --}}
                     <div class="divide-y divide-gray-100">
-                        @foreach ($request->audit_workflow->purchaseWorkflowItems as $workflowItem)
+                        @foreach ($request->account_workflow->purchaseWorkflowItems as $workflowItem)
                             @php
                                 $purchaseItem = $workflowItem->purchaseItem;
                                 $item = $purchaseItem->item;
                                 $itemVendor = $purchaseItem->itemVendor;
+
+                                $baseAmount = (float) ($purchaseItem->amount ?? 0);
+                                $itemDiscount = (float) ($purchaseItem->discount ?? 0);
+                                $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
+
+                                $finalAmount = $baseAmount - $itemDiscount + $shippingFee;
                             @endphp
                             <div
                                 class="px-4 py-4 sm:px-5"
@@ -155,13 +164,38 @@
                                                 </span>
                                             </div>
                                         </div>
+                                        {{-- Adjustments --}}
+                                        <div class="w-28 shrink-0 text-right">
+                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                Adjustments
+                                            </div>
+
+                                            <div class="mt-0.5 space-x-1 text-xs whitespace-nowrap">
+                                                @if ($itemDiscount > 0)
+                                                    <span class="font-medium text-gray-600">
+                                                        -{{ number_format($itemDiscount, 2) }}
+                                                    </span>
+                                                @endif
+
+                                                @if ($shippingFee > 0)
+                                                    <span class="font-medium text-gray-600">
+                                                        +{{ number_format($shippingFee, 2) }}
+                                                    </span>
+                                                @endif
+
+                                                @if ($itemDiscount <= 0 && $shippingFee <= 0)
+                                                    <span class="text-gray-400">
+                                                        -
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
                                         <div class="w-[240px] shrink-0 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-right">
                                             {{-- Payment Type --}}
                                             <div class="flex items-center justify-end gap-2">
                                                 <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                                                     Payment
                                                 </span>
-
                                                 @if ($purchaseItem->disbursement_type_name === 'Cash')
                                                     <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">
                                                         Cash
@@ -172,11 +206,13 @@
                                                     </span>
                                                 @endif
                                             </div>
-
                                             {{-- Amount --}}
                                             <div class="mt-1 whitespace-nowrap text-2xl font-extrabold leading-tight tracking-tight text-gray-900">
-                                                ₱{{ number_format($purchaseItem->amount, 2) }}
+                                                ₱{{ number_format($workflowItem->release_total, 2) }}
                                             </div>
+                                            @if ($purchaseItem->disbursement_type_name === 'Cash')
+                                                <span class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">(Origin: ₱{{ number_format($finalAmount, 2) }})</span>
+                                            @endif
 
                                             @if ($purchaseItem->disbursement_type_name !== 'Cash')
                                                 <div class="mt-1 break-words text-xs text-gray-500">
@@ -188,17 +224,7 @@
                                     
                                     {{-- Actions --}}
                                     <div class="flex shrink-0 items-center gap-2">
-                                        @if($purchaseItem->disbursement_type_name == 'Cash')
-                                            <x-approve-button
-                                                type="button"
-                                                wire:click="releaseCash({{ $workflowItem->id }})"
-                                                wire:confirm="Are you sure you want to approve this item?"
-                                                wire:loading.attr="disabled"
-                                                wire:target="releaseCash({{ $workflowItem->id }})"
-                                            >
-                                                {{__('Released Cash')}}
-                                            </x-approve-button>
-                                        @else
+                                        @if($purchaseItem->disbursement_type_name !== 'Cash')
                                             <x-approve-button
                                                 type="button"
                                                 wire:click="openRemarkModal({{ $workflowItem->id }})"
@@ -306,18 +332,7 @@
                                     </div>
                                     {{-- Mobile Actions --}}
                                     <div class="mt-4">
-                                        @if($purchaseItem->disbursement_type_name == 'Cash')
-                                            <x-approve-button
-                                                type="button"
-                                                wire:click="releaseCash({{ $workflowItem->id }})"
-                                                wire:confirm="Are you sure you want to approve this item?"
-                                                wire:loading.attr="disabled"
-                                                wire:target="releaseCash({{ $workflowItem->id }})"
-                                                class="w-full"
-                                            >
-                                                {{__('Released Cash')}}
-                                            </x-approve-button>
-                                        @else
+                                        @if($purchaseItem->disbursement_type_name !== 'Cash')
                                             <x-approve-button
                                                 type="button"
                                                 wire:click="openRemarkModal({{ $workflowItem->id }})"
@@ -344,16 +359,14 @@
                                     Total Amount to Release
                                 </div>
                                 <div class="mt-0.5 whitespace-nowrap text-3xl font-extrabold leading-none tracking-tight text-gray-900">
-                                    ₱{{ number_format($request->audit_total, 2) }}
+                                    ₱{{ number_format($request->account_total, 2) }}
                                 </div>
                             </div>
-                            @if ($allCash)
+                            @if ($hasCash)
                                 <x-approve-button
                                     type="button"
-                                    wire:click="approve({{ $request->audit_workflow->id }})"
-                                    wire:confirm="Are you sure you want to approve all items?"
+                                    x-on:click="$dispatch('cash-handover-modal', {workflowId: {{ $request->account_workflow->id }}})"
                                     wire:loading.attr="disabled"
-                                    wire:target="approve({{ $request->audit_workflow->id }})"
                                 >
                                     {{ __('Released Cash All') }}
                                 </x-approve-button>
@@ -366,17 +379,16 @@
                                     Amount
                                 </div>
                                 <div class="mt-1 whitespace-nowrap text-xl font-extrabold leading-tight tracking-tight text-emerald-800">
-                                    ₱{{ number_format($request->audit_total, 2) }}
+                                    ₱{{ number_format($request->account_total, 2) }}
                                 </div>
                             </div>
-                            @if ($allCash)
+                            @if ($hasCash)
                                 <div class="mt-4">
                                     <button
                                         type="button"
-                                        wire:click="approve({{ $request->audit_workflow->id }})"
-                                        wire:confirm="Are you sure you want to release all cash items?"
+                                        x-on:click="$dispatch('cash-handover-modal', {workflowId: {{ $request->account_workflow->id }}})"
                                         wire:loading.attr="disabled"
-                                        wire:target="approve({{ $request->audit_workflow->id }})"
+                                        wire:target="approve({{ $request->account_workflow->id }})"
                                         class="inline-flex w-full items-center justify-center gap-2 rounded-lg
                                             border border-emerald-300 bg-emerald-600 px-4 py-3
                                             text-sm font-bold text-white shadow-sm
@@ -489,4 +501,5 @@
             </div>
         </x-slot>
     </x-dialog-modal>
+    <livewire:accountings.modals.release-cash />
 </div>

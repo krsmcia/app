@@ -15,7 +15,7 @@ class DisbursementTypeSeeder extends Seeder
         DisbursementType::insert([
             ['name' => 'Bank Transfer', 'requires_account' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Cash', 'requires_account' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Creadit Card', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Credit Card', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Check', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'GCASH', 'requires_account' => false, 'created_at' => now(), 'updated_at' => now()],
         ]);

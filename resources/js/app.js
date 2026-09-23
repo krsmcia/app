@@ -4,6 +4,6 @@ import './item-card';
 import './wishlist-store';
 document.addEventListener('wheel', function (event) {
     if (event.target.matches('input[type="number"]')) {
-        event.preventDefault();
+        event.target.blur();
     }
-}, { passive: false });
+});

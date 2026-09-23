@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CashRelease extends Model
+class ReceivedItemPhoto extends Model
 {
-    //
     protected $guarded = [];
     public function purchaseAction()
     {

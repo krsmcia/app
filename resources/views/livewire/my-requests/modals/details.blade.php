@@ -13,29 +13,22 @@
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
         </div>
-
         <div class="min-w-0">
             <h3 class="text-sm font-semibold text-gray-900">
                 Purchase Request History
             </h3>
-
             <p class="mt-0.5 text-xs text-gray-500">
                 Review previous purchase requests and approval history.
             </p>
         </div>
     </div>
 </x-slot>
-
-
 <x-slot name="content">
-
     @if ($request)
-
         @php
             $latestWorkflow = $request->purchaseWorkflows
                 ->sortByDesc('id')
                 ->first();
-
             $statusClasses = match ($latestWorkflow?->status) {
                 'approved' => 'bg-green-100 text-green-700',
                 'rejected' => 'bg-red-100 text-red-700',
@@ -43,152 +36,101 @@
                 default => 'bg-gray-100 text-gray-600',
             };
         @endphp
-
-
         <div class="space-y-4 sm:space-y-6">
-
             {{-- =====================================================
                 REQUEST SUMMARY
             ====================================================== --}}
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
-
                 <div class="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-5">
-
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
                         {{-- Request Number --}}
                         <div class="min-w-0">
-
                             <div class="flex flex-wrap items-center gap-2">
-
                                 <span class="break-all text-base font-semibold text-gray-900">
                                     {{ $request->request_no }}
                                 </span>
-
                                 @if ($latestWorkflow)
                                     <span class="rounded-full px-2.5 py-1 text-xs font-medium {{ $statusClasses }}">
                                         {{ ucfirst($latestWorkflow->status) }}
                                     </span>
                                 @endif
-
                             </div>
-
                             <div class="mt-2 grid grid-cols-1 gap-1 text-xs text-gray-500 sm:flex sm:flex-wrap sm:gap-x-5">
-
                                 <span>
                                     Requested:
                                     <strong class="font-medium text-gray-700">
                                         {{ $request->created_at?->format('M d, Y h:i A') }}
                                     </strong>
                                 </span>
-
                                 <span>
                                     Department:
                                     <strong class="font-medium text-gray-700">
                                         {{ $request->department?->name ?? '-' }}
                                     </strong>
                                 </span>
-
                             </div>
-
                         </div>
-
                     </div>
-
                 </div>
-
-
                 {{-- Request Remark --}}
                 @if ($request->remark)
-
                     <div class="border-b border-gray-100 px-4 py-4 sm:px-5">
-
                         <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
                             Request Remark
                         </div>
-
                         <div class="mt-1 break-words text-sm leading-6 text-gray-700">
                             {{ $request->remark }}
                         </div>
-
                     </div>
-
                 @endif
-
-
                 {{-- =================================================
                     REQUESTED ITEMS
                 ================================================== --}}
                 <div class="px-4 py-4 sm:px-5 sm:py-5">
-
                     <div class="mb-3 flex items-center justify-between">
-
                         <h4 class="text-sm font-semibold text-gray-900">
                             Requested Items
                         </h4>
-
                         <span class="text-xs text-gray-500">
                             {{ $request->purchaseItems->count() }} items
                         </span>
-
                     </div>
-
-
                     {{-- =================================================
                         MOBILE ITEM CARDS
                     ================================================== --}}
                     <div class="space-y-3 md:hidden">
-
                         @forelse ($request->purchaseItems as $purchaseItem)
-
                             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
-
                                 {{-- Item Header --}}
                                 <div class="flex gap-3 border-b border-gray-100 bg-gray-50 p-3">
-
                                     <div class="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
-
                                         @if ($purchaseItem->item?->primaryImage)
-
                                             <img
                                                 src="{{ Storage::url($purchaseItem->item->primaryImage->path) }}"
                                                 alt="{{ $purchaseItem->item_name }}"
                                                 class="h-full w-full object-cover"
                                             >
-
                                         @else
-
                                             <img
                                                 src="{{ asset('images/default-item.png') }}"
                                                 alt="No image"
                                                 class="h-full w-full object-cover"
                                             >
-
                                         @endif
-
                                     </div>
-
-
                                     <div class="min-w-0 flex-1">
-
                                         <div class="break-words text-sm font-semibold text-gray-900">
                                             {{ $purchaseItem->item_name }}
                                         </div>
-
                                         @if ($purchaseItem->item)
                                             <div class="mt-0.5 text-xs text-gray-400">
                                                 Item ID: {{ $purchaseItem->item->id }}
                                             </div>
                                         @endif
-
                                     </div>
-
                                 </div>
-
-
                                 {{-- Item Details --}}
                                 <div class="grid grid-cols-2 gap-x-4 gap-y-3 p-3">
-
                                     <div>
                                         <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                             SKU
@@ -197,8 +139,6 @@
                                             {{ $purchaseItem->sku ?: '-' }}
                                         </div>
                                     </div>
-
-
                                     <div>
                                         <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                             Vendor
@@ -206,15 +146,12 @@
                                         <div class="mt-0.5 break-words text-sm text-gray-700">
                                             {{ $purchaseItem->vendor_name ?? '-' }}
                                         </div>
-
                                         @if ($purchaseItem->vendor_sku)
                                             <div class="mt-0.5 break-all text-[11px] text-gray-400">
                                                 SKU: {{ $purchaseItem->vendor_sku }}
                                             </div>
                                         @endif
                                     </div>
-
-
                                     <div>
                                         <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                             Quantity
@@ -223,8 +160,6 @@
                                             {{ number_format($purchaseItem->quantity) }}
                                         </div>
                                     </div>
-
-
                                     <div>
                                         <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                             Unit Price
@@ -233,154 +168,99 @@
                                             ₱{{ number_format($purchaseItem->unit_price ?? 0, 2) }}
                                         </div>
                                     </div>
-
                                 </div>
-
-
                                 {{-- Amount --}}
                                 <div class="flex items-center justify-between border-t border-gray-100 px-3 py-3">
-
                                     <span class="text-xs font-medium text-gray-500">
                                         Amount
                                     </span>
-
                                     <span class="text-sm font-bold text-gray-900">
                                         ₱{{ number_format($purchaseItem->amount ?? 0, 2) }}
                                     </span>
-
                                 </div>
-
-
                                 {{-- Remark --}}
                                 @if ($purchaseItem->remark)
-
                                     <div class="border-t border-gray-100 px-3 py-3">
-
                                         <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
                                             Remark
                                         </div>
-
                                         <div class="mt-1 break-words text-sm leading-5 text-gray-600">
                                             {{ $purchaseItem->remark }}
                                         </div>
-
                                     </div>
-
                                 @endif
-
                             </div>
-
                         @empty
-
                             <div class="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500">
                                 No items found.
                             </div>
-
                         @endforelse
-
                     </div>
-
-
                     {{-- =================================================
                         DESKTOP ITEM TABLE
                     ================================================== --}}
                     <div class="hidden overflow-x-auto rounded-lg border border-gray-200 md:block">
-
                         <table class="min-w-full divide-y divide-gray-200">
-
                             <thead class="bg-gray-50">
-
                                 <tr>
-
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Item
                                     </th>
-
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         SKU
                                     </th>
-
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Vendor
                                     </th>
-
                                     <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Qty
                                     </th>
-
                                     <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Unit Price
                                     </th>
-
                                     <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Amount
                                     </th>
-
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                                         Remark
                                     </th>
-
                                 </tr>
-
                             </thead>
-
-
                             <tbody class="divide-y divide-gray-100 bg-white">
-
                                 @forelse ($request->purchaseItems as $purchaseItem)
-
                                     <tr class="hover:bg-gray-50">
-
                                         <td class="px-4 py-3">
-
                                             <div class="flex items-center gap-3">
-
                                                 <div class="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-
                                                     @if ($purchaseItem->item?->primaryImage)
-
                                                         <img
                                                             src="{{ Storage::url($purchaseItem->item->primaryImage->path) }}"
                                                             alt="{{ $purchaseItem->item_name }}"
                                                             class="h-full w-full object-cover"
                                                         >
-
                                                     @else
-
                                                         <img
                                                             src="{{ asset('images/default-item.png') }}"
                                                             alt="No image"
                                                             class="h-full w-full object-cover"
                                                         >
-
                                                     @endif
-
                                                 </div>
-
                                                 <div class="min-w-0">
-
                                                     <div class="max-w-[220px] truncate text-sm font-medium text-gray-900">
                                                         {{ $purchaseItem->item_name }}
                                                     </div>
-
                                                     @if ($purchaseItem->item)
                                                         <div class="text-xs text-gray-400">
                                                             Item ID: {{ $purchaseItem->item->id }}
                                                         </div>
                                                     @endif
-
                                                 </div>
-
                                             </div>
-
                                         </td>
-
-
                                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                                             {{ $purchaseItem->sku }}
                                         </td>
-
-
                                         <td class="px-4 py-3">
 
                                             <div class="text-sm text-gray-700">
@@ -594,9 +474,13 @@
                                                         </div>
 
                                                     </div>
-
+                                                    @if ($workflowItem->receivedItemPhotos->isNotEmpty())
+                                                        <div class="mt-3 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+                                                            <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                                                            <span>Received by Procurement</span>
+                                                        </div>
+                                                    @endif
                                                 </div>
-
                                             @endforeach
 
                                         </div>
@@ -725,7 +609,15 @@
                                                     @endphp
                                                     <tr>
                                                         <td class="px-3 py-2 text-sm text-gray-700">
-                                                            {{ $workflowItem->purchaseItem?->item_name ?? '-' }}
+                                                            <div class="flex items-center gap-2">
+                                                                {{ $workflowItem->purchaseItem?->item_name ?? '-' }}
+                                                                @if ($workflowItem->receivedItemPhotos->isNotEmpty())
+                                                                    <div class="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
+                                                                        <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                                                                        <span>Received by Procurement</span>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
                                                         </td>
                                                         <td class="px-3 py-2 text-right text-sm text-gray-700">
                                                             {{ number_format($workflowItem->purchaseItem?->quantity ?? 0) }}

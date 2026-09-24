@@ -107,8 +107,7 @@ class Approved extends Component
             $purchaseAction->cashRelease()->create([
                 'receipt_photo_path' => $path
             ]);
-            app(PurchaseWorkflowService::class)->completeFundReleasedWorkflowIfFinished($workflowItem->purchaseWorkflow
-    );
+            app(PurchaseWorkflowService::class)->completeFundReleasedWorkflowIfFinished($workflowItem->purchaseWorkflow);
         });
         $this->reset([
             'showAttachReceiptModal',

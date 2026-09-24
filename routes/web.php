@@ -73,6 +73,7 @@ Route::middleware([
     });
     Route::middleware(['department:accounting'])->prefix('accountings')->name('accountings.')->group(function () {
         Route::get('/requests', Livewire\Accountings\Requests::class)->name('requests');
+        Route::get('/refunds', Livewire\Accountings\Refunds::class)->name('refunds');
     });
     
     /*

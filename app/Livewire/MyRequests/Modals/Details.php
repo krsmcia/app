@@ -15,27 +15,24 @@ class Details extends Component
         $this->request = auth()->user()->purchaseRequests()
             ->with([
                 'department',
-
                 'purchaseItems' => function ($query) {
                     $query->with([
                         'item.primaryImage',
                         'itemVendor.vendor',
-
                         'purchaseWorkflowItems' => function ($query) {
                             $query->with('purchaseWorkflow');
                         },
                     ]);
                 },
-
                 'purchaseWorkflows' => function ($query) {
                     $query->with([
                         'purchaseWorkflowItems.purchaseItem',
+                        'purchaseWorkflowItems.receivedItemPhotos',
                     ]);
                 },
             ])
             ->where('id', $purchaseRequestId)
             ->first();
-
         $this->historyModal = true;
     }
     public function closeModal()

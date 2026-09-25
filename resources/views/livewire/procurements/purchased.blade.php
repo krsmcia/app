@@ -15,19 +15,6 @@
                 $purchaseItem = $workflowItem?->purchaseItem;
                 $item = $purchaseItem?->item;
                 $request = $purchaseItem?->purchaseRequest;
-
-                $quantity = (float) ($purchaseItem?->quantity ?? 0);
-                $unitPrice = (float) ($purchaseItem?->unit_price ?? 0);
-                $itemAmount = (float) ($purchaseItem?->amount ?? 0);
-                $shippingFee = (float) ($purchaseItem?->shipping_fee ?? 0);
-                $discount = (float) ($purchaseItem?->discount ?? 0);
-
-                $vendorName = $purchaseItem?->vendor_name;
-
-                $itemTotal = max(
-                    0,
-                    $itemAmount + $shippingFee - $discount
-                );
             @endphp
             {{-- =========================================================
                 Purchase Card
@@ -159,7 +146,7 @@
                                 <span>
                                     Qty:
                                     <span class="font-semibold text-gray-700">
-                                        {{ $quantity }}
+                                        {{ number_format($purchase_action->quantity, 0) }}
                                     </span>
                                 </span>
                             </div>
@@ -172,13 +159,13 @@
                             >
                                 Vendor
                             </div>
-                            @if ($vendorName)
+                            @if ($purchase_action->vendor_name_display)
                                 <div
                                     class="mt-0.5 truncate text-sm
                                         font-semibold text-gray-800"
-                                    title="{{ $vendorName }}"
+                                    title="{{ $purchase_action->vendor_name_display }}"
                                 >
-                                    {{ $vendorName }}
+                                    {{ $purchase_action->vendor_name_display }}
                                 </div>
                             @else
                                 <div class="mt-0.5 text-sm text-gray-400">
@@ -192,7 +179,7 @@
                                 Unit Price
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($unitPrice, 2) }}
+                                {{ number_format($purchase_action->unit_price_display, 2) }}
                             </div>
                         </div>
                         {{-- Quantity --}}
@@ -201,7 +188,7 @@
                                 Quantity
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($quantity, 0) }}
+                                {{ number_format($purchase_action->quantity, 0) }}
                             </div>
                         </div>
                         {{-- Amount --}}
@@ -210,23 +197,23 @@
                                 Amount
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($itemAmount, 2) }}
+                                {{ number_format($purchase_action->item_amount, 2) }}
                             </div>
-                            @if ($shippingFee > 0 || $discount > 0)
+                            @if ($purchase_action->shipping_fee_amount > 0 || $purchase_action->discount_amount > 0)
                                 <div class="mt-1 space-y-0.5 text-[10px] leading-tight">
-                                    @if ($shippingFee > 0)
+                                    @if ($purchase_action->shipping_fee_amount > 0)
                                         <div class="text-gray-400">
                                             Shipping:
                                             <span class="font-medium text-gray-600">
-                                                +{{ number_format($shippingFee, 2) }}
+                                                +{{ number_format($purchase_action->shipping_fee_amount, 2) }}
                                             </span>
                                         </div>
                                     @endif
-                                    @if ($discount > 0)
+                                    @if ($purchase_action->discount_amount > 0)
                                         <div class="text-gray-400">
                                             Discount:
                                             <span class="font-medium text-gray-600">
-                                                -{{ number_format($discount, 2) }}
+                                                -{{ number_format($purchase_action->discount_amount, 2) }}
                                             </span>
                                         </div>
                                     @endif
@@ -239,7 +226,7 @@
                                 Total
                             </div>
                             <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                {{ number_format($itemTotal, 2) }}
+                                {{ number_format($purchase_action->item_total, 2) }}
                             </div>
                         </div>
                     </div>
@@ -279,11 +266,11 @@
                                     @endif
                                     Qty:
                                     <span class="font-semibold text-gray-700">
-                                        {{ $quantity }}
+                                        {{ number_format($purchase_action->quantity, 0) }}
                                     </span>
                                 </div>
                                 {{-- Vendor --}}
-                                @if ($vendorName)
+                                @if ($purchase_action->vendor_name_display)
                                     <div class="mt-2 flex items-center gap-1.5">
                                         <span class="text-[11px] text-gray-400">
                                             Vendor
@@ -292,7 +279,7 @@
                                             class="truncate text-xs
                                                 font-medium text-gray-700"
                                         >
-                                            {{ $vendorName }}
+                                            {{ $item->vendor_name_display }}
                                         </span>
                                     </div>
                                 @endif
@@ -310,7 +297,7 @@
                                         Unit Price
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($unitPrice, 2) }}
+                                        {{ number_format($purchase_action->unit_price_display, 2) }}
                                     </div>
                                 </div>
                                 {{-- Quantity --}}
@@ -319,7 +306,7 @@
                                         Quantity
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($quantity, 0) }}
+                                        {{ number_format($purchase_action->quantity, 0) }}
                                     </div>
                                 </div>
                                 {{-- Amount --}}
@@ -328,7 +315,7 @@
                                         Amount
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($itemAmount, 2) }}
+                                        {{ number_format($purchase_action->item_amount, 2) }}
                                     </div>
                                 </div>
                                 {{-- Total --}}
@@ -337,33 +324,33 @@
                                         Total
                                     </div>
                                     <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                        {{ number_format($itemTotal, 2) }}
+                                        {{ number_format($purchase_action->item_total, 2) }}
                                     </div>
                                 </div>
                             </div>
                             {{-- Shipping / Discount --}}
-                            @if ($shippingFee > 0 || $discount > 0)
+                            @if ($purchase_action->shipping_fee_amount > 0 || $purchase_action->discount_amount > 0)
                                 <div
                                     class="mt-4 border-t border-gray-200
                                         pt-3 grid grid-cols-2 gap-3"
                                 >
-                                    @if ($shippingFee > 0)
+                                    @if ($purchase_action->shipping_fee_amount > 0)
                                         <div>
                                             <div class="text-[11px] text-gray-400">
                                                 Shipping
                                             </div>
                                             <div class="mt-0.5 text-sm font-medium text-gray-700">
-                                                {{ number_format($shippingFee, 2) }}
+                                                {{ number_format($purchase_action->shipping_fee_amount, 2) }}
                                             </div>
                                         </div>
                                     @endif
-                                    @if ($discount > 0)
+                                    @if ($purchase_action->discount_amount > 0)
                                         <div>
                                             <div class="text-[11px] text-gray-400">
                                                 Discount
                                             </div>
                                             <div class="mt-0.5 text-sm font-medium text-gray-700">
-                                                -{{ number_format($discount, 2) }}
+                                                -{{ number_format($purchase_action->discount_amount, 2) }}
                                             </div>
                                         </div>
                                     @endif
@@ -384,14 +371,14 @@
                             sm:flex-row sm:items-center
                             sm:justify-between"
                     >
-                        {{-- Remark --}}
+                        {{-- comment --}}
                         <div class="min-w-0">
-                            @if ($request?->remark)
+                            @if ($purchase_action?->comment)
                                 <div class="text-sm text-gray-600">
                                     <span class="font-medium">
-                                        Remark:
+                                        Comment:
                                     </span>
-                                    {{ $request->remark }}
+                                    {{ $purchase_action?->comment }}
                                 </div>
                             @else
                                 <div class="text-xs text-gray-400">
@@ -410,7 +397,7 @@
                                 </div>
 
                                 <div class="text-base font-bold text-gray-900">
-                                    {{ number_format($itemTotal, 2) }}
+                                    {{ number_format($purchase_action->item_total, 2) }}
                                 </div>
                             </div>
 
@@ -589,7 +576,7 @@
                         );
                     });
 
-                    window.addEventListener('reset-recipient-photo', () => {
+                    window.addEventListener('reset-item-photo', () => {
                         resetPhoto();
                     });
                 "

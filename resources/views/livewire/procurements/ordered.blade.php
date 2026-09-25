@@ -15,10 +15,9 @@
                 $purchaseItem = $workflowItem?->purchaseItem;
                 $item = $purchaseItem?->item;
                 $request = $purchaseItem?->purchaseRequest;
-
                 $quantity = (float) ($purchaseItem?->quantity ?? 0);
                 $unitPrice = (float) ($purchaseItem?->unit_price ?? 0);
-                $itemAmount = (float) ($purchaseItem?->amount ?? 0);
+                $amount = (float) ($quantity * $unitPrice);
                 $shippingFee = (float) ($purchaseItem?->shipping_fee ?? 0);
                 $discount = (float) ($purchaseItem?->discount ?? 0);
 
@@ -26,7 +25,7 @@
 
                 $itemTotal = max(
                     0,
-                    $itemAmount + $shippingFee - $discount
+                    $amount + $shippingFee - $discount
                 );
             @endphp
             {{-- =========================================================
@@ -135,27 +134,21 @@
                             >
                                 {{ $item?->name ?? 'Unknown Item' }}
                             </div>
-
                             <div
                                 class="mt-1 flex items-center gap-2
                                     text-xs text-gray-500"
                             >
-
                                 @if ($item?->sku)
-
                                     <span>
                                         SKU:
                                         <span class="font-medium text-gray-600">
                                             {{ $item->sku }}
                                         </span>
                                     </span>
-
                                     <span class="text-gray-300">
                                         •
                                     </span>
-
                                 @endif
-
                                 <span>
                                     Qty:
                                     <span class="font-semibold text-gray-700">
@@ -210,7 +203,7 @@
                                 Amount
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($itemAmount, 2) }}
+                                {{ number_format($amount, 2) }}
                             </div>
                             @if ($shippingFee > 0 || $discount > 0)
                                 <div class="mt-1 space-y-0.5 text-[10px] leading-tight">
@@ -328,7 +321,7 @@
                                         Amount
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($itemAmount, 2) }}
+                                        {{ number_format($unitPrice, 2) }}
                                     </div>
                                 </div>
                                 {{-- Total --}}
@@ -482,11 +475,9 @@
         <x-slot name="title">
             <div>
                 <div class="text-lg font-semibold text-gray-900">
-                    Receive Order Item
+                    Upload Received Item
                 </div>
-                <p class="mt-1 text-sm text-gray-500">
-                    
-                </p>
+                <p class="mt-1 text-sm text-gray-500"></p>
             </div>
         </x-slot>
         <x-slot name="content">

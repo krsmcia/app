@@ -50,28 +50,20 @@
                             </span>
 
                         </div>
-
-
                         {{-- Items --}}
                         <div class="divide-y divide-gray-100">
-
                             @foreach ($cashItems as $workflowItem)
-
                                 @php
                                     $purchaseItem = $workflowItem->purchaseItem;
-
-                                    $unitPrice = (float) ($purchaseItem->amount ?? 0);
+                                    $unitPrice = (float) ($purchaseItem->unit_price ?? 0);
                                     $quantity = (int) ($purchaseItem->quantity ?? 1);
                                     $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
                                     $discount = (float) ($purchaseItem->discount ?? 0);
-
                                     $originalTotal = $unitPrice * $quantity;
-
                                     $calculatedTotal =
                                         $originalTotal
                                         + $shippingFee
                                         - $discount;
-
                                     $whole = floor($calculatedTotal);
                                     $decimal = $calculatedTotal - $whole;
 
@@ -79,59 +71,50 @@
                                         ? (int) $whole + 1
                                         : (int) $whole;
                                 @endphp
-
-
                                 <div
                                     wire:key="cash-item-{{ $workflowItem->id }}"
                                     class="px-3 py-2.5 sm:px-4 sm:py-3"
                                 >
-
                                     {{-- Item Header --}}
                                     <div class="flex items-start justify-between gap-2">
-
                                         <div class="min-w-0 flex-1">
-
                                             <div class="truncate text-xs font-semibold text-gray-900 sm:text-sm">
                                                 {{ $purchaseItem->item_name }}
                                             </div>
-
                                             <div class="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-gray-500 sm:text-[11px]">
-
                                                 <span class="shrink-0">
                                                     Qty {{ $quantity }}
                                                 </span>
-
                                                 @if ($purchaseItem->sku)
                                                     <span class="shrink-0">·</span>
-
                                                     <span class="truncate">
                                                         {{ $purchaseItem->sku }}
                                                     </span>
                                                 @endif
-
                                             </div>
-
                                         </div>
-
-
                                         {{-- Release --}}
                                         <div class="shrink-0 text-right">
 
                                             <div class="text-[9px] font-medium uppercase tracking-wide text-gray-400">
                                                 Release
                                             </div>
-
-                                            <div class="text-base font-extrabold text-emerald-700 sm:text-lg">
-                                                ₱{{ number_format($releaseAmount) }}
+                                            <div class="flex items-center gap-2">
+                                                {{-- Rounding Notice --}}
+                                                @if ($calculatedTotal != $releaseAmount)
+                                                    <div class="mt-1.5 flex items-center justify-end text-[9px] text-gray-400 sm:text-[10px]">
+                                                        Rounded from
+                                                        <span class="mx-1 font-medium">
+                                                            ₱{{ number_format($calculatedTotal, 2) }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                                <p class="text-base font-extrabold text-emerald-700 sm:text-lg">₱{{ number_format($releaseAmount) }}</p>
                                             </div>
-
                                         </div>
-
                                     </div>
-
-
                                     {{-- Price Breakdown --}}
-                                    <div class="mt-2.5 overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
+                                    <div class="overflow-hidden rounded-lg border border-gray-100 bg-gray-50">
 
                                         {{-- Original --}}
                                         <div class="flex items-center justify-between gap-2 border-b border-gray-100 px-2.5 py-1.5">
@@ -197,19 +180,6 @@
                                         </div>
 
                                     </div>
-
-
-                                    {{-- Rounding Notice --}}
-                                    @if ($calculatedTotal != $releaseAmount)
-
-                                        <div class="mt-1.5 flex items-center justify-end text-[9px] text-gray-400 sm:text-[10px]">
-                                            Rounded from
-                                            <span class="mx-1 font-medium">
-                                                ₱{{ number_format($calculatedTotal, 2) }}
-                                            </span>
-                                        </div>
-
-                                    @endif
 
                                 </div>
 

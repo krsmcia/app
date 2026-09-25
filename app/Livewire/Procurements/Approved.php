@@ -134,17 +134,17 @@ class Approved extends Component
         PurchaseWorkflowItem $workflowItem
     ): PurchaseWorkflowItem {
         $purchaseItem = $workflowItem->purchaseItem;
-
-        $amount = (float) ($purchaseItem->amount ?? 0);
+        $unit_price = (float) ($purchaseItem->unit_price ?? 0);
         $quantity = (int) ($purchaseItem->quantity ?? 1);
+        $amount = (float) ($unit_price * $quantity);
         $discount = (float) ($purchaseItem->discount ?? 0);
         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
 
-        $originalTotal = $amount * $quantity;
+        $amount;
 
         $calculatedTotal = max(
             0,
-            $originalTotal + $shippingFee - $discount
+            $amount + $shippingFee - $discount
         );
 
         $disbursementType = $purchaseItem->itemVendor?->disbursementType;
@@ -190,7 +190,7 @@ class Approved extends Component
         $workflowItem->payment_details =
             $purchaseItem->payment_details;
 
-        $workflowItem->original_total = $originalTotal;
+        $workflowItem->original_total = $amount;
 
         $workflowItem->calculated_total = $calculatedTotal;
 

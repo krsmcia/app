@@ -487,7 +487,6 @@ class Requests extends Component
                     'vendor_name' => $itemVendor->vendor->name,
                     'vendor_sku' => $itemVendor->vendor_sku,
                     'unit_price' => $unitPrice,
-                    'amount' => $amount,
                     'shipping_fee' => $shippingFee,
                     'discount' => $itemDiscount,
                     'disbursement_type_name' => $itemVendor->disbursementType->name,

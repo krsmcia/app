@@ -313,7 +313,7 @@
 
 
                                     {{-- Actions --}}
-                                    @if ($workflowItem->is_money_holder)
+                                    @if ($workflowItem->is_money_holder && $workflowItem->status === 'pending')
                                         <div class="flex w-[190px] shrink-0 flex-col gap-2">
 
                                             <x-approve-button
@@ -540,7 +540,7 @@
 
 
                                     {{-- Mobile Actions --}}
-                                    @if ($workflowItem->is_money_holder)
+                                    @if ($workflowItem->is_money_holder && $workflowItem->status === 'pending')
                                         <div class="mt-4 grid grid-cols-2 gap-2">
 
                                             <x-approve-button
@@ -594,7 +594,7 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            @if (!$workflowItem->is_money_holder)
+                                            @if (!$workflowItem->is_money_holder && $workflowItem->status === 'pending')
                                                 <button
                                                     type="button"
                                                     x-on:click="$dispatch('receive-cash', {

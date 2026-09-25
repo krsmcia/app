@@ -389,7 +389,7 @@ class Requests extends Component
 
                         $purchaseItem = $workflowItem->purchaseItem;
 
-                        $amount = (float) ($purchaseItem->amount ?? 0);
+                        $amount = (float) ($purchaseItem->unit_price * $purchaseItem->quantity ?? 0);
                         $discount = (float) ($purchaseItem->discount ?? 0);
                         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
 

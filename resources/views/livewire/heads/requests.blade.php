@@ -78,7 +78,7 @@
                                 $item = $purchaseItem->item;
                                 $itemVendor = $purchaseItem->itemVendor;
 
-                                $baseAmount = (float) ($purchaseItem->amount ?? 0);
+                                $baseAmount = (float) ($purchaseItem->unit_price * $purchaseItem->quantity ?? 0);
                                 $itemDiscount = (float) ($purchaseItem->discount ?? 0);
                                 $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
 

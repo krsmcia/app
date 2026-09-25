@@ -34,7 +34,7 @@
     </div>
 
     <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
-        Accounting
+        Budget Requests
     </h2>
 
     <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">

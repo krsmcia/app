@@ -44,7 +44,6 @@ class Cart extends Component
                         'vendor_name' => null,
                         'vendor_sku' => null,
                         'unit_price' => null,
-                        'amount' => null,
                     ]);
                 }
                 $nextStep = $this->nextApprovalStep($user);

@@ -3,74 +3,12 @@
 namespace App\Livewire\Accountings;
 
 use App\Models\PurchaseRequest;
-use App\Models\PurchaseWorkflow;
-use App\Models\PurchaseWorkflowItem;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Services\PurchaseWorkflowService;
 use Livewire\Attributes\On;
 class Requests extends Component
 {
     use WithPagination;
-    public bool $remarkModal = false;
-    public string $remark = '';
-    public ?int $releaseWorkflowItemId = null;
-    public function openRemarkModal($workflowItemId)
-    {
-        $this->releaseWorkflowItemId = $workflowItemId;
-        $this->remark = '';
-        $this->resetValidation();
-        $this->remarkModal = true;
-    }
-    public function complete()
-    {
-        $this->validate([
-            'remark' => 'required|string|max:500',
-        ]);
-        if (!$this->releaseWorkflowItemId) {
-            return;
-        }
-        $workflowItem = PurchaseWorkflowItem::query()
-            ->with([
-                'purchaseWorkflow',
-                'purchaseItem',
-            ])
-            ->whereKey($this->releaseWorkflowItemId)
-            ->where('status', 'pending')
-            ->whereHas('purchaseWorkflow', function ($query) {
-                $query
-                    ->where('step', 'accounting')
-                    ->where('status', 'pending');
-            })
-            ->firstOrFail();
-        DB::transaction(function () use ($workflowItem) {
-            $purchaseItem = $workflowItem->purchaseItem;
-            $isCash = strcasecmp(
-                trim($purchaseItem->disbursement_type_name ?? ''),
-                'cash'
-            ) === 0;
-            $workflowItem->update([
-                'status' => $isCash ? 'fund released' : 'purchased',
-                'acted_at' => now(),
-            ]);
-            // 실제 구매 상태 기록
-            $workflowItem->purchaseActions()->create([
-                'action' => $isCash ? 'pending' : 'purchased',
-                'acted_by' => Auth::id(),
-                'acted_at' => now(),
-                'comment' => $this->remark,
-            ]);
-            app(PurchaseWorkflowService::class)->completeAccountingWorkflowIfFinished($workflowItem->purchaseWorkflow);
-        });
-        $this->reset([
-            'remarkModal',
-            'remark',
-            'releaseWorkflowItemId',
-        ]);
-        $this->dispatch('approval-updated');
-    }
     private function roundCashAmount(float $amount): int
     {
         $whole = floor($amount);
@@ -133,8 +71,9 @@ class Requests extends Component
             $request->items = $workflow->purchaseWorkflowItems->map(
                 function ($workflowItem) {
                     $purchaseItem = $workflowItem->purchaseItem;
-                    $amount = (float) ($purchaseItem->amount ?? 0);
+                    $unit_price = (float) ($purchaseItem->unit_price ?? 0);
                     $quantity = (int) ($purchaseItem->quantity ?? 1);
+                    $amount = (float) $unit_price * $quantity;
                     $discount = (float) ($purchaseItem->discount ?? 0);
                     $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
                     /*

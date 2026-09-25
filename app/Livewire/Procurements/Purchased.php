@@ -11,6 +11,7 @@ use Livewire\WithoutUrlPagination;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
+use App\Services\PurchaseAmountService;
 
 class Purchased extends Component
 {
@@ -26,6 +27,7 @@ class Purchased extends Component
         $this->itemPhoto = null;
         $this->resetValidation();
         $this->itemPhotoModal = true;
+        $this->dispatch('reset-item-photo');
     }
     public function saveItemPhoto()
     {
@@ -53,6 +55,7 @@ class Purchased extends Component
             'itemPhotoModal',
             'itemPhoto',
         ]);
+        $this->dispatch('reset-item-photo');
     }
     public function render()
     {
@@ -67,6 +70,30 @@ class Purchased extends Component
             ])
             ->latest()
             ->paginate(10);
+        $purchase_actions->getCollection()->transform(function ($purchaseAction) {
+            $purchaseItem = $purchaseAction->purchaseWorkflowItem?->purchaseItem;
+            $quantity = (float) ($purchaseItem?->quantity ?? 0);
+            $unitPrice = (float) ($purchaseItem?->unit_price ?? 0);
+            $shippingFee = (float) ($purchaseItem?->shipping_fee ?? 0);
+            $discount = (float) ($purchaseItem?->discount ?? 0);
+            $itemAmount = $unitPrice * $quantity;
+            $itemTotal = max(
+                0,
+                $itemAmount + $shippingFee - $discount
+            );
+            if ($purchaseItem->disbursement_type_name === 'Cash') {
+                $amount = app(PurchaseAmountService::class)->calculate($purchaseItem);
+                $itemTotal = app(PurchaseAmountService::class)->round($amount);
+            }
+            $purchaseAction->quantity = $quantity;
+            $purchaseAction->unit_price_display = $unitPrice;
+            $purchaseAction->item_amount = $itemAmount;
+            $purchaseAction->shipping_fee_amount = $shippingFee;
+            $purchaseAction->discount_amount = $discount;
+            $purchaseAction->item_total = $itemTotal;
+            $purchaseAction->vendor_name_display = $purchaseItem?->vendor_name;
+            return $purchaseAction;
+        });
 
         return view('livewire.procurements.purchased', [
             'purchase_actions' => $purchase_actions,

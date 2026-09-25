@@ -7,7 +7,7 @@ use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
-use App\Services\PurchaseWorkflowService;
+use App\Services\PurchaseAmountService;
 use Livewire\Component;
 
 class ReceiveCash extends Component
@@ -57,11 +57,8 @@ class ReceiveCash extends Component
                 'max:500',
             ],
         ]);
-
         abort_unless($this->workflowItem, 404);
-
         $purchaseItem = $this->workflowItem->purchaseItem;
-
         /*
          * 가장 최근 transaction = 현재 Money Holder 확인
          */
@@ -69,16 +66,12 @@ class ReceiveCash extends Component
             ->purchaseItemTransactions
             ->sortByDesc('created_at')
             ->first();
-
         $currentTransaction = $latestItemTransaction?->transaction;
-
         abort_unless($currentTransaction, 403);
-
         /*
          * 현재 Money Holder
          */
         $moneyHolderId = $currentTransaction->to_user_id;
-
         /*
          * 현재 로그인한 사람이 이미 Money Holder라면
          * 자기 자신에게 받을 수 없음
@@ -88,7 +81,6 @@ class ReceiveCash extends Component
             422,
             'You are already the current money holder.'
         );
-
         /*
          * 로그인한 사용자가 procurement 팀원인지 확인
          */
@@ -96,23 +88,22 @@ class ReceiveCash extends Component
             ->departments()
             ->where('code', 'procurement')
             ->exists();
-
         abort_unless($isProcurementMember, 403);
-
         DB::transaction(function () use (
             $purchaseItem,
             $currentTransaction,
             $moneyHolderId
         ) {
+            $amount = app(PurchaseAmountService::class)->calculate($purchaseItem);
+            $roundAmount = app(PurchaseAmountService::class)->round($amount);
             /*
              * Money Holder → 현재 로그인 사용자
              */
             $transaction = Transaction::create([
                 'from_user_id' => $moneyHolderId,
                 'to_user_id' => Auth::id(),
-                'vendor_id' => $currentTransaction->vendor_id,
                 'type' => 'transfer',
-                'amount' => $currentTransaction->amount,
+                'amount' => $roundAmount,
                 'remark' => $this->remark,
                 'created_by' => Auth::id(),
             ]);

@@ -25,12 +25,19 @@ Route::middleware([
 ])->group(function () {
     /*
     |--------------------------------------------------------------------------
-    | Dashboard
+        Common
     |--------------------------------------------------------------------------
     */
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', function () {return view('dashboard');})->name('dashboard');
+    Route::get('/pending-approval', Livewire\PendingApproval::class)->name('pending-approval');
+    Route::get('/items', Livewire\Items::class)->name('items');
+    Route::get('/items/category/{category:code}', Livewire\Items\Category::class)->name('items.category');
+    Route::get('/wishlist', Livewire\Wishlist::class)->name('wishlist');
+    Route::get('/purchase-requests', Livewire\PurchaseRequests::class)->name('purchase-requests');
+    Route::get('/cart', Livewire\Cart::class)->name('cart');
+    Route::get('/my-requests', Livewire\MyRequests::class)->name('my-requests');
+    Route::get('/received-items', Livewire\ReceivedItems::class)->name('received-items');
+
     /*
     |--------------------------------------------------------------------------
     | Organization
@@ -76,16 +83,7 @@ Route::middleware([
         Route::get('/refunds', Livewire\Accountings\Refunds::class)->name('refunds');
     });
     
-    /*
-    |--------------------------------------------------------------------------
-    | Items
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/items', Livewire\Items::class)->name('items');
-    Route::get('/items/category/{category:code}', Livewire\Items\Category::class)->name('items.category');
-    Route::get('/wishlist', Livewire\Wishlist::class)->name('wishlist');
-    Route::get('/purchase-requests', Livewire\PurchaseRequests::class)->name('purchase-requests');
-    Route::get('/cart', Livewire\Cart::class)->name('cart');
-    Route::get('/my-requests', Livewire\MyRequests::class)->name('my-requests');
-    Route::get('/pending-approval', Livewire\PendingApproval::class)->name('pending-approval');
+    
+    
+    
 });

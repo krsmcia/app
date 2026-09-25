@@ -90,19 +90,16 @@ class ReleaseCash extends Component
      */
     private function calculateCashAmount($purchaseItem): int
     {
-        $amount = (float) ($purchaseItem->amount ?? 0);
+        $amount = (float) ($purchaseItem->amount ?? 0); //unit_price * quantity = amount
         $quantity = (int) ($purchaseItem->quantity ?? 1);
         $discount = (float) ($purchaseItem->discount ?? 0);
         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
-
         $total =
-            ($amount * $quantity)
+            $amount
             + $shippingFee
             - $discount;
-
         $whole = floor($total);
         $decimal = $total - $whole;
-
         return $decimal >= 0.45
             ? (int) $whole + 1
             : (int) $whole;

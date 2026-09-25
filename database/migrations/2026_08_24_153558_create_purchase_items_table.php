@@ -37,7 +37,6 @@ return new class extends Migration
             $table->string('vendor_name')->nullable();
             $table->string('vendor_sku')->nullable();
             $table->decimal('unit_price', 15, 2)->nullable();
-            $table->decimal('amount', 15, 2)->nullable();
             $table->decimal('shipping_fee', 15, 2)->nullable();
             $table->decimal('discount', 15, 2)->nullable();
             $table->string('disbursement_type_name')->nullable();

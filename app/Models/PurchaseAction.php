@@ -19,4 +19,8 @@ class PurchaseAction extends Model
     {
         return $this->hasMany(ReceivedItemPhoto::class);
     }
+    public function releasedItemPhotos()
+    {
+        return $this->hasMany(ReleasedItemPhoto::class);
+    }
 }

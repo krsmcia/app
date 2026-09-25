@@ -91,7 +91,6 @@ class Requests extends Component
             ->with([
                 'user',
                 'department',
-
                 'purchaseWorkflows' => function ($query) {
                     $query
                         ->where('step', 'accounting')
@@ -119,42 +118,30 @@ class Requests extends Component
             })
             ->latest()
             ->paginate(12);
-
         $requests->getCollection()->transform(function ($request) {
             $workflow = $request->purchaseWorkflows->first();
-
             $request->account_workflow = $workflow;
-
             if (!$workflow) {
                 $request->items = collect();
                 $request->account_total = 0;
 
                 return $request;
             }
-
             /*
             * Accounting 화면의 pending items
             */
             $request->items = $workflow->purchaseWorkflowItems->map(
                 function ($workflowItem) {
                     $purchaseItem = $workflowItem->purchaseItem;
-
                     $amount = (float) ($purchaseItem->amount ?? 0);
                     $quantity = (int) ($purchaseItem->quantity ?? 1);
                     $discount = (float) ($purchaseItem->discount ?? 0);
                     $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
-
-                    /*
-                    * Original price
-                    * 단가 × 수량
-                    */
-                    $originalTotal = $amount * $quantity;
-
                     /*
                     * 실제 계산 금액
                     */
                     $calculatedTotal =
-                        $originalTotal
+                        $amount
                         + $shippingFee
                         - $discount;
 
@@ -177,7 +164,7 @@ class Requests extends Component
                     /*
                     * Blade에서 사용
                     */
-                    $workflowItem->original_total = $originalTotal;
+                    $workflowItem->original_total = $amount;
                     $workflowItem->calculated_total = $calculatedTotal;
                     $workflowItem->release_total = $releaseTotal;
                     $workflowItem->is_cash = $isCash;

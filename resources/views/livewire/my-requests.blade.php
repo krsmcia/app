@@ -57,4 +57,5 @@
         @endif
     </div>
     <livewire:my-requests.modals.details />
+    <x-mobile-purchase-bottom-nav />
 </div>

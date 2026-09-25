@@ -16,7 +16,7 @@
         fixed
         inset-x-0
         bottom-0
-        z-50
+        z-30
         border-t
         border-gray-200
         bg-white/95
@@ -121,11 +121,11 @@
 
         {{-- History --}}
         <a
-            href="{{ route('purchase-requests') }}"
+            href="{{ route('my-requests') }}"
             @class([
                 'relative flex flex-col items-center justify-center gap-0.5 active:bg-gray-50',
-                'text-gray-900' => request()->routeIs('purchase-requests*'),
-                'text-gray-400' => ! request()->routeIs('purchase-requests*'),
+                'text-gray-900' => request()->routeIs('my-requests*'),
+                'text-gray-400' => ! request()->routeIs('my-requests*'),
             ])
         >
             <svg

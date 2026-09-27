@@ -344,8 +344,9 @@ class Requests extends Component
                     ->sum(function ($workflowItem) {
 
                         $purchaseItem = $workflowItem->purchaseItem;
-
-                        $amount = (float) ($purchaseItem->amount ?? 0);
+                        $quantity = (int) ($purchaseItem->quantity ?? 0);
+                        $unitPrice = (float) ($purchaseItem->unit_price ?? 0);
+                        $amount = (float) ($quantity * $unitPrice);
                         $discount = (float) ($purchaseItem->discount ?? 0);
                         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
 

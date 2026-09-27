@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        //snapshot of purchase request items at the time of request creation
         Schema::create('purchase_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_request_id')->constrained()->cascadeOnDelete();
@@ -33,6 +34,9 @@ return new class extends Migration
             |--------------------------------------------------------------------------
             */
             $table->string('item_name');
+            $table->string('brand')->nullable();
+            $table->string('color')->nullable();
+            $table->string('size')->nullable();
             $table->string('sku', 50);
             $table->string('vendor_name')->nullable();
             $table->string('vendor_sku')->nullable();

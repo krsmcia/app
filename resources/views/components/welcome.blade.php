@@ -210,7 +210,7 @@
         </a>
         {{-- Received Items --}}
         <a
-            href="{{route('received-items')}}"
+            href="{{route('ready-for-pickup')}}"
             class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
                 transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-md
                 sm:p-5 lg:aspect-auto lg:p-6"
@@ -232,13 +232,13 @@
                 </svg>
             </div>
             <h2 class="mt-4 text-base font-semibold leading-5 text-gray-900 sm:mt-5 sm:text-lg">
-                Received Items
+                Ready For Pickup
             </h2>
             <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
-                Review completed and previously processed requests.
+                Check the getable items
             </p>
             <div class="mt-auto pt-3 text-xs font-semibold text-slate-600 sm:text-sm">
-                View history
+                View items
                 <span class="transition group-hover:ml-1">→</span>
             </div>
         </a>

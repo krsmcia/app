@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithoutUrlPagination;
 
-class ReceivedItems extends Component
+class ReadyForPickup extends Component
 {
     public function render()
     {
@@ -28,6 +28,6 @@ class ReceivedItems extends Component
             $purchaseAction->vendor_name_display = $purchaseItem?->vendor_name;
             return $purchaseAction;
         });
-        return view('livewire.received-items',['purchase_actions' => $purchase_actions,]);
+        return view('livewire.ready-for-pickup', ['purchase_actions' => $purchase_actions,]);
     }
 }

@@ -175,7 +175,7 @@
                                         Amount
                                     </span>
                                     <span class="text-sm font-bold text-gray-900">
-                                        ₱{{ number_format($purchaseItem->amount ?? 0, 2) }}
+                                        ₱{{ number_format($purchaseItem->unit_price * $purchaseItem->quantity ?? 0, 2) }}
                                     </span>
                                 </div>
                                 {{-- Remark --}}
@@ -287,7 +287,7 @@
 
 
                                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                                            ₱{{ number_format($purchaseItem->amount ?? 0, 2) }}
+                                            ₱{{ number_format($purchaseItem->unit_price * $purchaseItem->quantity ?? 0, 2) }}
                                         </td>
 
 

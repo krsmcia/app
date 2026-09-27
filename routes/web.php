@@ -36,7 +36,7 @@ Route::middleware([
     Route::get('/purchase-requests', Livewire\PurchaseRequests::class)->name('purchase-requests');
     Route::get('/cart', Livewire\Cart::class)->name('cart');
     Route::get('/my-requests', Livewire\MyRequests::class)->name('my-requests');
-    Route::get('/received-items', Livewire\ReceivedItems::class)->name('received-items');
+    Route::get('/ready-for-pickup', Livewire\ReadyForPickup::class)->name('ready-for-pickup');
 
     /*
     |--------------------------------------------------------------------------

@@ -483,6 +483,9 @@ class Requests extends Component
                 $purchaseItem->update([
                     'item_vendor_id' => $itemVendor->id,
                     'item_name' => $item->name,
+                    'brand' => $item->brand,
+                    'color' => $item->color,
+                    'size' => $item->size,
                     'sku' => $item->sku,
                     'vendor_name' => $itemVendor->vendor->name,
                     'vendor_sku' => $itemVendor->vendor_sku,

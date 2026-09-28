@@ -19,8 +19,12 @@ class PurchaseAction extends Model
     {
         return $this->hasMany(ReceivedItemPhoto::class);
     }
-    public function releasedItemPhotos()
+    public function itemHandoverPhotos()
     {
-        return $this->hasMany(ReleasedItemPhoto::class);
+        return $this->hasMany(ItemHandoverPhoto::class);
+    }
+    public function actedBy()
+    {
+        return $this->belongsTo(User::class, 'acted_by');
     }
 }

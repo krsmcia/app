@@ -286,3 +286,40 @@
         </span>
     </div>
 </a>
+{{-- Item Handover --}}
+<a href="{{ route('procurements.handover') }}"
+   class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-md sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 sm:h-11 sm:w-11">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke-width="1.5"
+             stroke="currentColor"
+             class="size-5 text-violet-600 sm:size-6"
+        >
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8.25 15.75 12 19.5l3.75-3.75M12 4.5v14.25" />
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M5.25 8.25 12 1.5l6.75 6.75" />
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4.5 19.5h15" />
+        </svg>
+    </div>
+
+    <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+        Item Handover
+    </h2>
+
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        Hand over purchased items to the employees who requested them and record the receipt.
+    </p>
+
+    <div class="mt-auto pt-3 text-xs font-semibold text-violet-600 sm:text-sm">
+        Hand over
+        <span class="transition group-hover:ml-1">→</span>
+    </div>
+</a>

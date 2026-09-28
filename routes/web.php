@@ -62,6 +62,7 @@ Route::middleware([
         Route::get('/approved', Livewire\Procurements\Approved::class)->name('approved');
         Route::get('/purchased', Livewire\Procurements\Purchased::class)->name('purchased');
         Route::get('/ordered', Livewire\Procurements\Ordered::class)->name('ordered');
+        Route::get('/handover', Livewire\Procurements\Handover::class)->name('handover');
     });
     Route::middleware(['department:warehouse'])->prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/warehouses', Livewire\Warehouses\Warehouses::class)->name('warehouses');

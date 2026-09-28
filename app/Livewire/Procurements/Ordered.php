@@ -45,7 +45,7 @@ class Ordered extends Component
                 $this->itemPhoto
             );
             $purchaseAction->receivedItemPhotos()->create([
-                'receiver_photo_path' => $path
+                'receipt_photo_path' => $path
             ]);
         });
         $this->reset([

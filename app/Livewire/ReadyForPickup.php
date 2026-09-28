@@ -12,7 +12,7 @@ class ReadyForPickup extends Component
     public function render()
     {
         $purchase_actions = PurchaseAction::query()
-            ->where('action', 'purchased')
+            ->whereIn('action', ['purchased', 'ordered'])
             ->whereHas(
                 'purchaseWorkflowItem.purchaseItem.purchaseRequest',
                 fn ($query) => $query->where('user_id', auth()->id())

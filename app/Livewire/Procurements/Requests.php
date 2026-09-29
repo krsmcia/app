@@ -192,6 +192,7 @@ class Requests extends Component
             'success',
             'Vendor information updated successfully.'
         );
+        $this->dispatch('vendor-updated');
     }
     public function removeVendor(int $itemVendorId): void
     {
@@ -655,29 +656,6 @@ class Requests extends Component
                     $this->itemAdjustments[$workflowItem->id]['discount'] ?? 0
                 );
                 return max(0, $amount + $shippingFee - $discount);
-            });
-            $itemsTotal = $workflow->purchaseWorkflowItems->sum(function ($workflowItem) {
-                $item = $workflowItem->purchaseItem;
-                $vendor = $workflowItem->preferred_vendor;
-
-                if (!$vendor?->unit_price) {
-                    return 0;
-                }
-
-                $amount = $item->quantity * (float) $vendor->unit_price;
-
-                $shippingFee = (float) (
-                    $this->itemAdjustments[$workflowItem->id]['shipping_fee'] ?? 0
-                );
-
-                $discount = (float) (
-                    $this->itemAdjustments[$workflowItem->id]['discount'] ?? 0
-                );
-
-                return max(
-                    0,
-                    $amount + $shippingFee - $discount
-                );
             });
 
             $requestDiscount = (float) (

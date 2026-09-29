@@ -21,8 +21,11 @@
                         items: {
                             @foreach ($workflow->purchaseWorkflowItems as $workflowItem)
                                 {{ $workflowItem->id }}: {
+                                    itemId: {{ $workflowItem->purchaseItem?->item_id ?? 0 }},
+                                    quantity: {{ (float) ($workflowItem->purchaseItem?->quantity ?? 0) }},
+                                    unitPrice: {{ (float) ($workflowItem->preferred_vendor?->unit_price ?? 0) }},
                                     amount: {{ (float) (
-                                        $workflowItem->purchaseItem?->quantity
+                                        ($workflowItem->purchaseItem?->quantity ?? 0)
                                         * ($workflowItem->preferred_vendor?->unit_price ?? 0)
                                     ) }},
                                     shippingFee: {{ (float) ($itemAdjustments[$workflowItem->id]['shipping_fee'] ?? 0) }},
@@ -77,6 +80,12 @@
                         },
                         
                     }"
+                    x-on:vendor-updated.window="
+                        updateVendorPrice(
+                            $event.detail.itemId,
+                            $event.detail.unitPrice
+                        )
+                    "
                     class="rounded-lg border border-gray-200 bg-white shadow-sm"
                 >
                     {{-- Header --}}

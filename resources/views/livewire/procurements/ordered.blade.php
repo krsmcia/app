@@ -471,7 +471,7 @@
             </div>
         @endif
     </div>
-    <div class=""
+    <div
         x-data="{
             photoName: null,
             photoPreview: null,
@@ -531,7 +531,9 @@
                                 (blob) => {
                                     if (!blob) {
                                         reject(
-                                            new Error('Image resize failed.')
+                                            new Error(
+                                                'Image resize failed.'
+                                            )
                                         );
                                         return;
                                     }
@@ -563,53 +565,7 @@
                 });
             }
         }"
-        x-init="
-            $refs.photo.addEventListener('change', async (event) => {
-                const originalFile = event.target.files[0];
-
-                if (!originalFile) {
-                    return;
-                }
-
-                status = 'resizing';
-                photoPreview = null;
-                photoName = null;
-
-                try {
-                    const resizedFile = await resizeImage(originalFile);
-
-                    photoName = resizedFile.name;
-                    status = 'uploading';
-
-                    const reader = new FileReader();
-
-                    reader.onload = (e) => {
-                        photoPreview = e.target.result;
-                    };
-
-                    reader.readAsDataURL(resizedFile);
-
-                    $wire.upload(
-                        'itemPhoto',
-                        resizedFile,
-                        () => {
-                            status = 'ready';
-                        },
-                        () => {
-                            status = 'idle';
-                        }
-                    );
-
-                } catch (error) {
-                    console.error(error);
-                    status = 'idle';
-                }
-            });
-
-            window.addEventListener('reset-recipient-photo', () => {
-                resetPhoto();
-            });
-        "
+        x-on:reset-item-photo.window="resetPhoto()"
     >
         <x-dialog-modal wire:model.live="itemPhotoModal">
             <x-slot name="title">
@@ -627,11 +583,51 @@
                     {{-- Hidden file input --}}
                     <input
                         type="file"
-                        id="photo"
                         class="hidden"
                         x-ref="photo"
                         accept="image/*"
                         capture="environment"
+                        x-on:change="
+                            const originalFile = $event.target.files[0];
+
+                            if (!originalFile) {
+                                return;
+                            }
+
+                            status = 'resizing';
+                            photoPreview = null;
+                            photoName = null;
+
+                            try {
+                                const resizedFile = await resizeImage(originalFile);
+
+                                photoName = resizedFile.name;
+                                status = 'uploading';
+
+                                const reader = new FileReader();
+
+                                reader.onload = (e) => {
+                                    photoPreview = e.target.result;
+                                };
+
+                                reader.readAsDataURL(resizedFile);
+
+                                $wire.upload(
+                                    'itemPhoto',
+                                    resizedFile,
+                                    () => {
+                                        status = 'ready';
+                                    },
+                                    () => {
+                                        status = 'idle';
+                                    }
+                                );
+
+                            } catch (error) {
+                                console.error(error);
+                                status = 'idle';
+                            }
+                        "
                     />
                     <label
                             for="photo"

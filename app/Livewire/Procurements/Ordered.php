@@ -53,6 +53,7 @@ class Ordered extends Component
             'itemPhotoModal',
             'itemPhoto',
         ]);
+        $this->dispatch('reset-item-photo');
     }
     public function render()
     {

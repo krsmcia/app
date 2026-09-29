@@ -471,249 +471,252 @@
             </div>
         @endif
     </div>
-    <x-dialog-modal wire:model.live="itemPhotoModal">
-        <x-slot name="title">
-            <div>
-                <div class="text-lg font-semibold text-gray-900">
-                    Upload Received Item
-                </div>
-                <p class="mt-1 text-sm text-gray-500"></p>
-            </div>
-        </x-slot>
-        <x-slot name="content">
-            {{-- Receipt Photo --}}
-            <div
-                x-data="{
-                    photoName: null,
-                    photoPreview: null,
-                    status: 'idle',
+    <div class=""
+        x-data="{
+            photoName: null,
+            photoPreview: null,
+            status: 'idle',
 
-                    resetPhoto() {
-                        this.photoName = null;
-                        this.photoPreview = null;
-                        this.status = 'idle';
+            resetPhoto() {
+                this.photoName = null;
+                this.photoPreview = null;
+                this.status = 'idle';
 
-                        if (this.$refs.photo) {
-                            this.$refs.photo.value = '';
-                        }
-                    },
+                if (this.$refs.photo) {
+                    this.$refs.photo.value = '';
+                }
+            },
 
-                    resizeImage(file) {
-                        return new Promise((resolve, reject) => {
-                            const maxSize = 1024;
-                            const reader = new FileReader();
+            resizeImage(file) {
+                return new Promise((resolve, reject) => {
+                    const maxSize = 1024;
+                    const reader = new FileReader();
 
-                            reader.onload = (event) => {
-                                const img = new Image();
+                    reader.onload = (event) => {
+                        const img = new Image();
 
-                                img.onload = () => {
-                                    let width = img.width;
-                                    let height = img.height;
+                        img.onload = () => {
+                            let width = img.width;
+                            let height = img.height;
 
-                                    if (width > maxSize || height > maxSize) {
-                                        if (width > height) {
-                                            height = Math.round(
-                                                height * (maxSize / width)
-                                            );
-                                            width = maxSize;
-                                        } else {
-                                            width = Math.round(
-                                                width * (maxSize / height)
-                                            );
-                                            height = maxSize;
-                                        }
-                                    }
-
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = width;
-                                    canvas.height = height;
-
-                                    const ctx = canvas.getContext('2d');
-
-                                    ctx.drawImage(
-                                        img,
-                                        0,
-                                        0,
-                                        width,
-                                        height
+                            if (width > maxSize || height > maxSize) {
+                                if (width > height) {
+                                    height = Math.round(
+                                        height * (maxSize / width)
                                     );
-
-                                    canvas.toBlob(
-                                        (blob) => {
-                                            if (!blob) {
-                                                reject(
-                                                    new Error('Image resize failed.')
-                                                );
-                                                return;
-                                            }
-
-                                            resolve(
-                                                new File(
-                                                    [blob],
-                                                    file.name.replace(
-                                                        /\.[^/.]+$/,
-                                                        '.jpg'
-                                                    ),
-                                                    {
-                                                        type: 'image/jpeg',
-                                                    }
-                                                )
-                                            );
-                                        },
-                                        'image/jpeg',
-                                        0.85
+                                    width = maxSize;
+                                } else {
+                                    width = Math.round(
+                                        width * (maxSize / height)
                                     );
-                                };
-
-                                img.onerror = reject;
-                                img.src = event.target.result;
-                            };
-
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                        });
-                    }
-                }"
-                x-init="
-                    $refs.photo.addEventListener('change', async (event) => {
-                        const originalFile = event.target.files[0];
-
-                        if (!originalFile) {
-                            return;
-                        }
-
-                        status = 'resizing';
-                        photoPreview = null;
-                        photoName = null;
-
-                        try {
-                            const resizedFile = await resizeImage(originalFile);
-
-                            photoName = resizedFile.name;
-                            status = 'uploading';
-
-                            const reader = new FileReader();
-
-                            reader.onload = (e) => {
-                                photoPreview = e.target.result;
-                            };
-
-                            reader.readAsDataURL(resizedFile);
-
-                            $wire.upload(
-                                'itemPhoto',
-                                resizedFile,
-                                () => {
-                                    status = 'ready';
-                                },
-                                () => {
-                                    status = 'idle';
+                                    height = maxSize;
                                 }
+                            }
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+
+                            const ctx = canvas.getContext('2d');
+
+                            ctx.drawImage(
+                                img,
+                                0,
+                                0,
+                                width,
+                                height
                             );
 
-                        } catch (error) {
-                            console.error(error);
+                            canvas.toBlob(
+                                (blob) => {
+                                    if (!blob) {
+                                        reject(
+                                            new Error('Image resize failed.')
+                                        );
+                                        return;
+                                    }
+
+                                    resolve(
+                                        new File(
+                                            [blob],
+                                            file.name.replace(
+                                                /\.[^/.]+$/,
+                                                '.jpg'
+                                            ),
+                                            {
+                                                type: 'image/jpeg',
+                                            }
+                                        )
+                                    );
+                                },
+                                'image/jpeg',
+                                0.85
+                            );
+                        };
+
+                        img.onerror = reject;
+                        img.src = event.target.result;
+                    };
+
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+        }"
+        x-init="
+            $refs.photo.addEventListener('change', async (event) => {
+                const originalFile = event.target.files[0];
+
+                if (!originalFile) {
+                    return;
+                }
+
+                status = 'resizing';
+                photoPreview = null;
+                photoName = null;
+
+                try {
+                    const resizedFile = await resizeImage(originalFile);
+
+                    photoName = resizedFile.name;
+                    status = 'uploading';
+
+                    const reader = new FileReader();
+
+                    reader.onload = (e) => {
+                        photoPreview = e.target.result;
+                    };
+
+                    reader.readAsDataURL(resizedFile);
+
+                    $wire.upload(
+                        'itemPhoto',
+                        resizedFile,
+                        () => {
+                            status = 'ready';
+                        },
+                        () => {
                             status = 'idle';
                         }
-                    });
+                    );
 
-                    window.addEventListener('reset-recipient-photo', () => {
-                        resetPhoto();
-                    });
-                "
-            >
+                } catch (error) {
+                    console.error(error);
+                    status = 'idle';
+                }
+            });
 
-                {{-- Hidden file input --}}
-                <input
-                    type="file"
-                    id="photo"
-                    class="hidden"
-                    x-ref="photo"
-                    accept="image/*"
-                    capture="environment"
-                />
-                <label
-                        for="photo"
-                        class="block text-sm font-medium text-gray-700"
-                    >
-                    {{ __('Item Photo') }}
-                    <span class="text-red-500">*</span>
-                </label>
-
-                {{-- Preview --}}
-                <div
-                    class="mt-2"
-                    x-show="photoPreview"
-                    x-cloak
-                >
-                    <img
-                        :src="photoPreview"
-                        alt="Receipt preview"
-                        class="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-gray-50"
-                    >
+            window.addEventListener('reset-recipient-photo', () => {
+                resetPhoto();
+            });
+        "
+    >
+        <x-dialog-modal wire:model.live="itemPhotoModal">
+            <x-slot name="title">
+                <div>
+                    <div class="text-lg font-semibold text-gray-900">
+                        Upload Received Item
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500"></p>
                 </div>
+            </x-slot>
+            <x-slot name="content">
+                {{-- Receipt Photo --}}
+                <div class="">
 
-                {{-- Select / Take Photo --}}
+                    {{-- Hidden file input --}}
+                    <input
+                        type="file"
+                        id="photo"
+                        class="hidden"
+                        x-ref="photo"
+                        accept="image/*"
+                        capture="environment"
+                    />
+                    <label
+                            for="photo"
+                            class="block text-sm font-medium text-gray-700"
+                        >
+                        {{ __('Item Photo') }}
+                        <span class="text-red-500">*</span>
+                    </label>
+
+                    {{-- Preview --}}
+                    <div
+                        class="mt-2"
+                        x-show="photoPreview"
+                        x-cloak
+                    >
+                        <img
+                            :src="photoPreview"
+                            alt="Receipt preview"
+                            class="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                        >
+                    </div>
+
+                    {{-- Select / Take Photo --}}
+                    <x-secondary-button
+                        class="mt-2 me-2"
+                        type="button"
+                        x-on:click.prevent="$refs.photo.click()"
+                    >
+                        <span x-show="!photoPreview">
+                            {{ __('Add Item Photo') }}
+                        </span>
+
+                        <span x-show="photoPreview">
+                            {{ __('Replace Item Photo') }}
+                        </span>
+                    </x-secondary-button>
+
+                    <x-input-error
+                        for="itemPhoto"
+                        class="mt-2"
+                    />
+                </div>
+            </x-slot>
+            <x-slot name="footer">
                 <x-secondary-button
-                    class="mt-2 me-2"
                     type="button"
-                    x-on:click.prevent="$refs.photo.click()"
+                    wire:click="$toggle('itemPhotoModal')"
+                    wire:loading.attr="disabled"
+                    x-bind:disabled="status === 'resizing' || status === 'uploading'"
                 >
-                    <span x-show="!photoPreview">
-                        {{ __('Add Item Photo') }}
-                    </span>
-
-                    <span x-show="photoPreview">
-                        {{ __('Replace Item Photo') }}
-                    </span>
+                    Close
                 </x-secondary-button>
-
-                <x-input-error
-                    for="itemPhoto"
-                    class="mt-2"
-                />
-            </div>
-        </x-slot>
-        <x-slot name="footer">
-            <x-secondary-button
-                type="button"
-                wire:click="$toggle('itemPhotoModal')"
-                wire:loading.attr="disabled"
-                x-bind:disabled="status === 'resizing' || status === 'uploading'"
-            >
-                Close
-            </x-secondary-button>
-            <x-button
-                type="button"
-                class="ml-3"
-                wire:click="saveItemPhoto"
-                wire:loading.attr="disabled"
-                x-bind:disabled="status !== 'ready'"
-            >
-                <span x-show="status === 'resizing'">
-                    Resizing...
-                </span>
-
-                <span x-show="status === 'uploading'">
-                    Uploading...
-                </span>
-
-                <span
-                    x-show="status === 'ready'"
-                    wire:loading.remove
-                    wire:target="saveItemPhoto"
+                <x-button
+                    type="button"
+                    class="ml-3"
+                    wire:click="saveItemPhoto"
+                    wire:loading.attr="disabled"
+                    x-bind:disabled="status !== 'ready'"
                 >
-                    Save
-                </span>
+                    <span x-show="status === 'resizing'">
+                        Resizing...
+                    </span>
 
-                <span
-                    x-show="status === 'ready'"
-                    wire:loading
-                    wire:target="saveItemPhoto"
-                >
-                    Saving...
-                </span>
-            </x-button>
-        </x-slot>
-    </x-dialog-modal>
+                    <span x-show="status === 'uploading'">
+                        Uploading...
+                    </span>
+
+                    <span
+                        x-show="status === 'ready'"
+                        wire:loading.remove
+                        wire:target="saveItemPhoto"
+                    >
+                        Save
+                    </span>
+
+                    <span
+                        x-show="status === 'ready'"
+                        wire:loading
+                        wire:target="saveItemPhoto"
+                    >
+                        Saving...
+                    </span>
+                </x-button>
+            </x-slot>
+        </x-dialog-modal>
+    </div>
+    
 </div>

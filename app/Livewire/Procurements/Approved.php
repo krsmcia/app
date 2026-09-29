@@ -5,6 +5,7 @@ namespace App\Livewire\Procurements;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;

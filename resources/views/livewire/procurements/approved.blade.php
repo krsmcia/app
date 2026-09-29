@@ -1,10 +1,10 @@
 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
     <div class="mb-6">
         <h1 class="text-xl font-semibold text-gray-900">
-            Budget Requests
+            Funded Purchases
         </h1>
         <p class="mt-1 text-sm text-gray-500">
-            Purchase requests waiting for budget processing.
+            Purchases ready to be processed with funds received from Accounting.
         </p>
     </div>
     <div class="space-y-4">

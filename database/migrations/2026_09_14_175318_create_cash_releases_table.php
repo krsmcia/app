@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('cash_releases', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_action_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('transaction_id')->constrained()->cascadeOnDelete();
             $table->string('receipt_photo_path', 2048)->nullable();
             $table->timestamps();
         });

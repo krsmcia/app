@@ -681,6 +681,7 @@
                     Close
                 </x-secondary-button>
                 <x-button
+                    x-show="status !== 'idle'"
                     type="button"
                     class="ml-3"
                     wire:click="saveItemPhoto"

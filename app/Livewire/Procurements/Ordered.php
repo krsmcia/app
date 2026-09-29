@@ -41,7 +41,7 @@ class Ordered extends Component
         DB::transaction(function () use ($purchaseAction) {
             // Store receipt photo
             $path = Storage::disk('local')->putFile(
-                'procurements/release-item/' . now()->format('Y/m/d'),
+                'procurements/received-item/' . now()->format('Y/m/d'),
                 $this->itemPhoto
             );
             $purchaseAction->receivedItemPhotos()->create([

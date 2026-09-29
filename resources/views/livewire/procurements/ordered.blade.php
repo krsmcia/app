@@ -486,12 +486,12 @@
                 x-data="{
                     photoName: null,
                     photoPreview: null,
-                    processing: false,
+                    status: 'idle',
 
                     resetPhoto() {
                         this.photoName = null;
                         this.photoPreview = null;
-                        this.processing = false;
+                        this.status = 'idle';
 
                         if (this.$refs.photo) {
                             this.$refs.photo.value = '';
@@ -582,17 +582,16 @@
                             return;
                         }
 
-                        processing = true;
+                        status = 'resizing';
                         photoPreview = null;
                         photoName = null;
 
                         try {
-                            // Resize
                             const resizedFile = await resizeImage(originalFile);
 
                             photoName = resizedFile.name;
+                            status = 'uploading';
 
-                            // Preview
                             const reader = new FileReader();
 
                             reader.onload = (e) => {
@@ -601,23 +600,20 @@
 
                             reader.readAsDataURL(resizedFile);
 
-                            // Upload to Livewire
                             $wire.upload(
                                 'itemPhoto',
                                 resizedFile,
                                 () => {
-                                    // Upload complete
-                                    processing = false;
+                                    status = 'ready';
                                 },
                                 () => {
-                                    // Upload failed
-                                    processing = false;
+                                    status = 'idle';
                                 }
                             );
 
                         } catch (error) {
                             console.error(error);
-                            processing = false;
+                            status = 'idle';
                         }
                     });
 
@@ -681,7 +677,9 @@
         <x-slot name="footer">
             <x-secondary-button
                 type="button"
-                wire:click="$toggle('itemPhotoModal')" wire:loading.attr="disabled"
+                wire:click="$toggle('itemPhotoModal')"
+                wire:loading.attr="disabled"
+                x-bind:disabled="status === 'resizing' || status === 'uploading'"
             >
                 Close
             </x-secondary-button>
@@ -690,11 +688,29 @@
                 class="ml-3"
                 wire:click="saveItemPhoto"
                 wire:loading.attr="disabled"
+                x-bind:disabled="status !== 'ready'"
             >
-                <span wire:loading.remove wire:target="saveItemPhoto">
+                <span x-show="status === 'resizing'">
+                    Resizing...
+                </span>
+
+                <span x-show="status === 'uploading'">
+                    Uploading...
+                </span>
+
+                <span
+                    x-show="status === 'ready'"
+                    wire:loading.remove
+                    wire:target="saveItemPhoto"
+                >
                     Save
                 </span>
-                <span wire:loading wire:target="saveItemPhoto">
+
+                <span
+                    x-show="status === 'ready'"
+                    wire:loading
+                    wire:target="saveItemPhoto"
+                >
                     Saving...
                 </span>
             </x-button>

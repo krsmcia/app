@@ -264,6 +264,8 @@ class Items extends Component
     public function createItem(): void
     {
         $this->editingItemId = null;
+        $this->sku = blank($this->sku) ? null : trim($this->sku);
+        $this->barcode = blank($this->barcode) ? null : trim($this->barcode);
         $validated = $this->validate();
         DB::transaction(function () use ($validated) {
             $item = Item::create([
@@ -325,6 +327,8 @@ class Items extends Component
     public function updateItem(): void
     {
         $item = Item::findOrFail($this->editingItemId);
+        $this->sku = blank($this->sku) ? null : trim($this->sku);
+        $this->barcode = blank($this->barcode) ? null : trim($this->barcode);
         $validated = $this->validate();
         DB::transaction(function () use ($item, $validated) {
             $item->update([

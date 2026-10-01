@@ -437,20 +437,20 @@
                         Basic Information
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- SKU --}}
-                        <div>
+                        {{-- Name --}}
+                        <div class="">
                             <label class="mb-1 block text-sm font-medium text-gray-700">
-                                SKU
+                                Product Name<span class="text-red-700">*</span>
                             </label>
                             <input
                                 type="text"
-                                wire:model="sku"
-                                placeholder="SKU"
+                                wire:model="name"
+                                placeholder="Product name"
                                 autocomplete="off"
                                 class="block w-full rounded-md border-gray-300 shadow-sm
                                     focus:border-indigo-500 focus:ring-indigo-500"
                             >
-                            @error('sku')
+                            @error('name')
                                 <p class="mt-1 text-xs text-red-600">
                                     {{ $message }}
                                 </p>
@@ -470,25 +470,6 @@
                                     focus:border-indigo-500 focus:ring-indigo-500"
                             >
                             @error('barcode')
-                                <p class="mt-1 text-xs text-red-600">
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-                        {{-- Name --}}
-                        <div class="md:col-span-2">
-                            <label class="mb-1 block text-sm font-medium text-gray-700">
-                                Product Name
-                            </label>
-                            <input
-                                type="text"
-                                wire:model="name"
-                                placeholder="Product name"
-                                autocomplete="off"
-                                class="block w-full rounded-md border-gray-300 shadow-sm
-                                    focus:border-indigo-500 focus:ring-indigo-500"
-                            >
-                            @error('name')
                                 <p class="mt-1 text-xs text-red-600">
                                     {{ $message }}
                                 </p>

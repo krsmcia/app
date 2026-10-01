@@ -8,6 +8,7 @@ use App\Models\ItemImage;
 use App\Models\Vendor;
 use App\Models\Category;
 use App\Models\DisbursementType;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -267,9 +268,7 @@ class Items extends Component
         $validated = $this->validate();
         DB::transaction(function () use ($validated) {
             $item = Item::create([
-                'sku' => blank($validated['sku'] ?? null)
-                    ? null
-                    : $validated['sku'],
+                'sku' => $this->generateSku(),
                 'barcode' => blank($validated['barcode'] ?? null)
                     ? null
                     : $validated['barcode'],
@@ -476,7 +475,14 @@ class Items extends Component
             'Item deleted successfully.'
         );
     }
+    private function generateSku(): string
+    {
+        do {
+            $sku = 'SKU-' . strtoupper(Str::random(6));
+        } while (Item::where('sku', $sku)->exists());
 
+        return $sku;
+    }
     /*
     |--------------------------------------------------------------------------
     | Vendor Management

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('received_item_photos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_action_id')->constrained()->cascadeOnDelete();
-            $table->string('receipt_photo_path', 2048)->nullable();
+            $table->string('item_photo_path', 2048);
             $table->timestamps();
         });
     }

@@ -56,7 +56,7 @@ class Purchased extends Component
                 $this->itemPhoto
             );
             $purchaseAction->receivedItemPhotos()->create([
-                'receipt_photo_path' => $path,
+                'item_photo_path' => $path,
             ]);
         });
 

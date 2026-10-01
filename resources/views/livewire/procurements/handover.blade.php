@@ -173,15 +173,6 @@
                                 </div>
                             @endif
                         </div>
-                        {{-- Unit Price --}}
-                        <div>
-                            <div class="text-[10px] text-gray-400">
-                                Unit Price
-                            </div>
-                            <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($purchase_action->unit_price_display, 2) }}
-                            </div>
-                        </div>
                         {{-- Quantity --}}
                         <div>
                             <div class="text-[10px] text-gray-400">
@@ -189,44 +180,6 @@
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
                                 {{ number_format($purchase_action->quantity, 0) }}
-                            </div>
-                        </div>
-                        {{-- Amount --}}
-                        <div>
-                            <div class="text-[10px] text-gray-400">
-                                Amount
-                            </div>
-                            <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($purchase_action->item_amount, 2) }}
-                            </div>
-                            @if ($purchase_action->shipping_fee_amount > 0 || $purchase_action->discount_amount > 0)
-                                <div class="mt-1 space-y-0.5 text-[10px] leading-tight">
-                                    @if ($purchase_action->shipping_fee_amount > 0)
-                                        <div class="text-gray-400">
-                                            Shipping:
-                                            <span class="font-medium text-gray-600">
-                                                +{{ number_format($purchase_action->shipping_fee_amount, 2) }}
-                                            </span>
-                                        </div>
-                                    @endif
-                                    @if ($purchase_action->discount_amount > 0)
-                                        <div class="text-gray-400">
-                                            Discount:
-                                            <span class="font-medium text-gray-600">
-                                                -{{ number_format($purchase_action->discount_amount, 2) }}
-                                            </span>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
-                        {{-- Total --}}
-                        <div>
-                            <div class="text-[10px] text-gray-400">
-                                Total
-                            </div>
-                            <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                {{ number_format($purchase_action->item_total, 2) }}
                             </div>
                         </div>
                     </div>
@@ -285,78 +238,6 @@
                                 @endif
                             </div>
                         </div>
-                        {{-- Price / Amount / Total --}}
-                        <div
-                            class="rounded-lg border border-gray-100
-                                bg-gray-50/70 p-3"
-                        >
-                            <div class="grid grid-cols-2 gap-3">
-                                {{-- Unit Price --}}
-                                <div>
-                                    <div class="text-[11px] text-gray-400">
-                                        Unit Price
-                                    </div>
-                                    <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($purchase_action->unit_price_display, 2) }}
-                                    </div>
-                                </div>
-                                {{-- Quantity --}}
-                                <div>
-                                    <div class="text-[11px] text-gray-400">
-                                        Quantity
-                                    </div>
-                                    <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($purchase_action->quantity, 0) }}
-                                    </div>
-                                </div>
-                                {{-- Amount --}}
-                                <div>
-                                    <div class="text-[11px] text-gray-400">
-                                        Amount
-                                    </div>
-                                    <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($purchase_action->item_amount, 2) }}
-                                    </div>
-                                </div>
-                                {{-- Total --}}
-                                <div>
-                                    <div class="text-[11px] text-gray-400">
-                                        Total
-                                    </div>
-                                    <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                        {{ number_format($purchase_action->item_total, 2) }}
-                                    </div>
-                                </div>
-                            </div>
-                            {{-- Shipping / Discount --}}
-                            @if ($purchase_action->shipping_fee_amount > 0 || $purchase_action->discount_amount > 0)
-                                <div
-                                    class="mt-4 border-t border-gray-200
-                                        pt-3 grid grid-cols-2 gap-3"
-                                >
-                                    @if ($purchase_action->shipping_fee_amount > 0)
-                                        <div>
-                                            <div class="text-[11px] text-gray-400">
-                                                Shipping
-                                            </div>
-                                            <div class="mt-0.5 text-sm font-medium text-gray-700">
-                                                {{ number_format($purchase_action->shipping_fee_amount, 2) }}
-                                            </div>
-                                        </div>
-                                    @endif
-                                    @if ($purchase_action->discount_amount > 0)
-                                        <div>
-                                            <div class="text-[11px] text-gray-400">
-                                                Discount
-                                            </div>
-                                            <div class="mt-0.5 text-sm font-medium text-gray-700">
-                                                -{{ number_format($purchase_action->discount_amount, 2) }}
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        </div>
                     </div>
                 </div>
                 {{-- =====================================================
@@ -388,42 +269,10 @@
                         </div>
                         {{-- Total + Receive --}}
                         <div
-                            class="flex items-center justify-between gap-4
-                                sm:justify-end"
+                            class="flex items-center gap-4
+                                justify-end"
                         >
-                            <div class="shrink-0 text-right">
-                                <div class="text-xs text-gray-500">
-                                    Total
-                                </div>
-
-                                <div class="text-base font-bold text-gray-900">
-                                    {{ number_format($purchase_action->item_total, 2) }}
-                                </div>
-                            </div>
-
                             <div class="flex items-center gap-2">
-
-                                {{-- Refund --}}
-                                <button
-                                    class="flex items-center gap-1"
-                                    type="button"
-                                    variant="secondary"
-                                    x-data
-                                    x-on:click="alert('Unused funds must be returned to the Accounting Department. Please hand over the remaining cash to an Accounting Department employee.')"
-                                >
-                                    <div class="text-xs text-gray-500">
-                                        Refund
-                                    </div>
-                                    <span
-                                        class="flex h-4 w-4 items-center justify-center
-                                            rounded-full border border-gray-300
-                                            text-[10px] font-semibold text-gray-500
-                                            hover:border-gray-400 hover:text-gray-700"
-                                    >
-                                        ?
-                                    </span>
-                                </button>
-
                                 {{-- Receive --}}
                                 <x-button
                                     type="button"
@@ -438,7 +287,6 @@
                                         Receiving...
                                     </span>
                                 </x-button>
-
                             </div>
                         </div>
                     </div>

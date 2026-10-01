@@ -189,7 +189,7 @@
                                         <div class="min-w-0 flex-1">
 
                                             <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
-                                                Item
+                                                Item #{{$workflowItem->purchaseItem->id}}
                                             </div>
 
                                             <button
@@ -795,8 +795,163 @@
         </x-slot>
 
         <x-slot name="content">
+            {{-- Item Photo --}}
+            <div
+                x-data="{
+                    photoName: null,
+                    photoPreview: null,
+                    resetPhoto() {
+                        this.photoName = null;
+                        this.photoPreview = null;
+
+                        if (this.$refs.photo) {
+                            this.$refs.photo.value = '';
+                        }
+                    },
+                    resizeImage(file) {
+                        return new Promise((resolve, reject) => {
+                            const maxSize = 1024;
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                const img = new Image();
+                                img.onload = () => {
+                                    let width = img.width;
+                                    let height = img.height;
+                                    if (width > maxSize || height > maxSize) {
+                                        if (width > height) {
+                                            height = Math.round(
+                                                height * (maxSize / width)
+                                            );
+                                            width = maxSize;
+                                        } else {
+                                            width = Math.round(
+                                                width * (maxSize / height)
+                                            );
+                                            height = maxSize;
+                                        }
+                                    }
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(
+                                        img,
+                                        0,
+                                        0,
+                                        width,
+                                        height
+                                    );
+                                    canvas.toBlob(
+                                        (blob) => {
+                                            if (!blob) {
+                                                reject(
+                                                    new Error('Image resize failed.')
+                                                );
+                                                return;
+                                            }
+                                            resolve(
+                                                new File(
+                                                    [blob],
+                                                    file.name.replace(
+                                                        /\.[^/.]+$/,
+                                                        '.jpg'
+                                                    ),
+                                                    {
+                                                        type: 'image/jpeg',
+                                                    }
+                                                )
+                                            );
+                                        },
+                                        'image/jpeg',
+                                        0.85
+                                    );
+                                };
+                                img.onerror = reject;
+                                img.src = event.target.result;
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                }"
+                x-init="
+                    $refs.itemPhoto.addEventListener('change', async (event) => {
+                        const originalFile = event.target.files[0];
+                        if (!originalFile) {
+                            return;
+                        }
+                        const resizedFile = await resizeImage(originalFile);
+                        photoName = resizedFile.name;
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            photoPreview = e.target.result;
+                        };
+                        reader.readAsDataURL(resizedFile);
+
+                        $wire.upload(
+                            'itemPhoto',
+                            resizedFile
+                        );
+                    });
+                    window.addEventListener('reset-recipient-photo', () => {
+                        resetPhoto();
+                    });
+                "
+            >
+
+                {{-- Hidden file input --}}
+                <input
+                    type="file"
+                    id="itemPhoto"
+                    class="hidden"
+                    x-ref="itemPhoto"
+                    accept="image/*"
+                    capture="environment"
+                />
+                <label
+                        for="itemPhoto"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                    {{ __('Item Photo') }}
+                    <span class="text-red-500">*</span>
+                </label>
+
+                {{-- Preview --}}
+                <div
+                    class="mt-2"
+                    x-show="photoPreview"
+                    x-cloak
+                >
+                    <img
+                        :src="photoPreview"
+                        alt="Item preview"
+                        class="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-gray-50"
+                    >
+                </div>
+
+                {{-- Select / Take Photo --}}
+                <x-secondary-button
+                    class="mt-2 me-2"
+                    type="button"
+                    x-on:click.prevent="$refs.itemPhoto.click()"
+                >
+                    <span x-show="!photoPreview">
+                        {{ __('Add Item Photo') }}
+                    </span>
+
+                    <span x-show="photoPreview">
+                        {{ __('Replace Item Photo') }}
+                    </span>
+                </x-secondary-button>
+
+                <x-input-error
+                    for="itemPhoto"
+                    class="mt-2"
+                />
+            </div>
             {{-- Receipt Photo --}}
             <div
+                class="mt-4"
                 x-data="{
                     photoName: null,
                     photoPreview: null,
@@ -899,7 +1054,6 @@
                     });
                 "
             >
-
                 {{-- Hidden file input --}}
                 <input
                     type="file"
@@ -916,7 +1070,6 @@
                     {{ __('Receipt Photo') }}
                     <span class="text-red-500">*</span>
                 </label>
-
                 {{-- Preview --}}
                 <div
                     class="mt-2"
@@ -929,7 +1082,6 @@
                         class="w-full max-h-96 object-contain rounded-lg border border-gray-200 bg-gray-50"
                     >
                 </div>
-
                 {{-- Select / Take Photo --}}
                 <x-secondary-button
                     class="mt-2 me-2"
@@ -939,19 +1091,61 @@
                     <span x-show="!photoPreview">
                         {{ __('Add Receipt Photo') }}
                     </span>
-
                     <span x-show="photoPreview">
                         {{ __('Replace Receipt Photo') }}
                     </span>
                 </x-secondary-button>
-
                 <x-input-error
                     for="recipientPhoto"
                     class="mt-2"
                 />
             </div>
-
-
+            {{-- Actual Purchase Amount --}}
+            <div class="mt-5">
+                {{-- Original Amount --}}
+                <div class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-xs font-medium text-gray-500">
+                            Original Amount
+                        </span>
+                        <span class="text-sm font-semibold text-gray-800">
+                            ₱{{ number_format($originalAmount ?? 0, 2) }}
+                        </span>
+                    </div>
+                    <div class="mt-1 text-[10px] text-gray-400">
+                        Amount released for this purchase
+                    </div>
+                </div>
+                {{-- Actual Purchase Amount --}}
+                <div class="mt-2">
+                    <label
+                        for="purchaseAmount"
+                        class="block text-sm font-medium text-gray-700"
+                    >
+                        Actual Purchase Amount
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-400">
+                            ₱
+                        </span>
+                        <input
+                            type="tel"
+                            x-mask:dynamic="$money($input, '.', ',', 2)"
+                            id="purchaseAmount"
+                            wire:model.defer="amount"
+                            class="block w-full rounded-lg border-gray-300 pl-8 text-sm shadow-sm
+                                focus:border-emerald-500 focus:ring-emerald-500"
+                            placeholder="0.00"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <x-input-error
+                        for="amount"
+                        class="mt-1.5"
+                    />
+                </div>
+            </div>
             {{-- comment --}}
             <div class="mt-5 space-y-5">
                 <div
@@ -965,35 +1159,28 @@
                     >
                         {{ __('Comment') }}
                     </label>
-
                     <textarea
                         id="receiptComment"
                         wire:model.defer="comment"
                         x-on:input="count = $event.target.value.length"
                         rows="4"
                         maxlength="500"
-                        class="mt-2 block w-full rounded-lg border-gray-300 text-sm shadow-sm
-                            focus:border-emerald-500 focus:ring-emerald-500"
+                        class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 resize-none"
                         placeholder="e.g. Transaction number, voucher number, approval number..."
                     ></textarea>
-
                     @error('comment')
                         <p class="mt-1.5 text-xs text-red-600">
                             {{ $message }}
                         </p>
                     @enderror
-
                     <div class="mt-1 text-right text-xs text-gray-400">
                         <span x-text="count"></span>/500
                     </div>
                 </div>
             </div>
-
         </x-slot>
-
         <x-slot name="footer">
             <div class="flex w-full justify-end gap-2">
-
                 <x-secondary-button
                     type="button"
                     wire:click="$set('showAttachReceiptModal', false)"
@@ -1001,7 +1188,6 @@
                 >
                     Cancel
                 </x-secondary-button>
-
                 <x-approve-button
                     type="button"
                     wire:click="releaseCash"
@@ -1016,7 +1202,6 @@
                         {{ __('Processing...') }}
                     </span>
                 </x-approve-button>
-
             </div>
         </x-slot>
     </x-dialog-modal>

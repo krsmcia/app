@@ -10,24 +10,6 @@
     </div>
     <div class="space-y-4">
         @forelse ($purchase_actions as $purchase_action)
-            @php
-                $workflowItem = $purchase_action->purchaseWorkflowItem;
-                $purchaseItem = $workflowItem?->purchaseItem;
-                $item = $purchaseItem?->item;
-                $request = $purchaseItem?->purchaseRequest;
-                $quantity = (float) ($purchaseItem?->quantity ?? 0);
-                $unitPrice = (float) ($purchaseItem?->unit_price ?? 0);
-                $amount = (float) ($quantity * $unitPrice);
-                $shippingFee = (float) ($purchaseItem?->shipping_fee ?? 0);
-                $discount = (float) ($purchaseItem?->discount ?? 0);
-
-                $vendorName = $purchaseItem?->vendor_name;
-
-                $itemTotal = max(
-                    0,
-                    $amount + $shippingFee - $discount
-                );
-            @endphp
             {{-- =========================================================
                 Purchase Card
             ========================================================== --}}
@@ -47,18 +29,13 @@
                     <div>
 
                         <div class="flex items-center gap-3">
-
-                            @if ($request)
-                                <h2 class="font-semibold text-gray-900">
-                                    {{ $request->request_no }}
-                                </h2>
-                            @else
-                                <h2 class="font-semibold text-gray-900">
+                            <h2 class="font-semibold text-gray-900">
+                                @if ($purchase_action->purchaseWorkflowItem?->purchaseItem?->purchaseRequest)
+                                    {{ $purchase_action->purchaseWorkflowItem->purchaseItem->purchaseRequest->request_no }}
+                                @else
                                     Purchase #{{ $purchase_action->id }}
-                                </h2>
-                            @endif
-
-
+                                @endif
+                            </h2>
                             <span
                                 class="rounded-full bg-blue-50 px-2.5 py-1
                                     text-xs font-medium text-blue-700"
@@ -69,22 +46,18 @@
                         </div>
 
 
-                        @if ($request)
-
+                        @if ($purchase_action->purchaseRequest)
                             <div class="mt-1 text-sm text-gray-500">
-
                                 Requested by
 
                                 <span class="font-medium text-gray-700">
-                                    {{ $request->user?->name }}
+                                    {{ $purchase_action->purchaseRequest->user?->name }}
                                 </span>
 
-                                @if ($request->department)
-                                    · {{ $request->department->name }}
+                                @if ($purchase_action->purchaseRequest->department)
+                                    · {{ $purchase_action->purchaseRequest->department->name }}
                                 @endif
-
                             </div>
-
                         @endif
 
                     </div>
@@ -117,10 +90,11 @@
                             class="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100"
                         >
                             <img
-                                src="{{ $item?->primaryImage
-                                    ? Storage::url($item->primaryImage->path)
+                                src="{{ $purchase_action->item?->primaryImage
+                                    ? Storage::url($purchase_action->item->primaryImage->path)
                                     : asset('images/default-item.png') }}"
-                                alt="{{ $item?->item_name }}"
+                                alt="{{ $purchase_action->item?->name }}"
+
                                 class="h-full w-full object-cover"
                             >
                         </div>
@@ -132,17 +106,17 @@
                             <div
                                 class="truncate text-sm font-semibold text-gray-900"
                             >
-                                {{ $item?->name ?? 'Unknown Item' }}
+                                {{ $purchase_action->item?->name ?? 'Unknown Item' }}
                             </div>
                             <div
                                 class="mt-1 flex items-center gap-2
                                     text-xs text-gray-500"
                             >
-                                @if ($item?->sku)
+                                @if ($purchase_action->item?->sku)
                                     <span>
                                         SKU:
                                         <span class="font-medium text-gray-600">
-                                            {{ $item->sku }}
+                                            {{ $purchase_action->item->sku }}
                                         </span>
                                     </span>
                                     <span class="text-gray-300">
@@ -152,7 +126,7 @@
                                 <span>
                                     Qty:
                                     <span class="font-semibold text-gray-700">
-                                        {{ $quantity }}
+                                        {{ $purchase_action->quantity }}
                                     </span>
                                 </span>
                             </div>
@@ -165,13 +139,12 @@
                             >
                                 Vendor
                             </div>
-                            @if ($vendorName)
+                            @if ($purchase_action->vendorName)
                                 <div
-                                    class="mt-0.5 truncate text-sm
-                                        font-semibold text-gray-800"
-                                    title="{{ $vendorName }}"
+                                    class="mt-0.5 truncate text-sm font-semibold text-gray-800"
+                                    title="{{ $purchase_action->vendorName }}"
                                 >
-                                    {{ $vendorName }}
+                                    {{ $purchase_action->vendorName }}
                                 </div>
                             @else
                                 <div class="mt-0.5 text-sm text-gray-400">
@@ -185,7 +158,7 @@
                                 Unit Price
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($unitPrice, 2) }}
+                                {{ number_format($purchase_action->unitPrice, 2) }}
                             </div>
                         </div>
                         {{-- Quantity --}}
@@ -194,7 +167,7 @@
                                 Quantity
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($quantity, 0) }}
+                                {{ number_format($purchase_action->quantity, 0) }}
                             </div>
                         </div>
                         {{-- Amount --}}
@@ -203,23 +176,23 @@
                                 Amount
                             </div>
                             <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                {{ number_format($amount, 2) }}
+                                {{ number_format($purchase_action->amount, 2) }}
                             </div>
-                            @if ($shippingFee > 0 || $discount > 0)
+                            @if ($purchase_action->shippingFee > 0 || $purchase_action->discount > 0)
                                 <div class="mt-1 space-y-0.5 text-[10px] leading-tight">
-                                    @if ($shippingFee > 0)
+                                    @if ($purchase_action->shippingFee > 0)
                                         <div class="text-gray-400">
                                             Shipping:
                                             <span class="font-medium text-gray-600">
-                                                +{{ number_format($shippingFee, 2) }}
+                                                +{{ number_format($purchase_action->shippingFee, 2) }}
                                             </span>
                                         </div>
                                     @endif
-                                    @if ($discount > 0)
+                                    @if ($purchase_action->discount > 0)
                                         <div class="text-gray-400">
                                             Discount:
                                             <span class="font-medium text-gray-600">
-                                                -{{ number_format($discount, 2) }}
+                                                -{{ number_format($purchase_action->discount, 2) }}
                                             </span>
                                         </div>
                                     @endif
@@ -232,7 +205,7 @@
                                 Total
                             </div>
                             <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                {{ number_format($itemTotal, 2) }}
+                                {{ number_format($purchase_action->itemTotal, 2) }}
                             </div>
                         </div>
                     </div>
@@ -248,35 +221,38 @@
                                     rounded-lg bg-gray-100"
                             >
                                 <img
-                                    src="{{ $item?->primaryImage
-                                        ? Storage::url($item->primaryImage->path)
+                                    src="{{ $purchase_action->item?->primaryImage
+                                        ? Storage::url($purchase_action->item->primaryImage->path)
                                         : asset('images/default-item.png') }}"
-                                    alt="{{ $item?->name }}"
+                                    alt="{{ $purchase_action->item?->name }}"
+
                                     class="h-full w-full object-cover"
                                 >
                             </div>
                             {{-- Info --}}
                             <div class="min-w-0 flex-1">
                                 <div class="text-sm font-semibold text-gray-900">
-                                    {{ $item?->name ?? 'Unknown Item' }}
+                                    {{ $purchase_action->item?->name ?? 'Unknown Item' }}
                                 </div>
                                 <div class="mt-1 text-xs text-gray-500">
-                                    @if ($item?->sku)
-                                        SKU:
-                                        <span class="font-medium">
-                                            {{ $item->sku }}
+                                    @if ($purchase_action->item?->sku)
+                                        <span>
+                                            SKU:
+                                            <span class="font-medium text-gray-600">
+                                                {{ $purchase_action->item->sku }}
+                                            </span>
                                         </span>
-                                        <span class="mx-1 text-gray-300">
+                                        <span class="text-gray-300">
                                             •
                                         </span>
                                     @endif
                                     Qty:
                                     <span class="font-semibold text-gray-700">
-                                        {{ $quantity }}
+                                        {{ $purchase_action->quantity }}
                                     </span>
                                 </div>
                                 {{-- Vendor --}}
-                                @if ($vendorName)
+                                @if ($purchase_action->vendorName)
                                     <div class="mt-2 flex items-center gap-1.5">
                                         <span class="text-[11px] text-gray-400">
                                             Vendor
@@ -285,8 +261,12 @@
                                             class="truncate text-xs
                                                 font-medium text-gray-700"
                                         >
-                                            {{ $vendorName }}
+                                            {{ $purchase_action->vendorName }}
                                         </span>
+                                    </div>
+                                @else
+                                    <div class="mt-0.5 text-sm text-gray-400">
+                                        No vendor
                                     </div>
                                 @endif
                             </div>
@@ -303,7 +283,7 @@
                                         Unit Price
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($unitPrice, 2) }}
+                                        {{ number_format($purchase_action->unitPrice, 2) }}
                                     </div>
                                 </div>
                                 {{-- Quantity --}}
@@ -312,7 +292,7 @@
                                         Quantity
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($quantity, 0) }}
+                                        {{ number_format($purchase_action->quantity, 0) }}
                                     </div>
                                 </div>
                                 {{-- Amount --}}
@@ -321,7 +301,7 @@
                                         Amount
                                     </div>
                                     <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                        {{ number_format($unitPrice, 2) }}
+                                        {{ number_format($purchase_action->amount, 2) }}
                                     </div>
                                 </div>
                                 {{-- Total --}}
@@ -330,33 +310,33 @@
                                         Total
                                     </div>
                                     <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                        {{ number_format($itemTotal, 2) }}
+                                        {{ number_format($purchase_action->itemTotal, 2) }}
                                     </div>
                                 </div>
                             </div>
                             {{-- Shipping / Discount --}}
-                            @if ($shippingFee > 0 || $discount > 0)
+                            @if ($purchase_action->shippingFee > 0 || $purchase_action->discount > 0)
                                 <div
                                     class="mt-4 border-t border-gray-200
                                         pt-3 grid grid-cols-2 gap-3"
                                 >
-                                    @if ($shippingFee > 0)
+                                    @if ($purchase_action->shippingFee > 0)
                                         <div>
                                             <div class="text-[11px] text-gray-400">
                                                 Shipping
                                             </div>
                                             <div class="mt-0.5 text-sm font-medium text-gray-700">
-                                                {{ number_format($shippingFee, 2) }}
+                                                {{ number_format($purchase_action->shippingFee, 2) }}
                                             </div>
                                         </div>
                                     @endif
-                                    @if ($discount > 0)
+                                    @if ($purchase_action->discount > 0)
                                         <div>
                                             <div class="text-[11px] text-gray-400">
                                                 Discount
                                             </div>
                                             <div class="mt-0.5 text-sm font-medium text-gray-700">
-                                                -{{ number_format($discount, 2) }}
+                                                -{{ number_format($purchase_action->discount, 2) }}
                                             </div>
                                         </div>
                                     @endif
@@ -379,12 +359,12 @@
                     >
                         {{-- Remark --}}
                         <div class="min-w-0">
-                            @if ($request?->remark)
+                            @if ($purchase_action->request?->remark)
                                 <div class="text-sm text-gray-600">
                                     <span class="font-medium">
                                         Remark:
                                     </span>
-                                    {{ $request->remark }}
+                                    {{ $purchase_action->request->remark }}
                                 </div>
                             @else
                                 <div class="text-xs text-gray-400">
@@ -403,7 +383,7 @@
                                 </div>
 
                                 <div class="text-base font-bold text-gray-900">
-                                    {{ number_format($itemTotal, 2) }}
+                                    {{ number_format($purchase_action->itemTotal, 2) }}
                                 </div>
                             </div>
 
@@ -669,6 +649,84 @@
                         for="itemPhoto"
                         class="mt-2"
                     />
+                </div>
+                {{-- Actual Purchase Amount --}}
+                <div class="mt-5">
+                    {{-- Original Amount --}}
+                    <div class="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
+                        <div class="flex items-center justify-between gap-3">
+                            <span class="text-xs font-medium text-gray-500">
+                                Original Amount
+                            </span>
+                            <span class="text-sm font-semibold text-gray-800">
+                                ₱{{ number_format($originalAmount ?? 0, 2) }}
+                            </span>
+                        </div>
+                        <div class="mt-1 text-[10px] text-gray-400">
+                            Amount released for this purchase
+                        </div>
+                    </div>
+                    {{-- Actual Purchase Amount --}}
+                    <div class="mt-2">
+                        <label
+                            for="purchaseAmount"
+                            class="block text-sm font-medium text-gray-700"
+                        >
+                            Actual Purchase Amount
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-400">
+                                ₱
+                            </span>
+                            <input
+                                type="tel"
+                                x-mask:dynamic="$money($input, '.', ',', 2)"
+                                id="purchaseAmount"
+                                wire:model.defer="amount"
+                                class="block w-full rounded-lg border-gray-300 pl-8 text-sm shadow-sm
+                                    focus:border-emerald-500 focus:ring-emerald-500"
+                                placeholder="0.00"
+                                autocomplete="off"
+                            >
+                        </div>
+                        <x-input-error
+                            for="amount"
+                            class="mt-1.5"
+                        />
+                    </div>
+                </div>
+                {{-- comment --}}
+                <div class="mt-5 space-y-5">
+                    <div
+                        x-data="{
+                            count: {{ strlen($comment ?? '') }}
+                        }"
+                    >
+                        <label
+                            for="receiptComment"
+                            class="block text-sm font-medium text-gray-700"
+                        >
+                            {{ __('Comment') }}
+                        </label>
+                        <textarea
+                            id="receiptComment"
+                            wire:model.defer="comment"
+                            x-on:input="count = $event.target.value.length"
+                            rows="4"
+                            maxlength="500"
+                            class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500 resize-none"
+                            placeholder="e.g. Transaction number, voucher number, approval number..."
+                        ></textarea>
+                        @error('comment')
+                            <p class="mt-1.5 text-xs text-red-600">
+                                {{ $message }}
+                            </p>
+                        @enderror
+                        <div class="mt-1 text-right text-xs text-gray-400">
+                            <span x-text="count"></span>/500
+                        </div>
+                    </div>
                 </div>
             </x-slot>
             <x-slot name="footer">

@@ -20,10 +20,9 @@ return new class extends Migration
             // Vendor involved in the transaction, if any
             $table->foreignId('vendor_id')->nullable()->constrained('vendors')->restrictOnDelete();
             $table->enum('type', [
-                'purchased',    //Accounting -> vendor
+                'purchased',    //Accounting -> vendor or Procurement -> vendor
                 'released',     //Accounting -> Procurement
                 'transfer',     //Procurement -> Procurement
-                'spent',        //Actual amount of spent
                 'returned',     //Procurement -> Accounting
                 'adjustment',   //Only Admin available just in case
             ]);

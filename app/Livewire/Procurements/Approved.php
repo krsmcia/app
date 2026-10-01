@@ -22,9 +22,12 @@ class Approved extends Component
     public string $search = '';
     
     public ?int $selectedWorkflowItemId = null;
+    public $originalAmount;
+    public $amount = null;
     public string $comment = '';
     public bool $commentModal = false;
     public bool $showAttachReceiptModal = false;
+    public $itemPhoto;
     public $recipientPhoto;
     public function openPlaceOrderModal(int $workflowItemId): void
     {
@@ -63,7 +66,15 @@ class Approved extends Component
     public function openAttachReceiptModal(int $workflowItemId): void
     {
         $this->selectedWorkflowItemId = $workflowItemId;
+        $workflowItem = PurchaseWorkflowItem::with([
+            'purchaseItem.purchaseRequest',
+        ])->findOrFail($this->selectedWorkflowItemId);
+        $purchase_item = $this->prepareWorkflowItem($workflowItem);
+        $this->originalAmount = $purchase_item->release_total;
+        $this->itemPhoto = null;
         $this->recipientPhoto = null;
+        $this->amount = null;
+        $this->comment = '';
 
         $this->resetValidation();
 
@@ -74,10 +85,20 @@ class Approved extends Component
     public function releaseCash(): void
     {
         $this->validate([
+            'itemPhoto' => [
+                'required',
+                'image',
+                'max:5120',
+            ],
             'recipientPhoto' => [
                 'required',
                 'image',
                 'max:5120',
+            ],
+            'amount' => [
+                'required',
+                'numeric',
+                'min:0',
             ],
             'comment' => [
                 'nullable',
@@ -90,9 +111,15 @@ class Approved extends Component
         ])->findOrFail($this->selectedWorkflowItemId);
         abort_unless($workflowItem->status === 'pending', 403);
         DB::transaction(function () use ($workflowItem) {
+            $purchaseItem = $workflowItem->purchaseItem;
+            // Store item photo
+            $itemPath = Storage::disk('local')->putFile(
+                'procurements/received-item/' . now()->format('Y/m/d'),
+                $this->itemPhoto
+            );
             // Store receipt photo
-            $path = Storage::disk('local')->putFile(
-                'procurements/cash-releases/' . now()->format('Y/m/d'),
+            $receiptPath = Storage::disk('local')->putFile(
+                'procurements/receipts/' . now()->format('Y/m/d'),
                 $this->recipientPhoto
             );
             $workflowItem->update([
@@ -105,14 +132,31 @@ class Approved extends Component
                 'acted_at' => now(),
                 'comment' => $this->comment,
             ]);
+            $transaction = Transaction::create([
+                'from_user_id' => auth()->id(),
+                'vendor_id' => $purchaseItem->itemVendor->vendor_id,
+                'type' => 'purchased',
+                'amount' => $this->amount,
+                'remark' => $this->comment,
+                'created_by' => auth()->id()
+            ]);
+            $transaction->purchaseItemTransactions()->create([
+                'purchase_item_id' => $workflowItem->purchase_item_id,
+                'amount' => $this->amount,
+            ]);
             $purchaseAction->cashRelease()->create([
-                'receipt_photo_path' => $path
+                'transaction_id' => $transaction->id,
+                'receipt_photo_path' => $receiptPath
+            ]);
+            $purchaseAction->receivedItemPhotos()->create([
+                'item_photo_path' => $itemPath
             ]);
             app(PurchaseWorkflowService::class)->completeFundReleasedWorkflowIfFinished($workflowItem->purchaseWorkflow);
         });
         $this->reset([
             'showAttachReceiptModal',
             'selectedWorkflowItemId',
+            'itemPhoto',
             'recipientPhoto',
             'comment',
         ]);

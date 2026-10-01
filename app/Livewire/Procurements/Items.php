@@ -264,13 +264,15 @@ class Items extends Component
     public function createItem(): void
     {
         $this->editingItemId = null;
-        $this->sku = blank($this->sku) ? null : trim($this->sku);
-        $this->barcode = blank($this->barcode) ? null : trim($this->barcode);
         $validated = $this->validate();
         DB::transaction(function () use ($validated) {
             $item = Item::create([
-                'sku' => $validated['sku'],
-                'barcode' => $validated['barcode'] ?? null,
+                'sku' => blank($validated['sku'] ?? null)
+                    ? null
+                    : $validated['sku'],
+                'barcode' => blank($validated['barcode'] ?? null)
+                    ? null
+                    : $validated['barcode'],
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'unit' => $validated['unit'],
@@ -327,13 +329,15 @@ class Items extends Component
     public function updateItem(): void
     {
         $item = Item::findOrFail($this->editingItemId);
-        $this->sku = blank($this->sku) ? null : trim($this->sku);
-        $this->barcode = blank($this->barcode) ? null : trim($this->barcode);
         $validated = $this->validate();
         DB::transaction(function () use ($item, $validated) {
             $item->update([
-                'sku' => $validated['sku'],
-                'barcode' => $validated['barcode'] ?? null,
+                'sku' => blank($validated['sku'] ?? null)
+                    ? null
+                    : $validated['sku'],
+                'barcode' => blank($validated['barcode'] ?? null)
+                    ? null
+                    : $validated['barcode'],
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'unit' => $validated['unit'],

@@ -102,7 +102,7 @@ class Items extends Component
     {
         return [
             'sku' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('items', 'sku')
@@ -125,7 +125,7 @@ class Items extends Component
                 'string',
             ],
             'unit' => [
-                'required',
+                'nullable',
                 'string',
                 'max:30',
             ],

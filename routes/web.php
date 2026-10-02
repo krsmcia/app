@@ -59,6 +59,9 @@ Route::middleware([
         Route::get('/items', Livewire\Procurements\Items::class)->name('items');
         Route::get('/vendors', Livewire\Procurements\Vendors::class)->name('vendors');
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
+        Route::middleware(['role:supervisor'])->group(function () {
+            Route::get('/review-prices', Livewire\Procurements\ReviewPrices::class)->name('review-prices');
+        });
         Route::get('/approved', Livewire\Procurements\Approved::class)->name('approved');
         Route::get('/purchased', Livewire\Procurements\Purchased::class)->name('purchased');
         Route::get('/ordered', Livewire\Procurements\Ordered::class)->name('ordered');

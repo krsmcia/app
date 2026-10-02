@@ -18,7 +18,6 @@ use Livewire\Component;
 class Requests extends Component
 {
     use WithPagination;
-
     public bool $showVendorModal = false;
     public ?int $vendorItemId = null;
     public ?Item $vendorItem = null;
@@ -29,25 +28,19 @@ class Requests extends Component
     public array $vendorForms = [];
     public array $requestDiscounts = [];
     public array $itemAdjustments = [];
-
     public function openVendorModal(int $itemId): void
     {
         $item = Item::query()
             ->with('itemVendors.vendor')
             ->findOrFail($itemId);
-
         // 이전 모달 상태 완전히 초기화
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
-
         $this->vendorItemId = $item->id;
         $this->vendorItem = $item;
-
         $this->selectedItemId = $item->id;
-        $this->selectedItemName = $item->item_name ?? 'Unnamed Item';
-
+        $this->selectedItemName = $item->name ?? 'Unnamed Item';
         $this->vendorForms = [];
-
         foreach ($item->itemVendors as $itemVendor) {
             $this->vendorForms[$itemVendor->id] = [
                 'vendor_id' => $itemVendor->vendor_id,
@@ -61,48 +54,37 @@ class Requests extends Component
                 'is_preferred' => (bool) $itemVendor->is_preferred,
             ];
         }
-
         $this->showVendorModal = true;
     }
-
     public function closeVendorModal(): void
     {
         $this->showVendorModal = false;
-
         $this->vendorItemId = null;
         $this->vendorItem = null;
-
         $this->selectedItemId = null;
         $this->selectedItemName = '';
-
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
         $this->vendorForms = [];
     }
-
     public function setPrimaryVendor(int $itemVendorId): void
     {
         foreach ($this->vendorForms as $id => &$vendor) {
             $vendor['is_preferred'] = ((int) $id === $itemVendorId);
         }
-
         unset($vendor);
     }
-
     public function saveVendors(): void
     {
         if (!$this->selectedItemId) {
             return;
         }
-
         $primaryVendorId = collect($this->vendorForms)
             ->filter(fn ($vendor) => !empty($vendor['is_preferred']))
             ->keys()
             ->first();
-
         // 모든 Vendor 데이터 validation
         foreach ($this->vendorForms as $itemVendorId => $data) {
-
             $validated = validator(
                 $data,
                 [
@@ -111,31 +93,26 @@ class Requests extends Component
                         'string',
                         'max:100',
                     ],
-
                     'unit_price' => [
                         'nullable',
                         'numeric',
                         'min:0',
                     ],
-
                     'minimum_order_qty' => [
                         'required',
                         'integer',
                         'min:1',
                     ],
-
                     'lead_time' => [
                         'nullable',
                         'integer',
                         'min:0',
                     ],
-
                     'disbursement_type_id' => [
                         'required',
                         'integer',
                         'exists:disbursement_types,id',
                     ],
-
                     'payment_details' => [
                         'nullable',
                         'string',
@@ -143,7 +120,6 @@ class Requests extends Component
                     ],
                 ]
             )->validate();
-
             ItemVendor::query()
                 ->where('id', $itemVendorId)
                 ->where('item_id', $this->selectedItemId)
@@ -151,32 +127,25 @@ class Requests extends Component
                     'vendor_sku' => filled($validated['vendor_sku'] ?? null)
                         ? trim($validated['vendor_sku'])
                         : null,
-
                     'unit_price' => filled($validated['unit_price'] ?? null)
                         ? $validated['unit_price']
                         : null,
-
                     'minimum_order_qty' => (int) $validated['minimum_order_qty'],
-
                     'lead_time' => filled($validated['lead_time'] ?? null)
                         ? (int) $validated['lead_time']
                         : null,
-
                     'disbursement_type_id' => (int) $validated['disbursement_type_id'],
-
                     'payment_details' => filled($validated['payment_details'] ?? null)
                         ? trim($validated['payment_details'])
                         : null,
                 ]);
         }
-
         // Preferred Vendor 처리
         ItemVendor::query()
             ->where('item_id', $this->selectedItemId)
             ->update([
                 'is_preferred' => false,
             ]);
-
         if ($primaryVendorId) {
             ItemVendor::query()
                 ->where('id', $primaryVendorId)
@@ -185,33 +154,39 @@ class Requests extends Component
                     'is_preferred' => true,
                 ]);
         }
-
         $this->reloadVendorItem();
+
+        $preferredVendor = ItemVendor::query()
+            ->where('item_id', $this->selectedItemId)
+            ->where('is_preferred', true)
+            ->first();
 
         session()->flash(
             'success',
             'Vendor information updated successfully.'
         );
-        $this->dispatch('vendor-updated');
+
+        $this->dispatch('vendor-updated',
+            itemId: $this->selectedItemId,
+            unitPrice: $preferredVendor?->unit_price !== null
+                ? (float) $preferredVendor->unit_price
+                : 0
+        );
     }
     public function removeVendor(int $itemVendorId): void
     {
         if (!$this->vendorItemId) {
             return;
         }
-
         $itemVendor = ItemVendor::query()
             ->where('id', $itemVendorId)
             ->where('item_id', $this->vendorItemId)
             ->firstOrFail();
-
         // Primary Vendor는 삭제 불가
         if ($itemVendor->is_preferred) {
             return;
         }
-
         $itemVendor->delete();
-
         $this->reloadVendorItem();
     }
     public function updatedVendorSearch(): void
@@ -221,18 +196,15 @@ class Requests extends Component
     public function searchVendors(): void
     {
         $search = trim($this->vendorSearch);
-
         if (strlen($search) < 2 || ! $this->vendorItemId) {
             $this->vendorSearchResults = [];
             return;
         }
-
         $attachedVendorIds = $this->vendorItem
             ? $this->vendorItem->itemVendors
                 ->pluck('vendor_id')
                 ->all()
             : [];
-
         $this->vendorSearchResults = Vendor::query()
             ->where('is_active', true)
             ->when(
@@ -259,15 +231,12 @@ class Requests extends Component
         if (! $this->vendorItemId) {
             return;
         }
-
         $item = Item::findOrFail($this->vendorItemId);
-
         // Vendor가 실제로 존재하고 활성 상태인지 확인
         $vendor = Vendor::query()
             ->where('id', $vendorId)
             ->where('is_active', true)
             ->firstOrFail();
-
         // 이미 연결되어 있으면 추가하지 않음
         if (
             $item->vendors()
@@ -276,10 +245,8 @@ class Requests extends Component
         ) {
             return;
         }
-
         // 첫 번째 Vendor라면 자동으로 Preferred
         $isFirstVendor = ! $item->vendors()->exists();
-
         $item->vendors()->attach($vendor->id, [
             'vendor_sku' => null,
             'unit_price' => null,
@@ -289,11 +256,8 @@ class Requests extends Component
             'payment_details' => null,
             'is_preferred' => $isFirstVendor,
         ]);
-
         $this->reloadVendorItem();
-
         $this->vendorSearch = '';
-
         $this->vendorSearchResults = [];
     }
     private function reloadVendorItem(): void
@@ -301,11 +265,9 @@ class Requests extends Component
         if (!$this->vendorItemId) {
             return;
         }
-
         $this->vendorItem = Item::query()
             ->with('itemVendors.vendor')
             ->findOrFail($this->vendorItemId);
-
         $this->vendorForms = $this->vendorItem->itemVendors
             ->mapWithKeys(function ($itemVendor) {
                 return [
@@ -324,7 +286,6 @@ class Requests extends Component
             })
             ->toArray();
     }
-    
     public function approve(
         int $workflowId,
         $requestDiscount,
@@ -341,19 +302,16 @@ class Requests extends Component
             ->where('step', 'procurement')
             ->where('status', 'pending')
             ->firstOrFail();
-
         /*
         |--------------------------------------------------------------------------
         | Request Discount
         |--------------------------------------------------------------------------
         */
-
         $requestDiscount = (float) str_replace(
             ',',
             '',
             $requestDiscount ?? 0
         );
-
         validator(
             [
                 'discount' => $requestDiscount,
@@ -366,65 +324,52 @@ class Requests extends Component
                 ],
             ]
         )->validate();
-
         DB::transaction(function () use (
             $workflow,
             $requestDiscount,
             $items
         ) {
             $totalAmount = 0;
-
             foreach ($workflow->purchaseWorkflowItems as $workflowItem) {
-
                 // 현재 Procurement 단계에서는 pending item만 처리
                 if ($workflowItem->status !== 'pending') {
                     continue;
                 }
-
                 /*
                 |--------------------------------------------------------------------------
                 | Alpine에서 승인 시 전달된 값
                 |--------------------------------------------------------------------------
                 */
-
                 $itemData = $items[$workflowItem->id] ?? [];
-
                 $shippingFee = (float) str_replace(
                     ',',
                     '',
                     $itemData['shippingFee'] ?? 0
                 );
-
                 $itemDiscount = (float) str_replace(
                     ',',
                     '',
                     $itemData['discount'] ?? 0
                 );
-
                 /*
                 |--------------------------------------------------------------------------
                 | Purchase Item
                 |--------------------------------------------------------------------------
                 */
-
                 $purchaseItem = $workflowItem->purchaseItem;
                 $item = $purchaseItem->item;
-
                 /*
                 |--------------------------------------------------------------------------
                 | Preferred Vendor
                 |--------------------------------------------------------------------------
                 */
-
                 $itemVendor = $item->itemVendors
                     ->firstWhere('is_preferred', true);
-
                 /*
                 |--------------------------------------------------------------------------
                 | Vendor / Price / Disbursement Type 확인
                 |--------------------------------------------------------------------------
                 */
-
                 if (
                     !$itemVendor ||
                     !$itemVendor->vendor ||
@@ -437,17 +382,13 @@ class Requests extends Component
                         "Vendor or price is not set for item: {$purchaseItem->item_name}"
                     );
                 }
-
                 $unitPrice = (float) $itemVendor->unit_price;
-
                 /*
                 |--------------------------------------------------------------------------
                 | 기본 아이템 금액
                 |--------------------------------------------------------------------------
                 */
-
                 $amount = $purchaseItem->quantity * $unitPrice;
-
                 /*
                 |--------------------------------------------------------------------------
                 | Item Discount 검증
@@ -456,31 +397,26 @@ class Requests extends Component
                 | Discount는 Amount + Shipping보다 클 수 없음
                 |
                 */
-
                 if ($itemDiscount > ($amount + $shippingFee)) {
                     abort(
                         422,
                         "Item discount cannot be greater than the item amount."
                     );
                 }
-
                 /*
                 |--------------------------------------------------------------------------
                 | Item별 최종 금액
                 |--------------------------------------------------------------------------
                 */
-
                 $itemTotal = max(
                     0,
                     $amount + $shippingFee - $itemDiscount
                 );
-
                 /*
                 |--------------------------------------------------------------------------
                 | Purchase Item Snapshot
                 |--------------------------------------------------------------------------
                 */
-
                 $purchaseItem->update([
                     'item_vendor_id' => $itemVendor->id,
                     'item_name' => $item->name,
@@ -496,28 +432,23 @@ class Requests extends Component
                     'disbursement_type_name' => $itemVendor->disbursementType->name,
                     'payment_details' => $itemVendor->payment_details,
                 ]);
-
                 /*
                 |--------------------------------------------------------------------------
                 | Procurement Workflow Item
                 |--------------------------------------------------------------------------
                 */
-
                 $workflowItem->update([
                     'status' => 'approved',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'approved',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
-
                 // Item별 계산 결과를 전체 합계에 추가
                 $totalAmount += $itemTotal;
             }
-
             /*
             |--------------------------------------------------------------------------
             | Request Discount 검증
@@ -526,55 +457,55 @@ class Requests extends Component
             | 전체 Item 금액보다 Request Discount가 클 수 없음
             |
             */
-
             if ($requestDiscount > $totalAmount) {
                 abort(
                     422,
                     'Request discount cannot be greater than the total purchase amount.'
                 );
             }
-
             /*
             |--------------------------------------------------------------------------
             | Request Discount 적용
             |--------------------------------------------------------------------------
             */
-
             $totalAmount = max(
                 0,
                 $totalAmount - $requestDiscount
             );
-
             /*
             |--------------------------------------------------------------------------
             | Purchase Request
             |--------------------------------------------------------------------------
             */
-
             $workflow->purchaseRequest->update([
                 'discount' => $requestDiscount,
             ]);
-
             /*
             |--------------------------------------------------------------------------
             | Procurement Workflow 완료
             |--------------------------------------------------------------------------
             */
-
             $workflow->update([
                 'status' => 'completed',
                 'acted_at' => now(),
             ]);
-
             /*
             |--------------------------------------------------------------------------
-            | 다음 단계 → Audit
+            | 다음 단계 → Audit or Procurement Supervisor's review
             |--------------------------------------------------------------------------
             */
-
-            $this->createAuditWorkflow($workflow);
+            $isProcurementSupervisor = auth()->user()->departments()->where('code', 'procurement')->exists() && auth()->user()->hasRole('supervisor');
+            if($isProcurementSupervisor)
+            {
+                //Go to Audit
+                $this->createAuditWorkflow($workflow);    
+            }
+            else
+            {
+                //Go to Procurement supervisor
+                $this->createReviewWorkflow($workflow);
+            }
         });
-
         $this->dispatch('approval-updated');
     }
     private function createAuditWorkflow(PurchaseWorkflow $workflow): void
@@ -582,6 +513,23 @@ class Requests extends Component
         $purchaseRequest = $workflow->purchaseRequest;
         $nextWorkflow = $purchaseRequest->purchaseWorkflows()->create([
             'step' => 'audit',
+            'status' => 'pending',
+        ]);
+        $approvedItems = $workflow->purchaseWorkflowItems()
+            ->where('status', 'approved')
+            ->get();
+        foreach ($approvedItems as $workflowItem) {
+            $nextWorkflow->purchaseWorkflowItems()->create([
+                'purchase_item_id' => $workflowItem->purchase_item_id,
+                'status' => 'pending',
+            ]);
+        }
+    }
+    private function createReviewWorkflow(PurchaseWorkflow $workflow): void
+    {
+        $purchaseRequest = $workflow->purchaseRequest;
+        $nextWorkflow = $purchaseRequest->purchaseWorkflows()->create([
+            'step' => 'review-prices',
             'status' => 'pending',
         ]);
         $approvedItems = $workflow->purchaseWorkflowItems()

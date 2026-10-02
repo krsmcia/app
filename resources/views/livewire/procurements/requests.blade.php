@@ -17,7 +17,6 @@
                 <div
                     x-data="{
                         requestDiscount: {{ (float) ($requestDiscounts[$request->id] ?? 0) }},
-
                         items: {
                             @foreach ($workflow->purchaseWorkflowItems as $workflowItem)
                                 {{ $workflowItem->id }}: {
@@ -33,18 +32,19 @@
                                 },
                             @endforeach
                         },
-
                         number(value) {
                             return parseFloat(
                                 String(value ?? 0).replace(/,/g, '')
                             ) || 0;
                         },
-
                         get subtotal() {
                             return Object.values(this.items).reduce((sum, item) => {
-                                const amount = this.number(item.amount);
+                                const quantity = this.number(item.quantity);
+                                const unitPrice = this.number(item.unitPrice);
                                 const shippingFee = this.number(item.shippingFee);
                                 const discount = this.number(item.discount);
+
+                                const amount = quantity * unitPrice;
 
                                 return sum + Math.max(
                                     0,
@@ -78,13 +78,29 @@
                                 this.requestDiscount = '';
                             }
                         },
-                        
+                        updateVendorPrice(workflowItemId, unitPrice) {
+                            const item = this.items[workflowItemId];
+
+                            if (!item) {
+                                return;
+                            }
+
+                            item.unitPrice = this.number(unitPrice);
+                            item.amount = item.quantity * item.unitPrice;
+                        },
                     }"
                     x-on:vendor-updated.window="
-                        updateVendorPrice(
-                            $event.detail.itemId,
-                            $event.detail.unitPrice
-                        )
+                        const itemId = $event.detail.itemId;
+                        const unitPrice = $event.detail.unitPrice;
+
+                        Object.entries(items).forEach(([workflowItemId, item]) => {
+                            if (item.itemId == itemId) {
+                                updateVendorPrice(
+                                    workflowItemId,
+                                    unitPrice
+                                );
+                            }
+                        });
                     "
                     class="rounded-lg border border-gray-200 bg-white shadow-sm"
                 >
@@ -119,29 +135,23 @@
                             @php
                                 $item = $workflowItem->purchaseItem;
                                 $preferredVendor = $workflowItem->preferred_vendor;
-
                                 $unitPrice = $preferredVendor?->unit_price !== null
                                     ? (float) $preferredVendor->unit_price
                                     : 0;
-
                                 $shippingFee = (float) (
                                     $itemAdjustments[$workflowItem->id]['shipping_fee'] ?? 0
                                 );
-
                                 $itemDiscount = (float) (
                                     $itemAdjustments[$workflowItem->id]['discount'] ?? 0
                                 );
-
                                 $itemAmount = $item && $unitPrice > 0
                                     ? $item->quantity * $unitPrice
                                     : 0;
-
                                 $itemTotal = max(
                                     0,
                                     $itemAmount + $shippingFee - $itemDiscount
                                 );
                             @endphp
-
                             <div
                                 class="px-4 py-4 sm:px-5"
                                 wire:key="workflow-{{ $workflowItem->id }}"
@@ -155,7 +165,6 @@
                                             get itemData() {
                                                 return items[{{ $workflowItem->id }}];
                                             },
-
                                             number(value) {
                                                 return parseFloat(
                                                     String(value ?? 0).replace(/,/g, '')
@@ -163,9 +172,12 @@
                                             },
 
                                             get total() {
-                                                const amount = this.number(this.itemData.amount);
+                                                const quantity = this.number(this.itemData.quantity);
+                                                const unitPrice = this.number(this.itemData.unitPrice);
                                                 const shippingFee = this.number(this.itemData.shippingFee);
                                                 const discount = this.number(this.itemData.discount);
+
+                                                const amount = quantity * unitPrice;
 
                                                 return Math.max(
                                                     0,
@@ -191,7 +203,7 @@
                                                     alert(
                                                         `Item discount cannot be greater than ${this.money(maxDiscount)}.`
                                                     );
-                                                    this.itemData.shippingFee = '';
+
                                                     this.itemData.discount = '';
                                                 }
                                             }
@@ -274,9 +286,10 @@
                                                 Amount
                                             </div>
 
-                                            <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                                {{ number_format($itemAmount, 2) }}
-                                            </div>
+                                            <div
+                                                x-text="money(itemData.amount)"
+                                                class="mt-0.5 text-sm font-semibold text-gray-900"
+                                            ></div>
                                         </div>
 
                                         {{-- Item Total --}}
@@ -457,9 +470,10 @@
                                                             Amount
                                                         </div>
 
-                                                        <div class="mt-0.5 text-sm font-semibold text-gray-900">
-                                                            {{ number_format($itemAmount, 2) }}
-                                                        </div>
+                                                        <div
+                                                            x-text="money(itemData.amount)"
+                                                            class="mt-0.5 text-sm font-semibold text-gray-900"
+                                                        ></div>
                                                     </div>
 
                                                     {{-- Item Total --}}

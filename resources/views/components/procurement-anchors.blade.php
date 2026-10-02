@@ -155,6 +155,45 @@
         <span class="transition group-hover:ml-1">→</span>
     </div>
 </a>
+@if(auth()->user()->hasRole('supervisor'))
+{{-- Review Prices --}}
+<a
+    href="{{ route('procurements.review-prices') }}"
+    class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+        transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md
+        sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 sm:h-11 sm:w-11">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5 text-indigo-600 sm:size-6"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 6.75v10.5m-3.75-6.75h7.5M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5z"
+            />
+        </svg>
+    </div>
+
+    <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+        Review Prices
+    </h2>
+
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        Review and compare purchase prices before approval.
+    </p>
+
+    <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
+        Review prices
+        <span class="transition group-hover:ml-1">→</span>
+    </div>
+</a>
+@endif
 {{-- Approved Purchases --}}
 <a
     href="{{ route('procurements.approved') }}"

@@ -27,4 +27,8 @@ class PurchaseAction extends Model
     {
         return $this->belongsTo(User::class, 'acted_by');
     }
+    public function budgetReleasePhotos()
+    {
+        return $this->hasMany(BudgetReleasePhoto::class);
+    }
 }

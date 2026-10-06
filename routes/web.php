@@ -75,6 +75,7 @@ Route::middleware([
     });
     Route::middleware(['department:audit'])->prefix('audits')->name('audits.')->group(function () {
         Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
+        Route::get('/inventories', Livewire\Audits\Inventories::class)->name('inventories');
     });
     Route::middleware(['role:super-admin|head'])->group(function () {
         Route::get('/heads/requests', Livewire\Heads\Requests::class)->name('heads.requests');

@@ -14,6 +14,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Hash;
 
 class ReleaseCash extends Component
 {
@@ -25,6 +26,7 @@ class ReleaseCash extends Component
     public $workflow = null;
     public bool $cashHandoverModal = false;
     public ?int $recipientUserId = null;
+    public string $recipientPassword = '';
 
     #[On('cash-handover-modal')]
     public function openModal(int $workflowId): void
@@ -39,6 +41,8 @@ class ReleaseCash extends Component
 
         $this->search = '';
         $this->recipientUserId = null;
+        $this->recipientPassword = '';
+        $this->resetValidation();
 
         $this->resetPage();
 
@@ -113,8 +117,11 @@ class ReleaseCash extends Component
                 'integer',
                 'exists:users,id',
             ],
+            'recipientPassword' => [
+                'required',
+                'string',
+            ],
         ]);
-
         $workflow = PurchaseWorkflow::query()
             ->with([
                 'purchaseWorkflowItems.purchaseItem',
@@ -124,44 +131,48 @@ class ReleaseCash extends Component
             ->where('step', 'accounting')
             ->where('status', 'pending')
             ->firstOrFail();
-
         $recipient = User::query()
             ->whereKey($this->recipientUserId)
             ->whereHas('departments', function ($query) {
                 $query->where('code', 'procurement');
             })
             ->firstOrFail();
-
+        /*
+        * Recipient must confirm with their own password.
+        */
+        if (! Hash::check($this->recipientPassword, $recipient->password)) {
+            $this->addError(
+                'recipientPassword',
+                __('The password is incorrect.')
+            );
+            return;
+        }
         DB::transaction(function () use ($workflow, $recipient) {
-
             /*
-             * Get pending Cash items only.
-             */
+            * Get pending Cash items only.
+            */
             $cashItems = $workflow->purchaseWorkflowItems
                 ->where('status', 'pending')
                 ->filter(function ($workflowItem) {
                     return $this->isCash($workflowItem);
                 })
                 ->values();
-
             if ($cashItems->isEmpty()) {
                 return;
             }
-
             /*
-             * Calculate each item first,
-             * then sum the rounded amounts.
-             */
+            * Calculate each item first,
+            * then sum the rounded amounts.
+            */
             $totalAmount = $cashItems->sum(function ($workflowItem) {
                 return $this->calculateCashAmount(
                     $workflowItem->purchaseItem
                 );
             });
-
             /*
-             * One physical cash handover
-             * = one Transaction.
-             */
+            * One physical cash handover
+            * = one Transaction.
+            */
             $transaction = Transaction::create([
                 'from_user_id' => auth()->id(),
                 'to_user_id' => $recipient->id,
@@ -173,73 +184,64 @@ class ReleaseCash extends Component
                 ),
                 'created_by' => auth()->id(),
             ]);
-
             /*
-             * One PurchaseRequest ↔ Transaction connection.
-             */
+            * One PurchaseRequest ↔ Transaction connection.
+            */
             PurchaseRequestTransaction::create([
                 'purchase_request_id' => $workflow->purchase_request_id,
                 'transaction_id' => $transaction->id,
             ]);
-
             foreach ($cashItems as $workflowItem) {
                 $purchaseItem = $workflowItem->purchaseItem;
-
                 /*
-                 * Calculate the exact amount released
-                 * for this item.
-                 */
+                * Calculate the exact amount released
+                * for this item.
+                */
                 $amount = $this->calculateCashAmount(
                     $purchaseItem
                 );
-
                 /*
-                 * Workflow item
-                 */
+                * Workflow item
+                */
                 $workflowItem->update([
                     'status' => 'fund released',
                     'acted_at' => now(),
                 ]);
-
                 /*
-                 * Action history
-                 */
+                * Action history
+                */
                 $workflowItem->purchaseActions()->create([
                     'action' => 'fund released',
                     'acted_by' => auth()->id(),
                     'acted_at' => now(),
                 ]);
-
                 /*
-                 * Transaction ↔ Item
-                 */
+                * Transaction ↔ Item
+                */
                 PurchaseItemTransaction::create([
                     'purchase_item_id' => $purchaseItem->id,
                     'transaction_id' => $transaction->id,
                     'amount' => $amount,
                 ]);
             }
-
             /*
-             * Complete Accounting workflow
-             * if there are no pending items left.
-             */
+            * Complete Accounting workflow
+            * if there are no pending items left.
+            */
             app(PurchaseWorkflowService::class)
                 ->completeAccountingWorkflowIfFinished($workflow);
         });
-
         $this->cashHandoverModal = false;
-
+        $this->recipientUserId = null;
+        $this->recipientPassword = '';
         $this->dispatch('cash-released')
             ->to(\App\Livewire\Accountings\Requests::class);
     }
-
     public function updatedSearch(): void
     {
         $this->recipientUserId = null;
         $this->resetPage();
     }
-
     public function render()
     {
         $users = User::query()
@@ -263,7 +265,6 @@ class ReleaseCash extends Component
             })
             ->orderBy('name')
             ->paginate(10);
-
         return view(
             'livewire.accountings.modals.release-cash',
             [

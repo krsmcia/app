@@ -178,34 +178,35 @@
                                             {{ number_format($baseAmount, 2) }}
                                         </div>
                                     </div>
-
                                     {{-- Adjustments --}}
-                                    <div class="w-28 shrink-0 text-right">
+                                    <div class="shrink-0 text-right">
                                         <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                             Adjustments
                                         </div>
-
-                                        <div class="mt-0.5 space-x-1 text-xs whitespace-nowrap">
+                                        <div class="mt-0.5 space-y-0.5 text-xs">
                                             @if ($itemDiscount > 0)
-                                                <span class="font-medium text-gray-600">
-                                                    -{{ number_format($itemDiscount, 2) }}
-                                                </span>
+                                                <div class="flex items-center justify-between gap-1">
+                                                    <span>{{ __('Discount') }}</span>
+                                                    <span class="font-medium text-red-600">
+                                                        -{{ number_format($itemDiscount, 2) }}
+                                                    </span>
+                                                </div>
                                             @endif
-
                                             @if ($shippingFee > 0)
-                                                <span class="font-medium text-gray-600">
-                                                    +{{ number_format($shippingFee, 2) }}
-                                                </span>
+                                                <div class="flex items-center justify-between gap-1">
+                                                    <span>{{ __('Shipping') }}</span>
+                                                    <span class="font-medium text-blue-600">
+                                                        +{{ number_format($shippingFee, 2) }}
+                                                    </span>
+                                                </div>
                                             @endif
-
                                             @if ($itemDiscount <= 0 && $shippingFee <= 0)
-                                                <span class="text-gray-400">
+                                                <div class="text-gray-400">
                                                     -
-                                                </span>
+                                                </div>
                                             @endif
                                         </div>
                                     </div>
-
                                     {{-- Final Amount --}}
                                     <div class="w-28 shrink-0 text-right">
                                         <div class="text-[10px] uppercase tracking-wide text-gray-400">

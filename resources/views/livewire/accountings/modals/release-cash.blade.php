@@ -285,6 +285,27 @@
                 </p>
 
             @enderror
+            {{-- Recipient Password --}}
+            <div class="mt-4">
+                <label class="text-xs font-semibold text-gray-800 sm:text-sm">
+                    Recipient Password
+                </label>
+
+                <input
+                    type="password"
+                    wire:model="recipientPassword"
+                    autocomplete="off"
+                    placeholder="Enter recipient's password"
+                    class="mt-1.5 block w-full rounded-lg border-gray-300 px-3 py-2.5
+                        text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+
+                @error('recipientPassword')
+                    <p class="mt-1.5 text-xs text-red-600">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
 
             {{-- Pagination --}}
@@ -316,7 +337,7 @@
                 <x-button
                     type="button"
                     class="ms-auto !px-3 !py-2 text-xs sm:!px-4 sm:text-sm"
-                    x-bind:disabled="!recipientUserId"
+                    x-bind:disabled="!recipientUserId || !$wire.recipientPassword"
                     x-on:click="
                         $wire.recipientUserId = recipientUserId;
                         $wire.releaseCash();

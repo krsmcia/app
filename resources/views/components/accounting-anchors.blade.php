@@ -49,6 +49,51 @@
     </div>
 </a>
 <a
+    href="{{ route('accountings.transactions') }}"
+    class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+        transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-md
+        sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 sm:h-11 sm:w-11">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5 text-violet-600 sm:size-6"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5
+                A4.5 4.5 0 0021 12V9"
+            />
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 3L21 7.5m0 0L16.5 12M21 7.5H7.5
+                A4.5 4.5 0 003 12v3"
+            />
+        </svg>
+    </div>
+
+    <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+        Transactions
+    </h2>
+
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        View and track cash transfers, payments, returns, and other financial transactions.
+    </p>
+
+    <div class="mt-auto pt-3 text-xs font-semibold text-violet-600 sm:text-sm">
+        Review
+        <span class="transition group-hover:ml-1">
+            →
+        </span>
+    </div>
+</a>
+<a
     href="{{ route('accountings.liquidations') }}"
     class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
         transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-md

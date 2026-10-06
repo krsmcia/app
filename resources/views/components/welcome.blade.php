@@ -1,5 +1,5 @@
 <div class="p-2">
-    <div class="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         @if(auth()->user()->hasRole('super-admin') || auth()->user()->departments->contains('code', 'hr'))
             <x-hr-anchors />
         @endif

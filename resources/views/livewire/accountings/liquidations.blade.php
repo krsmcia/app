@@ -69,7 +69,7 @@
                             $purchased = (float) ($item->purchased_amount ?? 0);
                             $returned = (float) ($item->returned_amount ?? 0);
 
-                            $remaining = $released - $purchased - $returned;
+                            $remaining = $released + $returned - $purchased;
                         @endphp
                         <tr>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">

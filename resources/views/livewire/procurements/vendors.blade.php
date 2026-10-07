@@ -396,28 +396,19 @@
                 {{-- Active --}}
                 <div class="md:col-span-2">
                     <label class="inline-flex items-center gap-2">
-
                         <input
                             type="checkbox"
                             wire:model="isActive"
                             class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         >
-
                         <span class="text-sm text-gray-700">
                             Active
                         </span>
-
                     </label>
-
                 </div>
-
             </div>
-
         </x-slot>
-
-
         <x-slot name="footer">
-
             <button
                 type="button"
                 wire:click="closeCreateModal"
@@ -425,121 +416,87 @@
             >
                 Cancel
             </button>
-
             <button
                 type="button"
                 wire:click="createVendor"
                 wire:loading.attr="disabled"
                 class="ml-3 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium"
             >
-
                 <span wire:loading.remove wire:target="createVendor">
                     Create
                 </span>
-
                 <span wire:loading wire:target="createVendor">
                     Creating...
                 </span>
-
             </button>
-
         </x-slot>
-
     </x-dialog-modal>
-
-
     {{-- Edit Modal --}}
     <x-dialog-modal
         maxWidth="2xl"
         wire:model.live="showEditModal"
     >
-
         <x-slot name="title">
             Edit Vendor
         </x-slot>
-
-
         <x-slot name="content">
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
                 {{-- Name --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Name
                     </label>
-
                     <input
                         type="text"
                         wire:model="name"
                         placeholder="Vendor name"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                     @error('name')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
                     @enderror
-
                 </div>
-
-
                 {{-- Code --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Code
                     </label>
-
                     <input
                         type="text"
                         wire:model="code"
                         placeholder="Vendor code"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                     @error('code')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
                     @enderror
-
                 </div>
-
-
                 {{-- Legal Name --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Legal Name
                     </label>
-
                     <input
                         type="text"
                         wire:model="legalName"
                         placeholder="Legal name"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                     @error('legalName')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
                     @enderror
-
                 </div>
-
-
                 {{-- Type --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Type
                     </label>
-
                     <select
                         wire:model="type"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -547,178 +504,124 @@
                         <option value="supplier">Supplier</option>
                         <option value="customer">Customer</option>
                     </select>
-
                     @error('type')
                         <p class="mt-1 text-xs text-red-600">
                             {{ $message }}
                         </p>
                     @enderror
-
                 </div>
-
-
                 {{-- Contact Person --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Contact Person
                     </label>
-
                     <input
                         type="text"
                         wire:model="contactPerson"
                         placeholder="Contact person"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                 </div>
-
-
                 {{-- Email --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Email
                     </label>
-
                     <input
                         type="email"
                         wire:model="email"
                         placeholder="Email address"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                 </div>
-
-
                 {{-- Phone --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Phone
                     </label>
-
                     <input
                         type="text"
                         wire:model="phone"
                         placeholder="Phone number"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                 </div>
-
-
                 {{-- Website --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Website
                     </label>
-
                     <input
                         type="text"
                         wire:model="website"
                         placeholder="Website"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                 </div>
-
-
                 {{-- Tax Number --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Tax Number
                     </label>
-
                     <input
                         type="text"
                         wire:model="taxNumber"
                         placeholder="Tax number"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                 </div>
-
-
                 {{-- Payment Terms --}}
                 <div>
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Payment Terms
                     </label>
-
                     <input
                         type="text"
                         wire:model="paymentTerms"
                         placeholder="e.g. 30 Days"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     >
-
                 </div>
-
-
                 {{-- Address --}}
                 <div class="md:col-span-2">
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Address
                     </label>
-
                     <textarea
                         wire:model="address"
                         rows="2"
                         placeholder="Vendor address"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     ></textarea>
-
                 </div>
-
-
                 {{-- Description --}}
                 <div class="md:col-span-2">
-
                     <label class="mb-1 block text-sm font-medium text-gray-700">
                         Description
                     </label>
-
                     <textarea
                         wire:model="description"
                         rows="3"
                         placeholder="Description"
                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                     ></textarea>
-
                 </div>
-
-
                 {{-- Active --}}
                 <div class="md:col-span-2">
-
                     <label class="inline-flex items-center gap-2">
-
                         <input
                             type="checkbox"
                             wire:model="isActive"
                             class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         >
-
                         <span class="text-sm text-gray-700">
                             Active
                         </span>
-
                     </label>
-
                 </div>
-
             </div>
-
         </x-slot>
-
-
         <x-slot name="footer">
-
             <button
                 type="button"
                 wire:click="closeEditModal"
@@ -726,26 +629,19 @@
             >
                 Cancel
             </button>
-
             <button
                 type="button"
                 wire:click="updateVendor"
                 wire:loading.attr="disabled"
                 class="ml-3 px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium"
             >
-
                 <span wire:loading.remove wire:target="updateVendor">
                     Update
                 </span>
-
                 <span wire:loading wire:target="updateVendor">
                     Updating...
                 </span>
-
             </button>
-
         </x-slot>
-
     </x-dialog-modal>
-
 </div>

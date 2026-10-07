@@ -60,17 +60,16 @@
                         @if ($request)
 
                             <div class="mt-1 text-sm text-gray-500">
-
-                                Hand Over To
-
-                                <span class="font-medium text-gray-700">
-                                    {{ $request->user?->name }}
-                                </span>
-
-                                @if ($request->department)
-                                    · {{ $request->department->name }}
-                                @endif
-
+                                <p>Hand Over To</p>
+                                <div class="flex items-center gap-1">
+                                    <img class="size-8 rounded-full object-cover" src="{{ $request->user->profile_photo_url }}" alt="{{ $request->user->name }}" />
+                                    <span class="font-medium text-gray-700">
+                                        {{ $request->user->name }}
+                                    </span>
+                                    @if ($request->department)
+                                        · {{ $request->department->name }}
+                                    @endif
+                                </div>
                             </div>
 
                         @endif

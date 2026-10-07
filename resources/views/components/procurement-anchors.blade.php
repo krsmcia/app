@@ -179,15 +179,12 @@
             />
         </svg>
     </div>
-
     <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
         Review Prices
     </h2>
-
     <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
         Review and compare purchase prices before approval.
     </p>
-
     <div class="mt-auto pt-3 text-xs font-semibold text-indigo-600 sm:text-sm">
         Review prices
         <span class="transition group-hover:ml-1">→</span>
@@ -218,15 +215,12 @@
             />
         </svg>
     </div>
-
     <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
         Approved Purchases
     </h2>
-
     <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
         View approved purchase items and track purchases ready for the next accounting process.
     </p>
-
     <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
         View approved
         <span class="transition group-hover:ml-1">
@@ -265,15 +259,12 @@
             />
         </svg>
     </div>
-
     <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
         Ordered Purchases
     </h2>
-
     <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
         View orders that have been placed but have not yet been paid.
     </p>
-
     <div class="mt-auto pt-3 text-xs font-semibold text-amber-600 sm:text-sm">
         View ordered
         <span class="transition group-hover:ml-1">
@@ -281,7 +272,6 @@
         </span>
     </div>
 </a>
-
 {{-- Purchased Purchases --}}
 <a
     href="{{ route('procurements.purchased') }}"
@@ -309,20 +299,48 @@
             />
         </svg>
     </div>
-
     <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
         Purchased Purchases
     </h2>
-
     <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
         View purchases that have been paid and recorded for procurement tracking.
     </p>
-
     <div class="mt-auto pt-3 text-xs font-semibold text-emerald-600 sm:text-sm">
         View purchased
         <span class="transition group-hover:ml-1">
             →
         </span>
+    </div>
+</a>
+{{-- Liquidation --}}
+<a href="{{ route('procurements.liquidations') }}"
+   class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-md sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 sm:h-11 sm:w-11">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke-width="1.5"
+             stroke="currentColor"
+             class="size-5 text-teal-600 sm:size-6"
+        >
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3.75 6.75h16.5M3.75 6.75A2.25 2.25 0 0 1 6 4.5h12a2.25 2.25 0 0 1 2.25 2.25m-16.5 0v10.5A2.25 2.25 0 0 0 6 19.5h12a2.25 2.25 0 0 0 2.25-2.25V6.75" />
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M8.25 11.25h7.5M8.25 14.25h4.5" />
+        </svg>
+    </div>
+    <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
+        Liquidation
+    </h2>
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        Review purchased items, record actual expenses, and settle remaining funds.
+    </p>
+    <div class="mt-auto pt-3 text-xs font-semibold text-teal-600 sm:text-sm">
+        Process liquidation
+        <span class="transition group-hover:ml-1">→</span>
     </div>
 </a>
 {{-- Item Handover --}}
@@ -348,15 +366,12 @@
                   d="M4.5 19.5h15" />
         </svg>
     </div>
-
     <h2 class="mt-4 text-base font-semibold leading-5 text-slate-600 sm:mt-5 sm:text-lg">
         Item Handover
     </h2>
-
     <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
         Hand over purchased items to the employees who requested them and record the receipt.
     </p>
-
     <div class="mt-auto pt-3 text-xs font-semibold text-violet-600 sm:text-sm">
         Hand over
         <span class="transition group-hover:ml-1">→</span>

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithoutUrlPagination;
+use Livewire\Attributes\Url;
 
 class UserLiquidations extends Component
 {
@@ -19,7 +20,8 @@ class UserLiquidations extends Component
     public User $user;
 
     public string $search = '';
-
+    
+    #[Url(as: 'date')]
     public string $purchaseDate = '';
 
     public bool $showLiquidationModal = false;

@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Warehouses;
-
 use App\Models\Item;
 use App\Models\Stock;
 use App\Models\Warehouse;
@@ -10,7 +8,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
-
 class InventoryManagement extends Component
 {
     use WithPagination;
@@ -62,10 +59,8 @@ class InventoryManagement extends Component
             'warehouseId',
             'stockStatus',
         ]);
-
         $this->resetPage();
     }
-
     public function openAddItemModal(): void
     {
         $this->reset([
@@ -76,22 +71,17 @@ class InventoryManagement extends Component
             'addItemSearch',
             'addItemResults',
         ]);
-
         $this->addQuantity = '0';
         $this->addReorderPoint = '0';
-
         $this->addItemModal = true;
     }
     public function updatedAddItemSearch(): void
     {
         $search = trim($this->addItemSearch);
-
         if ($search === '' || strlen($search) < 2) {
             $this->addItemResults = [];
-
             return;
         }
-
         $this->addItemResults = Item::query()
             ->select(['id', 'name', 'sku'])
             ->where(function ($query) use ($search) {
@@ -109,11 +99,9 @@ class InventoryManagement extends Component
         $item = Item::query()
             ->select(['id', 'name', 'sku'])
             ->find($itemId);
-
         if (!$item) {
             return;
         }
-
         $this->addItemId = $item->id;
         $this->addItemSearch = $item->name . ' (' . $item->sku . ')';
         $this->addItemResults = [];
@@ -171,7 +159,6 @@ class InventoryManagement extends Component
     #[On('stock-updated')]
     public function refreshStocks(): void
     {
-        
     }
     public function render()
     {
@@ -188,7 +175,6 @@ class InventoryManagement extends Component
                 $this->search !== '',
                 function ($query) {
                     $search = trim($this->search);
-
                     $query->whereHas('item', function ($query) use ($search) {
                         $query
                             ->where('name', 'like', "%{$search}%")

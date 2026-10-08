@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Heads;
-
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
@@ -9,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-
 class Requests extends Component
 {
     use WithPagination;
@@ -19,10 +16,8 @@ class Requests extends Component
     public function approveItem(int $workflowItemId): void
     {
         $user = Auth::user();
-
         $departmentIds = $user->departments()
             ->pluck('departments.id');
-
         $workflowItem = PurchaseWorkflowItem::query()
             ->with([
                 'purchaseWorkflow.purchaseRequest',
@@ -38,27 +33,22 @@ class Requests extends Component
                     });
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflowItem) {
             $workflowItem->update([
                 'status' => 'approved',
                 'acted_at' => now(),
             ]);
-
             $workflowItem->purchaseActions()->create([
                 'action' => 'approved',
                 'acted_by' => Auth::id(),
                 'acted_at' => now(),
             ]);
-
             $this->completeHeadWorkflowIfFinished(
                 $workflowItem->purchaseWorkflow
             );
         });
-
         $this->dispatch('approval-updated');
     }
-
     public function openDenyModal(int $workflowItemId): void
     {
         $this->denyWorkflowItemId = $workflowItemId;
@@ -66,8 +56,6 @@ class Requests extends Component
         $this->resetValidation();
         $this->denyModal = true;
     }
-
-
     /**
      * ---------------------------------------------------------
      * Deny single item
@@ -80,16 +68,12 @@ class Requests extends Component
         ], [
             'denyComment.required' => 'Please provide a reason for denial.',
         ]);
-
         if (!$this->denyWorkflowItemId) {
             return;
         }
-
         $user = Auth::user();
-
         $departmentIds = $user->departments()
             ->pluck('departments.id');
-
         $workflowItem = PurchaseWorkflowItem::query()
             ->with([
                 'purchaseWorkflow.purchaseRequest',
@@ -105,33 +89,26 @@ class Requests extends Component
                     });
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflowItem) {
             $workflowItem->update([
                 'status' => 'denied',
                 'acted_at' => now(),
             ]);
-
             $workflowItem->purchaseActions()->create([
                 'action' => 'denied',
                 'acted_by' => Auth::id(),
                 'comment' => trim($this->denyComment),
                 'acted_at' => now(),
             ]);
-
             $this->completeHeadWorkflowIfFinished(
                 $workflowItem->purchaseWorkflow
             );
         });
-
         $this->denyModal = false;
         $this->denyWorkflowItemId = null;
         $this->denyComment = '';
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Approve all pending items
@@ -140,10 +117,8 @@ class Requests extends Component
     public function approve(int $workflowId): void
     {
         $user = Auth::user();
-
         $departmentIds = $user->departments()
             ->pluck('departments.id');
-
         $workflow = PurchaseWorkflow::query()
             ->with([
                 'purchaseRequest',
@@ -156,41 +131,31 @@ class Requests extends Component
                 $query->whereIn('department_id', $departmentIds);
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflow) {
-
             $pendingItems = $workflow->purchaseWorkflowItems
                 ->filter(fn ($item) => $item->status === 'pending');
-
             if ($pendingItems->isEmpty()) {
                 return;
             }
-
             foreach ($pendingItems as $workflowItem) {
                 $workflowItem->update([
                     'status' => 'approved',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'approved',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
             }
-
             $workflow->update([
                 'status' => 'completed',
                 'acted_at' => now(),
             ]);
-
             $this->createNextWorkflow($workflow);
         });
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Deny all pending items
@@ -199,10 +164,8 @@ class Requests extends Component
     public function denyAll(int $workflowId): void
     {
         $user = Auth::user();
-
         $departmentIds = $user->departments()
             ->pluck('departments.id');
-
         $workflow = PurchaseWorkflow::query()
             ->with([
                 'purchaseRequest',
@@ -215,39 +178,30 @@ class Requests extends Component
                 $query->whereIn('department_id', $departmentIds);
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflow) {
-
             $pendingItems = $workflow->purchaseWorkflowItems
                 ->filter(fn ($item) => $item->status === 'pending');
-
             if ($pendingItems->isEmpty()) {
                 return;
             }
-
             foreach ($pendingItems as $workflowItem) {
                 $workflowItem->update([
                     'status' => 'denied',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'denied',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
             }
-
             $workflow->update([
                 'status' => 'completed',
                 'acted_at' => now(),
             ]);
         });
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Complete head workflow when no pending items remain
@@ -256,24 +210,18 @@ class Requests extends Component
     private function completeHeadWorkflowIfFinished(
         PurchaseWorkflow $workflow
     ): void {
-
         $hasPendingItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'pending')
             ->exists();
-
         if ($hasPendingItems) {
             return;
         }
-
         $workflow->update([
             'status' => 'completed',
             'acted_at' => now(),
         ]);
-
         $this->createNextWorkflow($workflow);
     }
-
-
     /**
      * ---------------------------------------------------------
      * Create next workflow
@@ -282,23 +230,19 @@ class Requests extends Component
     private function createNextWorkflow(
         PurchaseWorkflow $workflow
     ): void {
-
         $purchaseRequest = $workflow->purchaseRequest;
-
         /*
          * Head에서 승인된 item만 다음 단계로 전달
          */
         $approvedItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'approved')
             ->get();
-
         /*
          * 승인된 item이 없으면 다음 단계 생성하지 않음
          */
         if ($approvedItems->isEmpty()) {
             return;
         }
-
         /*
          * 다음 단계
          *
@@ -309,9 +253,7 @@ class Requests extends Component
             'step' => 'accounting',
             'status' => 'pending',
         ]);
-
         foreach ($approvedItems as $workflowItem) {
-
             $nextWorkflow->purchaseWorkflowItems()->create([
                 'purchase_item_id' => $workflowItem->purchase_item_id,
                 'status' => 'pending',
@@ -321,15 +263,12 @@ class Requests extends Component
     public function render()
     {
         $user = Auth::user();
-
         $departmentIds = $user->departments()
             ->pluck('departments.id');
-
         $requests = PurchaseRequest::query()
             ->with([
                 'user',
                 'department',
-
                 'purchaseWorkflows' => function ($query) {
                     $query
                         ->where('step', 'head')
@@ -357,25 +296,18 @@ class Requests extends Component
             })
             ->latest()
             ->paginate(12);
-
         $requests->getCollection()->transform(
             function ($request) {
-
                 $workflow = $request->purchaseWorkflows->first();
-
                 $request->head_workflow = $workflow;
-
                 if (!$workflow) {
                     $request->head_total = 0;
-
                     return $request;
                 }
-
                 /*
                  * Head 화면에는 pending item만 존재
                  */
                 $request->items = $workflow->purchaseWorkflowItems;
-
                 /*
                  * 중요:
                  *
@@ -386,19 +318,14 @@ class Requests extends Component
                  */
                 $request->head_total = $workflow->purchaseWorkflowItems
                     ->sum(function ($workflowItem) {
-
                         $purchaseItem = $workflowItem->purchaseItem;
-
                         $amount = (float) ($purchaseItem->unit_price * $purchaseItem->quantity ?? 0);
                         $discount = (float) ($purchaseItem->discount ?? 0);
                         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
-
                         return $amount - $discount + $shippingFee;
                     });
-
                 $request->audit_total -= (float) ($request->discount ?? 0);
                 $request->audit_total = max(0, $request->audit_total);
-                
                 return $request;
             }
         );

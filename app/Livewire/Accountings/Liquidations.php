@@ -1,17 +1,14 @@
 <?php
-
 namespace App\Livewire\Accountings;
-
+use App\Models\User;
 use App\Models\PurchaseItem;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithoutUrlPagination;
-
 class Liquidations extends Component
 {
     use WithPagination, WithoutUrlPagination;
-
     public string $search = '';
     public string $fromDate = '';
     public string $toDate = '';
@@ -21,7 +18,6 @@ class Liquidations extends Component
             ->subMonths(2)
             ->startOfMonth()
             ->format('Y-m-d');
-
         $this->toDate = now()->format('Y-m-d');
     }
     public function updatedSearch(): void
@@ -93,7 +89,6 @@ class Liquidations extends Component
                     if ($this->fromDate) {
                         $q->whereDate('created_at', '>=', $this->fromDate);
                     }
-
                     if ($this->toDate) {
                         $q->whereDate('created_at', '<=', $this->toDate);
                     }
@@ -117,13 +112,20 @@ class Liquidations extends Component
             // released + returned - purchased != 0
             ->havingRaw('
                 COALESCE(released_amount, 0)
-                + COALESCE(returned_amount, 0)
+                - COALESCE(returned_amount, 0)
                 - COALESCE(purchased_amount, 0) != 0
             ')
             ->latest('id')
-            ->paginate(20);
+            ->paginate(20,['*'], 'itemsPage');
+        $procurementUsers = User::query()
+            ->whereHas('departments', function ($query) {
+                $query->where('code', 'procurement');
+            })
+            ->orderBy('name')
+            ->paginate(20, ['*'], 'usersPage');
         return view('livewire.accountings.liquidations', [
             'items' => $items,
+            'procurementUsers' => $procurementUsers,
         ]);
     }
 }

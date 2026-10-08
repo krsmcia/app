@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Procurements;
-
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
@@ -9,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-
 class ReviewPrices extends Component
 {
     use WithPagination;
@@ -49,7 +46,6 @@ class ReviewPrices extends Component
         });
         $this->dispatch('approval-updated');
     }
-
     public function openDenyModal(int $workflowItemId): void
     {
         $this->denyWorkflowItemId = $workflowItemId;
@@ -57,8 +53,6 @@ class ReviewPrices extends Component
         $this->resetValidation();
         $this->denyModal = true;
     }
-
-
     /**
      * ---------------------------------------------------------
      * Deny single item
@@ -105,8 +99,6 @@ class ReviewPrices extends Component
         $this->denyComment = '';
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Approve all pending items
@@ -130,19 +122,16 @@ class ReviewPrices extends Component
                 return;
             }
             foreach ($pendingItems as $workflowItem) {
-
                 $workflowItem->update([
                     'status' => 'approved',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'approved',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
             }
-
             /*
              * review-prices workflow 완료
              */
@@ -150,7 +139,6 @@ class ReviewPrices extends Component
                 'status' => 'completed',
                 'acted_at' => now(),
             ]);
-
             /*
              * 다음 단계 생성
              *
@@ -158,11 +146,8 @@ class ReviewPrices extends Component
              */
             $this->createNextWorkflow($workflow);
         });
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Deny all pending items
@@ -179,30 +164,23 @@ class ReviewPrices extends Component
             ->where('step', 'review-prices')
             ->where('status', 'pending')
             ->firstOrFail();
-
         DB::transaction(function () use ($workflow) {
-
             $pendingItems = $workflow->purchaseWorkflowItems
                 ->filter(fn ($item) => $item->status === 'pending');
-
             if ($pendingItems->isEmpty()) {
                 return;
             }
-
             foreach ($pendingItems as $workflowItem) {
-
                 $workflowItem->update([
                     'status' => 'denied',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'denied',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
             }
-
             /*
              * 모든 item이 거절되었으므로
              * 다음 단계 workflow는 생성하지 않는다.
@@ -212,11 +190,8 @@ class ReviewPrices extends Component
                 'acted_at' => now(),
             ]);
         });
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Complete review-prices workflow when no pending items remain
@@ -225,24 +200,18 @@ class ReviewPrices extends Component
     private function completeReviewPricesWorkflowIfFinished(
         PurchaseWorkflow $workflow
     ): void {
-
         $hasPendingItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'pending')
             ->exists();
-
         if ($hasPendingItems) {
             return;
         }
-
         $workflow->update([
             'status' => 'completed',
             'acted_at' => now(),
         ]);
-
         $this->createNextWorkflow($workflow);
     }
-
-
     /**
      * ---------------------------------------------------------
      * Create next workflow
@@ -251,23 +220,19 @@ class ReviewPrices extends Component
     private function createNextWorkflow(
         PurchaseWorkflow $workflow
     ): void {
-
         $purchaseRequest = $workflow->purchaseRequest;
-
         /*
          * review-prices에서 승인된 item만 다음 단계로 전달
          */
         $approvedItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'approved')
             ->get();
-
         /*
          * 승인된 item이 없으면 다음 단계 생성하지 않음
          */
         if ($approvedItems->isEmpty()) {
             return;
         }
-
         /*
          * 다음 단계
          *
@@ -278,9 +243,7 @@ class ReviewPrices extends Component
             'step' => 'audit',
             'status' => 'pending',
         ]);
-
         foreach ($approvedItems as $workflowItem) {
-
             $nextWorkflow->purchaseWorkflowItems()->create([
                 'purchase_item_id' => $workflowItem->purchase_item_id,
                 'status' => 'pending',
@@ -319,37 +282,29 @@ class ReviewPrices extends Component
             })
             ->latest()
             ->paginate(12);
-
         $requests->getCollection()->transform(
             function ($request) {
-
                 $workflow = $request->purchaseWorkflows->first();
-
                 $request->review_prices_workflow = $workflow;
-
                 if (!$workflow) {
                     $request->review_prices_total = 0;
-
                     return $request;
                 }
                 $request->items = $workflow->purchaseWorkflowItems;
                 $request->review_prices_total = $workflow->purchaseWorkflowItems
                     ->sum(function ($workflowItem) {
-
                         $purchaseItem = $workflowItem->purchaseItem;
                         $quantity = (int) ($purchaseItem->quantity ?? 0);
                         $unitPrice = (float) ($purchaseItem->unit_price ?? 0);
                         $amount = (float) ($quantity * $unitPrice);
                         $discount = (float) ($purchaseItem->discount ?? 0);
                         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
-
                         return $amount - $discount + $shippingFee;
                     });
                 $request->review_prices_total = max(0, $request->review_prices_total);
                 return $request;
             }
         );
-
         return view('livewire.procurements.review-prices', [
             'requests' => $requests,
         ]);

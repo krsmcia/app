@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Procurements;
-
 use App\Models\Item;
 use App\Models\Vendor;
 use App\Models\ItemVendor;
@@ -12,9 +10,7 @@ use App\Models\DisbursementType;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
-
 use Livewire\Component;
-
 class Requests extends Component
 {
     use WithPagination;
@@ -155,17 +151,14 @@ class Requests extends Component
                 ]);
         }
         $this->reloadVendorItem();
-
         $preferredVendor = ItemVendor::query()
             ->where('item_id', $this->selectedItemId)
             ->where('is_preferred', true)
             ->first();
-
         session()->flash(
             'success',
             'Vendor information updated successfully.'
         );
-
         $this->dispatch('vendor-updated',
             itemId: $this->selectedItemId,
             unitPrice: $preferredVendor?->unit_price !== null
@@ -605,22 +598,18 @@ class Requests extends Component
                 );
                 return max(0, $amount + $shippingFee - $discount);
             });
-
             $requestDiscount = (float) (
                 $this->requestDiscounts[$request->id] ?? 0
             );
-
             $workflow->procurement_total = max(
                 0,
                 $itemsTotal - $requestDiscount
             );
         });
-
         $disbursementTypes = DisbursementType::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
-
         return view('livewire.procurements.requests', [
             'requests' => $requests,
             'disbursementTypes' => $disbursementTypes,

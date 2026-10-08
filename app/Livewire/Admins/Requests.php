@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Admins;
-
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
@@ -9,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-
 class Requests extends Component
 {
     use WithPagination;
@@ -44,7 +41,6 @@ class Requests extends Component
         });
         $this->dispatch('approval-updated');
     }
-
     public function openDenyModal(int $workflowItemId): void
     {
         $this->denyWorkflowItemId = $workflowItemId;
@@ -52,8 +48,6 @@ class Requests extends Component
         $this->resetValidation();
         $this->denyModal = true;
     }
-
-
     /**
      * ---------------------------------------------------------
      * Deny single item
@@ -100,8 +94,6 @@ class Requests extends Component
         $this->denyComment = '';
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Approve all pending items
@@ -125,19 +117,16 @@ class Requests extends Component
                 return;
             }
             foreach ($pendingItems as $workflowItem) {
-
                 $workflowItem->update([
                     'status' => 'approved',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'approved',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
             }
-
             /*
              * Head workflow 완료
              */
@@ -145,7 +134,6 @@ class Requests extends Component
                 'status' => 'completed',
                 'acted_at' => now(),
             ]);
-
             /*
              * 다음 단계 생성
              *
@@ -153,11 +141,8 @@ class Requests extends Component
              */
             $this->createNextWorkflow($workflow);
         });
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Deny all pending items
@@ -174,30 +159,23 @@ class Requests extends Component
             ->where('step', 'head')
             ->where('status', 'pending')
             ->firstOrFail();
-
         DB::transaction(function () use ($workflow) {
-
             $pendingItems = $workflow->purchaseWorkflowItems
                 ->filter(fn ($item) => $item->status === 'pending');
-
             if ($pendingItems->isEmpty()) {
                 return;
             }
-
             foreach ($pendingItems as $workflowItem) {
-
                 $workflowItem->update([
                     'status' => 'denied',
                     'acted_at' => now(),
                 ]);
-
                 $workflowItem->purchaseActions()->create([
                     'action' => 'denied',
                     'acted_by' => Auth::id(),
                     'acted_at' => now(),
                 ]);
             }
-
             /*
              * 모든 item이 거절되었으므로
              * 다음 단계 workflow는 생성하지 않는다.
@@ -207,11 +185,8 @@ class Requests extends Component
                 'acted_at' => now(),
             ]);
         });
-
         $this->dispatch('approval-updated');
     }
-
-
     /**
      * ---------------------------------------------------------
      * Complete head workflow when no pending items remain
@@ -220,24 +195,18 @@ class Requests extends Component
     private function completeHeadWorkflowIfFinished(
         PurchaseWorkflow $workflow
     ): void {
-
         $hasPendingItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'pending')
             ->exists();
-
         if ($hasPendingItems) {
             return;
         }
-
         $workflow->update([
             'status' => 'completed',
             'acted_at' => now(),
         ]);
-
         $this->createNextWorkflow($workflow);
     }
-
-
     /**
      * ---------------------------------------------------------
      * Create next workflow
@@ -246,23 +215,19 @@ class Requests extends Component
     private function createNextWorkflow(
         PurchaseWorkflow $workflow
     ): void {
-
         $purchaseRequest = $workflow->purchaseRequest;
-
         /*
          * Head에서 승인된 item만 다음 단계로 전달
          */
         $approvedItems = $workflow->purchaseWorkflowItems()
             ->where('status', 'approved')
             ->get();
-
         /*
          * 승인된 item이 없으면 다음 단계 생성하지 않음
          */
         if ($approvedItems->isEmpty()) {
             return;
         }
-
         /*
          * 다음 단계
          *
@@ -286,7 +251,6 @@ class Requests extends Component
             ->with([
                 'user',
                 'department',
-
                 'purchaseWorkflows' => function ($query) {
                     $query
                         ->where('step', 'head')
@@ -313,25 +277,18 @@ class Requests extends Component
             })
             ->latest()
             ->paginate(12);
-
         $requests->getCollection()->transform(
             function ($request) {
-
                 $workflow = $request->purchaseWorkflows->first();
-
                 $request->head_workflow = $workflow;
-
                 if (!$workflow) {
                     $request->head_total = 0;
-
                     return $request;
                 }
-
                 /*
                  * Head 화면에는 pending item만 존재
                  */
                 $request->items = $workflow->purchaseWorkflowItems;
-
                 /*
                  * 중요:
                  *
@@ -342,12 +299,9 @@ class Requests extends Component
                  */
                 $request->head_total = $workflow->purchaseWorkflowItems
                     ->sum(function ($workflowItem) {
-
                         $purchaseItem = $workflowItem->purchaseItem;
-
                         return (float) ($purchaseItem->amount ?? 0);
                     });
-
                 return $request;
             }
         );

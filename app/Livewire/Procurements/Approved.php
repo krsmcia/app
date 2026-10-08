@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Procurements;
-
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
@@ -15,12 +13,10 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use App\Services\PurchaseWorkflowService;
 use Livewire\Attributes\On;
-
 class Approved extends Component
 {
     use WithPagination, WithoutUrlPagination, WithFileUploads;
     public string $search = '';
-    
     public ?int $selectedWorkflowItemId = null;
     public $originalAmount;
     public $amount = null;
@@ -75,11 +71,8 @@ class Approved extends Component
         $this->recipientPhoto = null;
         $this->amount = null;
         $this->comment = '';
-
         $this->resetValidation();
-
         $this->showAttachReceiptModal = true;
-
         $this->dispatch('reset-recipient-photo');
     }
     public function releaseCash(): void
@@ -170,7 +163,6 @@ class Approved extends Component
     {
         $whole = floor($amount);
         $decimal = $amount - $whole;
-
         return $decimal >= 0.45
             ? (int) $whole + 1
             : (int) $whole;
@@ -184,30 +176,23 @@ class Approved extends Component
         $amount = (float) ($unit_price * $quantity);
         $discount = (float) ($purchaseItem->discount ?? 0);
         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
-
         $amount;
-
         $calculatedTotal = max(
             0,
             $amount + $shippingFee - $discount
         );
-
         $disbursementType = $purchaseItem->itemVendor?->disbursementType;
-
         $isCash = strtolower(
             trim($disbursementType?->name ?? '')
         ) === 'cash';
-
         $releaseTotal = $isCash
             ? $this->roundCashAmount($calculatedTotal)
             : $calculatedTotal;
-
         /*
         |--------------------------------------------------------------------------
         | Latest Money Transaction
         |--------------------------------------------------------------------------
         */
-
         $latestMoneyTransaction = $purchaseItem->latestMoneyTransaction;
         $moneyHolder = match ($latestMoneyTransaction?->transaction?->type) {
             'released',
@@ -215,96 +200,68 @@ class Approved extends Component
             'returned' => null,
             default => null,
         };
-
         /*
         |--------------------------------------------------------------------------
         | View Data
         |--------------------------------------------------------------------------
         */
-
         $workflowItem->purchase_item = $purchaseItem;
-
         $workflowItem->item = $purchaseItem->item;
-
         $workflowItem->item_vendor = $purchaseItem->itemVendor;
-
         $workflowItem->vendor = $purchaseItem->itemVendor?->vendor;
-
         $workflowItem->disbursement_type = $disbursementType;
-
         $workflowItem->payment_details =
             $purchaseItem->payment_details;
-
         $workflowItem->original_total = $amount;
-
         $workflowItem->calculated_total = $calculatedTotal;
-
         $workflowItem->release_total = $releaseTotal;
-
         $workflowItem->is_cash = $isCash;
-
         $workflowItem->money_holder = $moneyHolder;
-
         $workflowItem->latest_money_transaction = $latestMoneyTransaction;
-
         $workflowItem->is_money_holder = $moneyHolder?->id === auth()->id();
-
         /*
         |--------------------------------------------------------------------------
         | Display State
         |--------------------------------------------------------------------------
         */
-
         $workflowItem->status_label = match ($workflowItem->status) {
             'pending' => 'Pending',
             'ordered' => 'Ordered',
             'purchased' => 'Purchased',
             default => ucfirst($workflowItem->status),
         };
-
         $workflowItem->status_class = match ($workflowItem->status) {
             'pending'
                 => 'bg-amber-100 text-amber-700',
-
             'ordered'
                 => 'bg-blue-100 text-blue-700',
-
             'purchased'
                 => 'bg-emerald-100 text-emerald-700',
-
             default
                 => 'bg-gray-100 text-gray-700',
         };
-
         return $workflowItem;
     }
     private function prepareRequest(PurchaseRequest $request): PurchaseRequest
     {
         $workflow = $request->purchaseWorkflows->first();
-
         $request->audit_workflow = $workflow;
-
         if (!$workflow) {
             $request->items = collect();
             $request->audit_total = 0;
             $request->all_cash = false;
-
             return $request;
         }
-
         $request->items = $workflow->purchaseWorkflowItems->map(
             fn (PurchaseWorkflowItem $workflowItem) =>
                 $this->prepareWorkflowItem($workflowItem)
         );
-
         $request->audit_total = max(
             0,
             $request->items->sum('release_total')
         );
-
         $request->all_cash = $request->items->isNotEmpty()
             && $request->items->every->is_cash;
-
         return $request;
     }
     #[On('cash-received')]
@@ -317,7 +274,6 @@ class Approved extends Component
             ->with([
                 'user',
                 'department',
-
                 'purchaseWorkflows' => function ($query) {
                     $query
                         ->where('step', 'fund released')
@@ -336,7 +292,6 @@ class Approved extends Component
                             },
                         ]);
                 },
-
                 'purchaseRequestTransactions.transaction.fromUser',
                 'purchaseRequestTransactions.transaction.toUser',
             ])
@@ -350,11 +305,9 @@ class Approved extends Component
             })
             ->latest()
             ->paginate(12);
-
         $requests->getCollection()->transform(
             fn (PurchaseRequest $request) => $this->prepareRequest($request)
         );
-
         return view('livewire.procurements.approved', [
             'requests' => $requests,
         ]);

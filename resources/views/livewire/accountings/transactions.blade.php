@@ -183,14 +183,27 @@
                             {{-- Type --}}
                             <td class="whitespace-nowrap px-4 py-3">
                                 @php
-                                    $typeClass = match ($transaction->transaction_type) {
-                                        'Purchasing' => 'bg-green-50 text-green-700',
-                                        'Release' => 'bg-blue-50 text-blue-700',
+                                    $typeClass = match ($transaction->type) {
+                                        'purchased' => 'bg-green-50 text-green-700',
+                                        'released' => 'bg-blue-50 text-blue-700',
+                                        'returned' => 'bg-red-50 text-red-700',
+                                        'transfer' => 'bg-purple-50 text-purple-700',
+                                        'spent' => 'bg-orange-50 text-orange-700',
+                                        'adjustment' => 'bg-gray-50 text-gray-700',
                                         default => 'bg-gray-50 text-gray-700',
+                                    };
+                                    $typeLabel = match ($transaction->type) {
+                                        'purchased' => 'Purchased',
+                                        'released' => 'Release',
+                                        'returned' => 'Refund',
+                                        'transfer' => 'Transfer',
+                                        'spent' => 'Spent',
+                                        'adjustment' => 'Adjustment',
+                                        default => ucfirst($transaction->type),
                                     };
                                 @endphp
                                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $typeClass }}">
-                                    {{ $transaction->transaction_type }}
+                                    {{ $typeLabel }}
                                 </span>
                             </td>
                             {{-- Amount --}}

@@ -1,9 +1,6 @@
 <?php
-
 use Laravel\Fortify\Features;
-
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Fortify Guard
@@ -14,9 +11,7 @@ return [
     | guards that is already present in your "auth" configuration file.
     |
     */
-
     'guard' => 'web',
-
     /*
     |--------------------------------------------------------------------------
     | Fortify Password Broker
@@ -27,9 +22,7 @@ return [
     | of your password brokers setup in your "auth" configuration file.
     |
     */
-
     'passwords' => 'users',
-
     /*
     |--------------------------------------------------------------------------
     | Username / Email
@@ -44,11 +37,8 @@ return [
     | another name for the field you may define it below as needed.
     |
     */
-
     'username' => 'email',
-
     'email' => 'email',
-
     /*
     |--------------------------------------------------------------------------
     | Lowercase Usernames
@@ -59,9 +49,7 @@ return [
     | sensitive. You may disable this for your application if necessary.
     |
     */
-
     'lowercase_usernames' => true,
-
     /*
     |--------------------------------------------------------------------------
     | Home Path
@@ -72,9 +60,7 @@ return [
     | and the user is authenticated. You are free to change this value.
     |
     */
-
     'home' => '/dashboard',
-
     /*
     |--------------------------------------------------------------------------
     | Fortify Routes Prefix / Subdomain
@@ -85,11 +71,8 @@ return [
     | subdomain under which all of the Fortify routes will be available.
     |
     */
-
     'prefix' => '',
-
     'domain' => null,
-
     /*
     |--------------------------------------------------------------------------
     | Fortify Routes Middleware
@@ -100,9 +83,7 @@ return [
     | these middleware but typically this provided default is preferred.
     |
     */
-
     'middleware' => ['web'],
-
     /*
     |--------------------------------------------------------------------------
     | Rate Limiting
@@ -113,13 +94,11 @@ return [
     | specify a custom rate limiter to call then you may specify it here.
     |
     */
-
     'limiters' => [
         'login' => 'login',
         'two-factor' => 'two-factor',
         'passkeys' => 'passkeys',
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Register View Routes
@@ -130,9 +109,7 @@ return [
     | especially true if you're writing a custom single-page application.
     |
     */
-
     'views' => true,
-
     /*
     |--------------------------------------------------------------------------
     | Passkeys
@@ -143,13 +120,11 @@ return [
     | they use public-key cryptography - making them immune to breaches.
     |
     */
-
     'passkeys' => [
         'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
         'allowed_origins' => [config('app.url')],
         'timeout' => 60000,
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Features
@@ -160,7 +135,6 @@ return [
     | these features or you can even remove all of these if you need to.
     |
     */
-
     'features' => [
         //Features::registration(),
         Features::resetPasswords(),
@@ -176,5 +150,4 @@ return [
             'confirmPassword' => true,
         ]),
     ],
-
 ];

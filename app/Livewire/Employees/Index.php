@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Employees;
-
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -9,17 +7,12 @@ use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
-
 class Index extends Component
 {
     use WithPagination;
-
     public string $search = '';
-
     public bool $showCreateModal = false;
-
     public array $employees = [];
-
     public bool $showEditModal = false;
     public ?int $editingUserId = null;
     public string $editName = '';
@@ -27,17 +20,14 @@ class Index extends Component
     public string $editPassword = '';
     public string $editRole = 'staff';
     public array $editDepartmentIds = [];
-
     public function mount()
     {
         $this->addEmployeeRow();
     }
-
     public function updatingSearch()
     {
         $this->resetPage();
     }
-
     public function addEmployeeRow()
     {
         $this->employees[] = [
@@ -48,59 +38,48 @@ class Index extends Component
             'department_ids' => [],
         ];
     }
-
     public function removeEmployeeRow(int $index)
     {
         unset($this->employees[$index]);
-
         $this->employees = array_values($this->employees);
-
         if (empty($this->employees)) {
             $this->addEmployeeRow();
         }
     }
-
     public function createEmployees()
     {
         $this->validate([
             'employees' => ['required', 'array', 'min:1'],
-
             'employees.*.name' => [
                 'required',
                 'string',
                 'max:255',
             ],
-
             'employees.*.email' => [
                 'required',
                 'email',
                 'max:255',
                 'distinct',
             ],
-
             'employees.*.password' => [
                 'required',
                 'string',
                 'min:8',
             ],
-
             'employees.*.role' => [
                 'required',
                 'exists:roles,name',
             ],
-
             'employees.*.department_ids' => [
                 'required',
                 'array',
                 'min:1',
             ],
-
             'employees.*.department_ids.*' => [
                 'integer',
                 'exists:departments,id',
             ],
         ]);
-
         DB::transaction(function () {
             foreach ($this->employees as $employee) {
                 $departmentIds = collect($employee['department_ids'])
@@ -136,47 +115,36 @@ class Index extends Component
                 $user->departments()->sync($departmentIds);
             }
         });
-
         $this->resetEmployees();
-
         $this->showCreateModal = false;
-
         session()->flash(
             'success',
             'Employees created successfully.'
         );
     }
-
     protected function resetEmployees()
     {
         $this->employees = [];
-
         $this->addEmployeeRow();
     }
-
     public function editEmployee(int $userId)
     {
         $user = User::with(['roles', 'departments'])
             ->findOrFail($userId);
-
         if ($user->hasAnyRole(['super-admin', 'admin'])) {
             abort(403);
         }
-
         $this->editingUserId = $user->id;
         $this->editName = $user->name;
         $this->editEmail = $user->email;
         $this->editPassword = '';
         $this->editRole = $user->roles->first()?->name ?? 'staff';
-
         $this->editDepartmentIds = $user->departments
             ->pluck('id')
             ->map(fn ($id) => (string) $id)
             ->toArray();
-
         $this->showEditModal = true;
     }
-
     public function updateEmployee()
     {
         $user = User::findOrFail($this->editingUserId);
@@ -226,7 +194,6 @@ class Index extends Component
             ->map(fn ($id) => (int) $id)
             ->values()
             ->all();
-
         $user->current_department_id = $departmentIds[0] ?? null;
         $user->save();
         $user->syncRoles([
@@ -252,13 +219,10 @@ class Index extends Component
     public function deleteEmployee(int $userId)
     {
         $user = User::findOrFail($userId);
-
         if ($user->hasAnyRole(['super-admin', 'admin'])) {
             abort(403);
         }
-
         $user->delete();
-
         session()->flash(
             'success',
             'Employee deleted successfully.'

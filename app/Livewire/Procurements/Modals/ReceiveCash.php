@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Procurements\Modals;
-
 use App\Models\PurchaseWorkflowItem;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
@@ -9,34 +7,26 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use App\Services\PurchaseAmountService;
 use Livewire\Component;
-
 class ReceiveCash extends Component
 {
     public bool $show = false;
-
     public ?PurchaseWorkflowItem $workflowItem = null;
-
     public string $remark = '';
-
     #[On('receive-cash')]
     public function receiveCash(int $workflowItemId): void
     {
         $this->reset([
             'remark',
         ]);
-
         $this->resetValidation();
-
         $this->workflowItem = PurchaseWorkflowItem::query()
             ->with([
                 'purchaseItem.purchaseItemTransactions.transaction.fromUser',
                 'purchaseItem.purchaseRequest',
             ])
             ->findOrFail($workflowItemId);
-
         $this->show = true;
     }
-
     public function close(): void
     {
         $this->reset([
@@ -44,10 +34,8 @@ class ReceiveCash extends Component
             'workflowItem',
             'remark',
         ]);
-
         $this->resetValidation();
     }
-
     public function receive(): void
     {
         $this->validate([
@@ -107,7 +95,6 @@ class ReceiveCash extends Component
                 'remark' => $this->remark,
                 'created_by' => Auth::id(),
             ]);
-
             /*
              * Purchase Item과 transaction 연결
              */
@@ -116,12 +103,9 @@ class ReceiveCash extends Component
                 'amount' => $transaction->amount,
             ]);
         });
-
         $this->close();
-
         $this->dispatch('cash-received');
     }
-
     public function render()
     {
         return view('livewire.procurements.modals.receive-cash');

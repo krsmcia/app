@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Warehouses\Modals;
-
 use App\Models\Stock;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
@@ -9,25 +7,18 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
-
 class StockMovements extends Component
 {
     use WithPagination, WithoutUrlPagination; 
-
     public bool $showModal = false;
-
     public ?int $stockId = null;
-
     public ?Stock $stock = null;
-
     public string $type = 'in';
     public string $quantity = '';
     public string $remark = '';
-
     public string $movementUserSearch = '';
     public ?int $movementUserId = null;
     public array $movementUserResults = [];
-
     public function mount(): void
     {
         $this->resetForm();
@@ -65,15 +56,11 @@ class StockMovements extends Component
     public function updatedMovementUserSearch(): void
     {
         $search = trim($this->movementUserSearch);
-
         $this->movementUserId = null;
-
         if ($search === '' || strlen($search) < 2) {
             $this->movementUserResults = [];
-
             return;
         }
-
         $this->movementUserResults = \App\Models\User::query()
             ->select(['id', 'name', 'email'])
             ->where(function ($query) use ($search) {
@@ -91,15 +78,11 @@ class StockMovements extends Component
         $user = \App\Models\User::query()
             ->select(['id', 'name', 'email'])
             ->find($userId);
-
         if (!$user) {
             return;
         }
-
         $this->movementUserId = $user->id;
-
         $this->movementUserSearch = $user->name;
-
         $this->movementUserResults = [];
     }
     public function saveMovement(): void
@@ -126,13 +109,11 @@ class StockMovements extends Component
                 'exists:users,id',
             ],
         ]);
-
         if (in_array($this->type, ['out', 'return']) && !$this->movementUserId) {
             $this->addError(
                 'movementUserId',
                 'Please select a user.'
             );
-
             return;
         }
         try {
@@ -141,25 +122,20 @@ class StockMovements extends Component
                     ->whereKey($this->stockId)
                     ->lockForUpdate()
                     ->firstOrFail();
-
                 $quantity = (float) $this->quantity;
-
                 $newBalance = match ($this->type) {
                     'in', 'return' => $stock->quantity + $quantity,
                     'out' => $stock->quantity - $quantity,
                     'adjustment' => $quantity,
                 };
-
                 if ($newBalance < 0) {
                     throw new \RuntimeException(
                         'Insufficient stock quantity.'
                     );
                 }
-
                 $stock->update([
                     'quantity' => $newBalance,
                 ]);
-
                 StockMovement::create([
                     'item_id' => $stock->item_id,
                     'warehouse_id' => $stock->warehouse_id,
@@ -172,7 +148,6 @@ class StockMovements extends Component
                         : auth()->id(),
                     'remark' => $this->remark ?: null,
                 ]);
-
                 $this->stock = $stock->fresh([
                     'item',
                     'warehouse',
@@ -180,12 +155,10 @@ class StockMovements extends Component
             });
         } catch (\RuntimeException $e) {
             $this->addError('quantity', $e->getMessage());
-
             $this->dispatch(
                 'stock-movement-error',
                 message: $e->getMessage()
             );
-
             return;
         }
         $this->dispatch('stock-updated');
@@ -197,16 +170,13 @@ class StockMovements extends Component
             'Stock movement recorded successfully.'
         );
     }
-
     private function resetForm(): void
     {
         $this->type = 'in';
         $this->quantity = '';
         $this->remark = '';
-
         $this->resetValidation();
     }
-
     public function render()
     {
         $movements = StockMovement::query()
@@ -219,7 +189,6 @@ class StockMovements extends Component
             )
             ->latest()
             ->paginate(10);
-
         return view(
             'livewire.warehouses.modals.stock-movements',
             [

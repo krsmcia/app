@@ -89,9 +89,6 @@ Route::middleware([
         Route::get('/requests', Livewire\Accountings\Requests::class)->name('requests');
         Route::get('/transactions', Livewire\Accountings\Transactions::class)->name('transactions');
         Route::get('/liquidations', Livewire\Accountings\Liquidations::class)->name('liquidations');
+        Route::get('/liquidations/{user}', Livewire\Accountings\UserLiquidations::class)->name('user-liquidations');
     });
-    
-    
-    
-    
 });

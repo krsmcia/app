@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Procurements;
-
 use App\Models\PurchaseAction;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
@@ -11,18 +9,15 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Livewire\WithoutUrlPagination;
-
 class Ordered extends Component
 {
     use WithPagination, WithoutUrlPagination, WithFileUploads;
-
     public $selectedPurchaseActionId;
     public $itemPhotoModal = false;
     public $originalAmount = 0;
     public $amount = null;
     public string $comment = '';
     public $itemPhoto;
-
     public function openReceiveModal($purchaseActionId)
     {
         $purchaseAction = PurchaseAction::query()
@@ -32,48 +27,34 @@ class Ordered extends Component
                 'purchaseWorkflowItem.purchaseItem',
             ])
             ->firstOrFail();
-
         $purchaseItem = $purchaseAction
             ->purchaseWorkflowItem
             ?->purchaseItem;
-
         abort_unless($purchaseItem, 404);
-
         $this->selectedPurchaseActionId = $purchaseAction->id;
-
         $this->itemPhoto = null;
-
         $this->originalAmount = $this->calculateItemTotal(
             $purchaseItem
         );
-
         $this->amount = '';
-
         $this->comment = '';
-
         $this->resetValidation();
-
         $this->itemPhotoModal = true;
     }
-
     private function calculateItemTotal($purchaseItem): float
     {
         $amount =
             (float) $purchaseItem->quantity
             * (float) $purchaseItem->unit_price;
-
         $shippingFee =
             (float) ($purchaseItem->shipping_fee ?? 0);
-
         $discount =
             (float) ($purchaseItem->discount ?? 0);
-
         return max(
             0,
             $amount + $shippingFee - $discount
         );
     }
-
     public function saveItemPhoto()
     {
         /*
@@ -89,7 +70,6 @@ class Ordered extends Component
                 (string) $this->amount
             );
         }
-
         $this->validate([
             'itemPhoto' => [
                 'required',
@@ -107,7 +87,6 @@ class Ordered extends Component
                 'max:500',
             ],
         ]);
-
         $purchaseAction = PurchaseAction::query()
             ->where('id', $this->selectedPurchaseActionId)
             ->where('action', 'ordered')
@@ -115,13 +94,9 @@ class Ordered extends Component
                 'purchaseWorkflowItem.purchaseItem.itemVendor',
             ])
             ->firstOrFail();
-
         $workflowItem = $purchaseAction->purchaseWorkflowItem;
-
         $purchaseItem = $workflowItem?->purchaseItem;
-
         abort_unless($workflowItem && $purchaseItem, 404);
-
         DB::transaction(function () use (
             $purchaseAction,
             $workflowItem,
@@ -134,7 +109,6 @@ class Ordered extends Component
                 'procurements/received-item/' . now()->format('Y/m/d'),
                 $this->itemPhoto
             );
-
             /*
              * Change workflow item:
              *
@@ -146,7 +120,6 @@ class Ordered extends Component
                 'status' => 'purchased',
                 'acted_at' => now(),
             ]);
-
             /*
              * Create purchased action.
              */
@@ -158,7 +131,6 @@ class Ordered extends Component
                     'acted_at' => now(),
                     'comment' => $this->comment,
                 ]);
-
             /*
              * Create transaction.
              */
@@ -170,7 +142,6 @@ class Ordered extends Component
                 'remark' => $this->comment,
                 'created_by' => Auth::id(),
             ]);
-
             /*
              * Connect transaction to purchase item.
              */
@@ -180,7 +151,6 @@ class Ordered extends Component
                     'purchase_item_id' => $workflowItem->purchase_item_id,
                     'amount' => (float) $this->amount,
                 ]);
-
             /*
              * Save received item photo
              * against the PURCHASED action.
@@ -191,7 +161,6 @@ class Ordered extends Component
                     'item_photo_path' => $path,
                 ]);
         });
-
         $this->reset([
             'selectedPurchaseActionId',
             'itemPhotoModal',
@@ -200,60 +169,50 @@ class Ordered extends Component
             'amount',
             'comment',
         ]);
-
         $this->dispatch('reset-item-photo');
     }
-
     private function preparePurchaseActions($purchaseActions)
     {
         return $purchaseActions->through(function ($purchaseAction) {
             $purchaseItem = $purchaseAction
                 ->purchaseWorkflowItem
                 ?->purchaseItem;
-
             /*
              * Item
              */
             $purchaseAction->item =
                 $purchaseItem?->item;
-
             /*
              * Purchase request
              */
             $purchaseAction->request =
                 $purchaseItem?->purchaseRequest;
-
             /*
              * Quantity
              */
             $purchaseAction->quantity =
                 (float) ($purchaseItem?->quantity ?? 0);
-
             /*
              * Unit price
              */
             $purchaseAction->unitPrice =
                 (float) ($purchaseItem?->unit_price ?? 0);
-
             /*
              * Item amount
              */
             $purchaseAction->amount =
                 $purchaseAction->quantity
                 * $purchaseAction->unitPrice;
-
             /*
              * Shipping
              */
             $purchaseAction->shippingFee =
                 (float) ($purchaseItem?->shipping_fee ?? 0);
-
             /*
              * Discount
              */
             $purchaseAction->discount =
                 (float) ($purchaseItem?->discount ?? 0);
-
             /*
              * Final item total
              */
@@ -263,17 +222,14 @@ class Ordered extends Component
                     + $purchaseAction->shippingFee
                     - $purchaseAction->discount
             );
-
             /*
              * Vendor
              */
             $purchaseAction->vendorName =
                 $purchaseItem?->itemVendor?->vendor?->name;
-
             return $purchaseAction;
         });
     }
-
     public function render()
     {
         $purchaseActions = auth()->user()
@@ -290,11 +246,9 @@ class Ordered extends Component
             ])
             ->latest()
             ->paginate(10);
-
         $purchaseActions = $this->preparePurchaseActions(
             $purchaseActions
         );
-
         return view('livewire.procurements.ordered', [
             'purchase_actions' => $purchaseActions,
         ]);

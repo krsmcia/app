@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
-
 class Category extends Model
 {
     protected $fillable = [
@@ -14,7 +11,6 @@ class Category extends Model
         'is_active',
         'sort_order',
     ];
-
     protected function casts(): array
     {
         return [
@@ -22,7 +18,6 @@ class Category extends Model
             'sort_order' => 'integer',
         ];
     }
-
     public function parent()
     {
         return $this->belongsTo(
@@ -30,7 +25,6 @@ class Category extends Model
             'parent_id'
         );
     }
-
     public function children()
     {
         return $this->hasMany(
@@ -38,13 +32,11 @@ class Category extends Model
             'parent_id'
         );
     }
-
     public function childrenRecursive()
     {
         return $this->children()
             ->with('childrenRecursive');
     }
-
     public function descendants()
     {
         return $this->childrenRecursive();
@@ -60,12 +52,10 @@ class Category extends Model
     {
         $categories = [];
         $category = $this;
-
         while ($category) {
             array_unshift($categories, $category);
             $category = $category->parent;
         }
-
         return $categories;
     }
 }

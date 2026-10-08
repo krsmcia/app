@@ -68,8 +68,7 @@
                             $released = (float) ($item->released_amount ?? 0);
                             $purchased = (float) ($item->purchased_amount ?? 0);
                             $returned = (float) ($item->returned_amount ?? 0);
-
-                            $remaining = $released + $returned - $purchased;
+                            $remaining = $released - $returned - $purchased;
                         @endphp
                         <tr>
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
@@ -111,6 +110,53 @@
         @if ($items->hasPages())
             <div class="border-t border-gray-200 px-4 py-3">
                 {{ $items->links() }}
+            </div>
+        @endif
+    </div>
+    {{-- Procurement Team --}}
+    <div class="mt-8 overflow-hidden rounded-lg bg-white shadow">
+        <div class="border-b border-gray-200 px-4 py-4">
+            <h2 class="text-base font-semibold text-gray-900">
+                Procurement Team
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">
+                Select a procurement staff member to view and process their liquidations.
+            </p>
+        </div>
+        <div class="divide-y divide-gray-200">
+            @forelse ($procurementUsers as $user)
+                <a
+                    href="{{ route('accountings.user-liquidations', ['user' => $user->id]) }}"
+                    class="flex items-center justify-between px-4 py-4 hover:bg-gray-50"
+                >
+                    <div class="flex min-w-0 items-center gap-3">
+                        <img
+                            src="{{ $user->profile_photo_url }}"
+                            alt="{{ $user->name }}"
+                            class="size-8 shrink-0 rounded-full object-cover"
+                        >
+                        <div class="min-w-0">
+                            <div class="truncate text-sm font-medium text-gray-900">
+                                {{ $user->name }}
+                            </div>
+                            <div class="truncate text-xs text-gray-500">
+                                {{ $user->email }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-sm text-gray-400">
+                        View →
+                    </div>
+                </a>
+            @empty
+                <div class="px-4 py-8 text-center text-sm text-gray-500">
+                    No procurement team members found.
+                </div>
+            @endforelse
+        </div>
+        @if ($procurementUsers->hasPages())
+            <div class="border-t border-gray-200 px-4 py-3">
+                {{ $procurementUsers->links() }}
             </div>
         @endif
     </div>

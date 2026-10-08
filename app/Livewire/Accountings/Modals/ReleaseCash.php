@@ -1,14 +1,11 @@
 <?php
-
 namespace App\Livewire\Accountings\Modals;
-
 use App\Models\PurchaseWorkflow;
 use App\Models\User;
 use App\Models\Transaction;
 use App\Models\PurchaseRequestTransaction;
 use App\Models\PurchaseItemTransaction;
 use App\Services\PurchaseWorkflowService;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
@@ -16,21 +13,17 @@ use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
-
 class ReleaseCash extends Component
 {
     use WithPagination, WithoutUrlPagination, WithFileUploads;
-
     public int $cashReleaseAmount = 0;
     public $cashItems = [];
     public string $search = '';
     public $workflow = null;
     public bool $cashHandoverModal = false;
     public ?int $recipientUserId = null;
-
     public $confirmationPhoto = null;
     public bool $photoUploaded = false;
-
     #[On('cash-handover-modal')]
     public function openModal(int $workflowId): void
     {
@@ -41,22 +34,15 @@ class ReleaseCash extends Component
                 'purchaseRequest',
             ])
             ->findOrFail($workflowId);
-
         $this->search = '';
         $this->recipientUserId = null;
-
         $this->confirmationPhoto = null;
         $this->photoUploaded = false;
-
         $this->resetValidation();
-
         $this->resetPage();
-
         $this->calculateCashTotal();
-
         $this->cashHandoverModal = true;
     }
-
     private function calculateCashTotal(): void
     {
         $this->cashItems = $this->workflow
@@ -66,14 +52,12 @@ class ReleaseCash extends Component
                 return $this->isCash($workflowItem);
             })
             ->values();
-
         $this->cashReleaseAmount = $this->cashItems->sum(
             fn ($workflowItem) => $this->calculateCashAmount(
                 $workflowItem->purchaseItem
             )
         );
     }
-
     /**
      * Check whether this purchase item is Cash.
      */
@@ -86,7 +70,6 @@ class ReleaseCash extends Component
             'cash'
         ) === 0;
     }
-
     /**
      * Calculate the actual release amount for an item.
      *
@@ -114,7 +97,6 @@ class ReleaseCash extends Component
             ? (int) $whole + 1
             : (int) $whole;
     }
-
     public function removeConfirmationPhoto(): void
     {
         $this->confirmationPhoto = null;
@@ -122,13 +104,11 @@ class ReleaseCash extends Component
         $this->resetValidation('confirmationPhoto');
         $this->dispatch('reset-cash-confirmation-photo');
     }
-
     public function releaseCash($recipientUserId): void
     {
         $this->validate([
             'confirmationPhoto' => ['required', 'image', 'max:5120'],
         ]);
-
         $workflow = PurchaseWorkflow::query()
             ->with([
                 'purchaseWorkflowItems.purchaseItem',
@@ -138,14 +118,12 @@ class ReleaseCash extends Component
             ->where('step', 'accounting')
             ->where('status', 'pending')
             ->firstOrFail();
-
         $recipient = User::query()
             ->whereKey($recipientUserId)
             ->whereHas('departments', function ($query) {
                 $query->where('code', 'procurement');
             })
             ->firstOrFail();
-
         DB::transaction(function () use ($workflow, $recipient) {
             /*
             * Get pending Cash items only.
@@ -156,11 +134,9 @@ class ReleaseCash extends Component
                     return $this->isCash($workflowItem);
                 })
                 ->values();
-
             if ($cashItems->isEmpty()) {
                 return;
             }
-
             /*
             * Calculate each item first,
             * then sum the rounded amounts.
@@ -170,7 +146,6 @@ class ReleaseCash extends Component
                     $workflowItem->purchaseItem
                 );
             });
-
             /*
             * One physical cash handover
             * = one Transaction.
@@ -186,7 +161,6 @@ class ReleaseCash extends Component
                 ),
                 'created_by' => auth()->id(),
             ]);
-
             /*
             * One PurchaseRequest ↔ Transaction connection.
             */
@@ -194,10 +168,8 @@ class ReleaseCash extends Component
                 'purchase_request_id' => $workflow->purchase_request_id,
                 'transaction_id' => $transaction->id,
             ]);
-
             foreach ($cashItems as $workflowItem) {
                 $purchaseItem = $workflowItem->purchaseItem;
-
                 /*
                 * Calculate the exact amount released
                 * for this item.
@@ -205,7 +177,6 @@ class ReleaseCash extends Component
                 $amount = $this->calculateCashAmount(
                     $purchaseItem
                 );
-
                 /*
                 * Workflow item
                 */
@@ -213,12 +184,10 @@ class ReleaseCash extends Component
                     'status' => 'fund released',
                     'acted_at' => now(),
                 ]);
-
                 $path = Storage::disk('local')->putFile(
                     'accounting/release-budget/' . now()->format('Y/m/d'),
                     $this->confirmationPhoto
                 );
-
                 /*
                 * Action history
                 */
@@ -227,11 +196,9 @@ class ReleaseCash extends Component
                     'acted_by' => auth()->id(),
                     'acted_at' => now(),
                 ]);
-
                 $purchaseAction->budgetReleasePhotos()->create([
                     'budget_receiver_photo_path' => $path,
                 ]);
-
                 /*
                 * Transaction ↔ Item
                 */
@@ -241,7 +208,6 @@ class ReleaseCash extends Component
                     'amount' => $amount,
                 ]);
             }
-
             /*
             * Complete Accounting workflow
             * if there are no pending items left.
@@ -249,11 +215,9 @@ class ReleaseCash extends Component
             app(PurchaseWorkflowService::class)
                 ->completeAccountingWorkflowIfFinished($workflow);
         });
-
         $this->cashHandoverModal = false;
         $this->recipientUserId = null;
         $this->recipientPassword = '';
-
         $this->dispatch('cash-released')
             ->to(\App\Livewire\Accountings\Requests::class);
     }

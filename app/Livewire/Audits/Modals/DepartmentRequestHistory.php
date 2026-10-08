@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Audits\Modals;
-
 use App\Models\Department;
 use App\Models\PurchaseItem;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -10,76 +8,54 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
-
 class DepartmentRequestHistory extends Component
 {
     use WithPagination, WithoutUrlPagination;
-
     public bool $departmentRequestHistoryModal = false;
-
     public ?Department $department = null;
-
     public ?int $departmentId = null;
-
     public int $perPage = 12;
-
     public ?string $from = null;
-
     public ?string $to = null;
-
     public string $title = '';
-
     #[On('open-department-request-history')]
     public function openModal($departmentId = null)
     {
         $this->resetPage();
-
         $this->from = null;
         $this->to = null;
         $this->title = '';
-
         if (!$departmentId) {
             return;
         }
-
         $this->departmentId = (int) $departmentId;
-
         $this->department = Department::findOrFail(
             $this->departmentId
         );
-
         $this->departmentRequestHistoryModal = true;
     }
-
     public function closeModal()
     {
         $this->departmentRequestHistoryModal = false;
-
         $this->resetPage();
-
         $this->department = null;
         $this->departmentId = null;
-
         $this->from = null;
         $this->to = null;
         $this->title = '';
     }
-
     public function updatedFrom()
     {
         $this->resetPage();
     }
-
     public function updatedTo()
     {
         $this->resetPage();
     }
-
     public function updatedTitle()
     {
         $this->resetPage();
     }
-
     public function clearFilters()
     {
         $this->reset([
@@ -87,23 +63,18 @@ class DepartmentRequestHistory extends Component
             'to',
             'title',
         ]);
-
         $this->resetPage();
     }
-
     public function render()
     {
         $requestsCount = 0;
-
         $groupedItems = new LengthAwarePaginator(
             collect(),
             0,
             $this->perPage,
             $this->getPage()
         );
-
         if ($this->departmentId) {
-
             /*
              * ---------------------------------------------------------
              * Total request count
@@ -114,7 +85,6 @@ class DepartmentRequestHistory extends Component
              */
             $requestsCountQuery = $this->department
                 ->purchaseRequests();
-
             if ($this->from) {
                 $requestsCountQuery->whereDate(
                     'created_at',
@@ -122,7 +92,6 @@ class DepartmentRequestHistory extends Component
                     $this->from
                 );
             }
-
             if ($this->to) {
                 $requestsCountQuery->whereDate(
                     'created_at',
@@ -130,10 +99,7 @@ class DepartmentRequestHistory extends Component
                     $this->to
                 );
             }
-
             $requestsCount = $requestsCountQuery->count();
-
-
             /*
              * ---------------------------------------------------------
              * Product IDs requested by this department
@@ -143,12 +109,10 @@ class DepartmentRequestHistory extends Component
              */
             $itemIdsQuery = PurchaseItem::query()
                 ->whereHas('purchaseRequest', function ($query) {
-
                     $query->where(
                         'department_id',
                         $this->departmentId
                     );
-
                     if ($this->from) {
                         $query->whereDate(
                             'created_at',
@@ -156,7 +120,6 @@ class DepartmentRequestHistory extends Component
                             $this->from
                         );
                     }
-
                     if ($this->to) {
                         $query->whereDate(
                             'created_at',
@@ -168,11 +131,8 @@ class DepartmentRequestHistory extends Component
                 ->when(
                     trim($this->title) !== '',
                     function ($query) {
-
                         $search = trim($this->title);
-
                         $query->where(function ($query) use ($search) {
-
                             $query
                                 ->where(
                                     'item_name',
@@ -195,16 +155,12 @@ class DepartmentRequestHistory extends Component
                 ->whereNotNull('item_id')
                 ->select('item_id')
                 ->distinct();
-
-
             /*
              * ---------------------------------------------------------
              * Count unique products
              * ---------------------------------------------------------
              */
             $totalProducts = (clone $itemIdsQuery)->count();
-
-
             /*
              * ---------------------------------------------------------
              * Get current page item IDs
@@ -217,10 +173,7 @@ class DepartmentRequestHistory extends Component
                     $this->perPage
                 )
                 ->pluck('item_id');
-
-
             if ($itemIds->isNotEmpty()) {
-
                 /*
                  * -----------------------------------------------------
                  * Get ALL purchase items for the products
@@ -237,12 +190,10 @@ class DepartmentRequestHistory extends Component
                         'purchaseRequest.department',
                     ])
                     ->whereHas('purchaseRequest', function ($query) {
-
                         $query->where(
                             'department_id',
                             $this->departmentId
                         );
-
                         if ($this->from) {
                             $query->whereDate(
                                 'created_at',
@@ -250,7 +201,6 @@ class DepartmentRequestHistory extends Component
                                 $this->from
                             );
                         }
-
                         if ($this->to) {
                             $query->whereDate(
                                 'created_at',
@@ -264,8 +214,6 @@ class DepartmentRequestHistory extends Component
                         DB::raw('COALESCE(created_at, id)')
                     )
                     ->get();
-
-
                 /*
                  * -----------------------------------------------------
                  * Group by product
@@ -274,29 +222,24 @@ class DepartmentRequestHistory extends Component
                 $groupedItems = $purchaseItems
                     ->groupBy('item_id')
                     ->map(function ($items) {
-
                         $firstItem = $items->first();
-
                         $requests = $items
                             ->map(
                                 fn ($purchaseItem) =>
                                     $purchaseItem->purchaseRequest
                             )
                             ->filter();
-
                         return [
                             /*
                              * Product
                              */
                             'item' => $firstItem->item,
-
                             /*
                              * First purchase item
                              *
                              * Useful for SKU / vendor / item information.
                              */
                             'purchase_item' => $firstItem,
-
                             /*
                              * Number of unique purchase requests
                              */
@@ -304,7 +247,6 @@ class DepartmentRequestHistory extends Component
                                 ->pluck('id')
                                 ->unique()
                                 ->count(),
-
                             /*
                              * Total quantity requested
                              * by this department
@@ -313,20 +255,17 @@ class DepartmentRequestHistory extends Component
                                 fn ($purchaseItem) =>
                                     (float) $purchaseItem->quantity
                             ),
-
                             /*
                              * Last requested date
                              */
                             'last_requested_at' => $requests
                                 ->max('created_at'),
-
                             /*
                              * Last request number
                              */
                             'last_request_no' => $requests
                                 ->sortByDesc('created_at')
                                 ->first()?->request_no,
-
                             /*
                              * Users who requested this product
                              *
@@ -337,7 +276,6 @@ class DepartmentRequestHistory extends Component
                                 ->filter()
                                 ->unique('id')
                                 ->values(),
-
                             /*
                              * Number of unique users who requested it
                              */
@@ -346,7 +284,6 @@ class DepartmentRequestHistory extends Component
                                 ->filter()
                                 ->unique()
                                 ->count(),
-
                             /*
                              * Complete request history for this product
                              *
@@ -358,8 +295,6 @@ class DepartmentRequestHistory extends Component
                                 ->values(),
                         ];
                     });
-
-
                 /*
                  * -----------------------------------------------------
                  * Keep database ordering
@@ -367,13 +302,10 @@ class DepartmentRequestHistory extends Component
                  */
                 $groupedItems = $itemIds
                     ->map(function ($itemId) use ($groupedItems) {
-
                         return $groupedItems->get($itemId);
                     })
                     ->filter()
                     ->values();
-
-
                 /*
                  * -----------------------------------------------------
                  * Convert to paginator
@@ -390,7 +322,6 @@ class DepartmentRequestHistory extends Component
                     ]
                 );
             } else {
-
                 $groupedItems = new LengthAwarePaginator(
                     collect(),
                     $totalProducts,
@@ -399,7 +330,6 @@ class DepartmentRequestHistory extends Component
                 );
             }
         }
-
         return view(
             'livewire.audits.modals.department-request-history',
             [

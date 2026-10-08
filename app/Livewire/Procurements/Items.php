@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Procurements;
-
 use App\Imports\ItemsImport;
 use App\Models\Item;
 use App\Models\ItemImage;
@@ -16,7 +14,6 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
-
 class Items extends Component
 {
     use WithPagination;
@@ -89,7 +86,6 @@ class Items extends Component
     | Category Modal
     |--------------------------------------------------------------------------
     */
-    
     public bool $showCategoryModal = false;
     public ?int $categoryItemId = null;
     public ?Item $categoryItem = null;
@@ -215,13 +211,11 @@ class Items extends Component
             ])
             ->toArray();
     }
-
     /*
     |--------------------------------------------------------------------------
     | Sort
     |--------------------------------------------------------------------------
     */
-
     public function sortBy(string $field): void
     {
         $allowedFields = [
@@ -261,7 +255,6 @@ class Items extends Component
         $this->resetValidation();
         $this->showCreateModal = true;
     }
-
     public function createItem(): void
     {
         $this->editingItemId = null;
@@ -290,13 +283,11 @@ class Items extends Component
             'Item created successfully.'
         );
     }
-
     /*
     |--------------------------------------------------------------------------
     | Edit Item
     |--------------------------------------------------------------------------
     */
-
     public function edit(int $id): void
     {
         $item = Item::with('itemImages')
@@ -324,7 +315,6 @@ class Items extends Component
         $this->resetValidation();
         $this->showEditModal = true;
     }
-
     public function updateItem(): void
     {
         $item = Item::findOrFail($this->editingItemId);
@@ -355,13 +345,11 @@ class Items extends Component
             'Item updated successfully.'
         );
     }
-
     /*
     |--------------------------------------------------------------------------
     | Image Handling
     |--------------------------------------------------------------------------
     */
-
     private function storeNewImages(Item $item): void
     {
         if (empty($this->images)) {
@@ -388,7 +376,6 @@ class Items extends Component
             $hasPrimary = true;
         }
     }
-
     public function deleteImage(int $imageId): void
     {
         abort_unless(
@@ -480,7 +467,6 @@ class Items extends Component
         do {
             $sku = 'SKU-' . strtoupper(Str::random(6));
         } while (Item::where('sku', $sku)->exists());
-
         return $sku;
     }
     /*
@@ -488,7 +474,6 @@ class Items extends Component
     | Vendor Management
     |--------------------------------------------------------------------------
     */
-
     public function manageVendors(int $itemId): void
     {
         $this->vendorItemId = $itemId;
@@ -531,7 +516,6 @@ class Items extends Component
             ];
         }
     }
-
     public function addVendor(int $vendorId): void
     {
         if (! $this->vendorItemId) {
@@ -554,7 +538,6 @@ class Items extends Component
         $this->vendorSearch = '';
         $this->vendorSearchResults = [];
     }
-
     public function removeVendor(int $vendorId): void
     {
         if (! $this->vendorItemId) {
@@ -587,7 +570,6 @@ class Items extends Component
         });
         $this->reloadVendorItem();
     }
-
     public function setPreferredVendor(int $vendorId): void
     {
         if (! $this->vendorItemId) {
@@ -616,7 +598,6 @@ class Items extends Component
         });
         $this->reloadVendorItem();
     }
-
     public function updateVendor(int $vendorId): void
     {
         if (! $this->vendorItemId) {
@@ -658,19 +639,16 @@ class Items extends Component
                     'string',
                     'max:100',
                 ],
-
                 'unit_price' => [
                     'nullable',
                     'numeric',
                     'min:0',
                 ],
-
                 'minimum_order_qty' => [
                     'required',
                     'integer',
                     'min:1',
                 ],
-
                 'lead_time' => [
                     'nullable',
                     'integer',
@@ -681,7 +659,6 @@ class Items extends Component
                     'integer',
                     'exists:disbursement_types,id',
                 ],
-
                 'payment_details' => [
                     'nullable',
                     'string',
@@ -689,7 +666,6 @@ class Items extends Component
                 ],
             ]
         )->validate();
-
         $item->vendors()->updateExistingPivot(
             $vendorId,
             [
@@ -701,15 +677,12 @@ class Items extends Component
                 'payment_details' => $validated['payment_details'] ?? null,
             ]
         );
-
         $this->reloadVendorItem();
-
         session()->flash(
             'success',
             'Vendor information updated successfully.'
         );
     }
-
     private function reloadVendorItem(): void
     {
         if (! $this->vendorItemId) {
@@ -722,27 +695,23 @@ class Items extends Component
         ])->findOrFail($this->vendorItemId);
         $this->initializeVendorForms();
     }
-
     /*
     |--------------------------------------------------------------------------
     | Modal
     |--------------------------------------------------------------------------
     */
-
     public function closeCreateModal(): void
     {
         $this->showCreateModal = false;
         $this->resetForm();
         $this->resetValidation();
     }
-
     public function closeEditModal(): void
     {
         $this->showEditModal = false;
         $this->resetForm();
         $this->resetValidation();
     }
-
     public function closeVendorModal(): void
     {
         $this->showVendorModal = false;
@@ -752,13 +721,11 @@ class Items extends Component
         $this->vendorSearchResults = [];
         $this->vendorForms = [];
     }
-
     /*
     |--------------------------------------------------------------------------
     | Form Reset
     |--------------------------------------------------------------------------
     */
-
     private function resetForm(): void
     {
         $this->editingItemId = null;
@@ -774,27 +741,23 @@ class Items extends Component
         $this->images = [];
         $this->existingImages = [];
     }
-
     /*
     |--------------------------------------------------------------------------
     | Excel
     |--------------------------------------------------------------------------
     */
-
     public function openImportModal(): void
     {
         $this->excelFile = null;
         $this->resetValidation();
         $this->showImportModal = true;
     }
-
     public function closeImportModal(): void
     {
         $this->showImportModal = false;
         $this->excelFile = null;
         $this->resetValidation();
     }
-
     public function importExcel(): void
     {
         $this->validate([
@@ -848,7 +811,6 @@ class Items extends Component
     | Render
     |--------------------------------------------------------------------------
     */
-
     public function render()
     {
         $disbursementTypes = DisbursementType::query()

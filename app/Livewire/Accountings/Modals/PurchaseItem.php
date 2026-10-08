@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Livewire\Accountings\Modals;
-
 use Livewire\Component;
 use App\Models\User;
 use App\Models\PurchaseWorkflowItem;
@@ -15,13 +13,11 @@ use Illuminate\Validation\ValidationException;
 class PurchaseItem extends Component
 {
     use WithPagination, WithoutUrlPagination;
-
     public bool $commentModal = false;
     public string $search = '';
     public string $comment = '';
     public ?int $releaseWorkflowItemId = null;
     public ?int $recipientUserId = null;
-
     #[On('purchase-modal')]
     public function openPurchaseModal($workflowItemId)
     {
@@ -42,13 +38,11 @@ class PurchaseItem extends Component
                     ->where('is_active', true);
             })
             ->first();
-            
         if (! $recipient) {
             throw ValidationException::withMessages([
                 'recipientUserId' => 'The selected recipient must belong to the Procurement department.',
             ]);
         }
-        
         if (!$this->releaseWorkflowItemId) {
             return;
         }
@@ -113,7 +107,6 @@ class PurchaseItem extends Component
         $amount = (float) $purchaseItem->unit_price * (int) $purchaseItem->quantity;
         $discount = (float) ($purchaseItem->discount ?? 0);
         $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
-
         return $amount - $discount + $shippingFee;
     }
     public function updatedSearch(): void

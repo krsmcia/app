@@ -13,6 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Department;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class User extends Authenticatable
 {
@@ -26,6 +27,7 @@ class User extends Authenticatable
     use TwoFactorAuthenticatable;
     use HasRoles;
     use SoftDeletes;
+    use HasPushSubscriptions;
 
     /**
      * The attributes that are mass assignable.

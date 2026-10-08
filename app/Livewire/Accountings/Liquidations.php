@@ -37,22 +37,26 @@ class Liquidations extends Component
         $items = PurchaseItem::query()
             // Only items whose latest workflow status is "purchased".
             ->whereHas('purchaseWorkflowItems', function ($query) {
-                $query
-                    /*
-                    ->where('status', 'purchased')
-                    ->whereRaw('
-                        purchase_workflow_items.id = (
-                            SELECT MAX(pwi.id)
-                            FROM purchase_workflow_items AS pwi
-                            WHERE pwi.purchase_item_id = purchase_workflow_items.purchase_item_id
-                        )
-                    ');
-                    */
-                    ->where('status', 'purchased');
+                $query->where('status', 'purchased');
             })
             ->with([
                 'purchaseRequest',
                 'item',
+            ])
+            // Purchased by
+            ->addSelect([
+                'purchased_by_id' => function ($query) {
+                    $query->select('t.from_user_id')
+                        ->from('purchase_item_transactions as pit')
+                        ->join('transactions as t', 't.id', '=', 'pit.transaction_id')
+                        ->whereColumn('pit.purchase_item_id', 'purchase_items.id')
+                        ->where('t.type', 'purchased')
+                        ->whereNotNull('t.from_user_id')
+                        ->whereNull('t.to_user_id')
+                        ->whereNotNull('t.vendor_id')
+                        ->orderByDesc('t.created_at')
+                        ->limit(1);
+                },
             ])
             // Accounting → Procurement
             ->withSum([
@@ -117,6 +121,15 @@ class Liquidations extends Component
             ')
             ->latest('id')
             ->paginate(20,['*'], 'itemsPage');
+        $purchasedByUsers = User::query()
+            ->whereIn(
+                'id',
+                $items->pluck('purchased_by_id')
+                    ->filter()
+                    ->unique()
+            )
+            ->get()
+            ->keyBy('id');
         $procurementUsers = User::query()
             ->whereHas('departments', function ($query) {
                 $query->where('code', 'procurement');
@@ -125,6 +138,7 @@ class Liquidations extends Component
             ->paginate(20, ['*'], 'usersPage');
         return view('livewire.accountings.liquidations', [
             'items' => $items,
+            'purchasedByUsers' => $purchasedByUsers,
             'procurementUsers' => $procurementUsers,
         ]);
     }

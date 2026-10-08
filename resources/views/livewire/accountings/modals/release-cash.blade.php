@@ -393,7 +393,7 @@
                             for="photo"
                             class="block text-sm font-medium text-gray-700"
                         >
-                        {{ __('Item Photo') }}
+                        {{ __('Release Photo') }}
                         <span class="text-red-500">*</span>
                     </label>
 
@@ -417,11 +417,11 @@
                         x-on:click.prevent="$refs.photo.click()"
                     >
                         <span x-show="!photoPreview">
-                            {{ __('Add Item Photo') }}
+                            {{ __('Add Release Photo') }}
                         </span>
 
                         <span x-show="photoPreview">
-                            {{ __('Replace Item Photo') }}
+                            {{ __('Replace Release Photo') }}
                         </span>
                     </x-secondary-button>
 

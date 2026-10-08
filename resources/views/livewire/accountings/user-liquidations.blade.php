@@ -74,9 +74,11 @@
             {{-- Return Balance --}}
             <div
                 class="rounded-lg border p-4
-                    {{ $totalReturnAmount > 0
+                {{ $purchaseDate === now()->toDateString()
+                    ? 'border-amber-200 bg-amber-50'
+                    : ($totalReturnAmount > 0
                         ? 'border-blue-200 bg-blue-50'
-                        : 'border-gray-200 bg-gray-50' }}"
+                        : 'border-gray-200 bg-gray-50') }}"
             >
                 <div class="flex items-center justify-between gap-3">
 
@@ -95,7 +97,11 @@
                         </div>
 
                         <div class="mt-1 text-xs">
-                            @if ($totalReturnAmount > 0)
+                            @if ($purchaseDate === now()->toDateString())
+                                <span class="font-medium text-amber-700">
+                                    Liquidation available after today
+                                </span>
+                            @elseif ($totalReturnAmount > 0)
                                 <span class="font-medium text-blue-700">
                                     Amount to receive from user
                                 </span>
@@ -107,7 +113,7 @@
                         </div>
                     </div>
 
-                    @if ($totalReturnAmount > 0)
+                    @if ($totalReturnAmount > 0 && $purchaseDate !== now()->toDateString())
                         <button
                             type="button"
                             wire:click="openLiquidationModal"
@@ -192,9 +198,11 @@
         {{-- Balance --}}
         <div
             class="rounded-lg border p-4
-                {{ $totalReturnAmount > 0
-                    ? 'border-blue-200 bg-blue-50'
-                    : 'border-green-200 bg-green-50' }}"
+                {{ $purchaseDate === now()->toDateString()
+                    ? 'border-amber-200 bg-amber-50'
+                    : ($totalReturnAmount > 0
+                        ? 'border-blue-200 bg-blue-50'
+                        : 'border-gray-200 bg-gray-50') }}"
         >
             <div
                 class="text-xs font-medium uppercase tracking-wide
@@ -207,9 +215,11 @@
 
             <div
                 class="mt-1 text-xl font-bold
-                    {{ $totalReturnAmount > 0
-                        ? 'text-blue-700'
-                        : 'text-green-700' }}"
+                    {{ $purchaseDate === now()->toDateString()
+                        ? 'text-amber-700'
+                        : ($totalReturnAmount > 0
+                            ? 'text-blue-700'
+                            : 'text-gray-600') }}"
             >
                 @if ($totalReturnAmount > 0)
                     +₱{{ number_format($totalReturnAmount, 2) }}
@@ -357,7 +367,7 @@
                                             $transaction = $pivot->transaction;
 
                                             return $transaction
-                                                && $transaction->type === 'released'
+                                                && in_array($transaction->type, ['released', 'transfer'], true)
                                                 && (int) $transaction->to_user_id === (int) $user->id
                                                 && is_null($transaction->vendor_id);
                                         })
@@ -440,41 +450,39 @@
                                         <div class="space-y-2">
 
                                             @forelse ($releasedTransactions as $releasedTransaction)
-
                                                 @php
                                                     $transaction = $releasedTransaction->transaction;
-
-                                                    $isInitial = $releasedTransactions->first()?->id === $releasedTransaction->id;
                                                 @endphp
-
-                                                <div>
-                                                    <div class="flex items-center justify-end gap-2">
-
-                                                        <span class="font-medium text-gray-900">
-                                                            ₱{{ number_format($releasedTransaction->amount, 2) }}
-                                                        </span>
-
-                                                        @if ($isInitial)
-                                                            <span
-                                                                class="rounded-full bg-blue-50 px-2 py-0.5
-                                                                    text-xs font-medium text-blue-700"
-                                                            >
-                                                                Initial
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="flex items-center gap-2">
+                                                        @if (
+                                                            $transaction?->remark
+                                                            && str_starts_with(
+                                                                $transaction->remark,
+                                                                'Liquidation release'
+                                                            )
+                                                        )
+                                                            <span class="text-xs font-medium text-amber-600">
+                                                                Liquidation
+                                                            </span>
+                                                        @elseif ($transaction?->type === 'transfer')
+                                                            <span class="text-xs font-medium text-blue-600">
+                                                                Transfer
                                                             </span>
                                                         @else
-                                                            <span
-                                                                class="rounded-full bg-amber-50 px-2 py-0.5
-                                                                    text-xs font-medium text-amber-700"
-                                                            >
-                                                                Liquidation
+                                                            <span class="text-xs font-medium text-gray-500">
+                                                                Initial
                                                             </span>
                                                         @endif
 
+                                                        <span class="text-sm text-gray-600">
+                                                            ₱{{ number_format($releasedTransaction->amount, 2) }}
+                                                        </span>
                                                     </div>
 
-                                                    <div class="text-right text-xs text-gray-400">
-                                                        {{ $transaction->created_at->format('M d, Y') }}
-                                                    </div>
+                                                    <span class="text-xs text-gray-400">
+                                                        {{ $transaction?->created_at?->format('M d, Y h:i A') }}
+                                                    </span>
                                                 </div>
 
                                             @empty

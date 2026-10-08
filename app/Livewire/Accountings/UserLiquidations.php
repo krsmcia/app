@@ -36,9 +36,10 @@ class UserLiquidations extends Component
     {
         $this->user = $user;
 
-        $this->purchaseDate = now()
-            ->subDay()
-            ->toDateString();
+        $this->purchaseDate = request()->query(
+            'date',
+            now()->subDay()->toDateString()
+        );
     }
 
     protected function purchaseDateRange(): array
@@ -50,7 +51,10 @@ class UserLiquidations extends Component
             $date->copy()->endOfDay(),
         ];
     }
-
+    protected function isToday(): bool
+    {
+        return $this->purchaseDate === now()->toDateString();
+    }
     /**
      * 해당 User가 해당 날짜에 실제 구매한 Purchase Items.
      *
@@ -80,13 +84,20 @@ class UserLiquidations extends Component
      */
     protected function calculateReleased(): float
     {
-        [$start, $end] = $this->purchaseDateRange();
+        $itemIds = $this->purchaseItemIdsForDate();
 
-        return (float) Transaction::query()
-            ->where('type', 'released')
-            ->where('to_user_id', $this->user->id)
-            ->whereNull('vendor_id')
-            ->whereBetween('created_at', [$start, $end])
+        if (empty($itemIds)) {
+            return 0;
+        }
+
+        return (float) PurchaseItemTransaction::query()
+            ->whereIn('purchase_item_id', $itemIds)
+            ->whereHas('transaction', function ($query) {
+                $query
+                    ->whereIn('type', ['released', 'transfer'])
+                    ->where('to_user_id', $this->user->id)
+                    ->whereNull('vendor_id');
+            })
             ->sum('amount');
     }
 
@@ -185,6 +196,9 @@ class UserLiquidations extends Component
 
     public function openLiquidationModal(): void
     {
+        if ($this->isToday()) {
+            return;
+        }
         $this->refreshTotals();
 
         if ($this->totalReturnAmount <= 0) {
@@ -204,79 +218,127 @@ class UserLiquidations extends Component
      */
     public function confirmLiquidation(): void
     {
+        if ($this->isToday()) {
+            return;
+        }
         DB::transaction(function () {
-            /*
-             * Recalculate inside the transaction so the amount
-             * cannot be based on stale Livewire state.
-             */
-            $totals = $this->calculateDateTotals();
-
-            $amount = $totals['return_balance'];
-
-            if ($amount <= 0) {
-                return;
-            }
-
             $itemIds = $this->purchaseItemIdsForDate();
-
             if (empty($itemIds)) {
                 return;
             }
-
-            $transaction = Transaction::create([
-                'from_user_id' => $this->user->id,
-                'to_user_id' => auth()->id(),
-                'vendor_id' => null,
-                'type' => 'returned',
-                'amount' => $amount,
-                'remark' => sprintf(
-                    'Liquidation return for purchase date %s',
-                    $this->purchaseDate
-                ),
-                'created_by' => auth()->id(),
-            ]);
-
-            /*
-             * Link the returned transaction to the user's
-             * purchase items for this liquidation.
-             *
-             * The return amount is a date-level balance,
-             * so allocation is only for traceability.
-             */
-            $remaining = $amount;
-
-            $purchaseRows = PurchaseItemTransaction::query()
-                ->whereIn('purchase_item_id', $itemIds)
-                ->whereHas('transaction', function ($query) {
-                    $query
-                        ->where('type', 'purchased')
-                        ->where('from_user_id', $this->user->id)
-                        ->whereNull('to_user_id')
-                        ->whereNotNull('vendor_id');
-                })
-                ->orderBy('id')
+            $items = PurchaseItem::query()
+                ->whereIn('id', $itemIds)
+                ->with([
+                    'purchaseItemTransactions.transaction',
+                ])
+                ->lockForUpdate()
                 ->get();
-
-            foreach ($purchaseRows as $purchaseRow) {
-                if ($remaining <= 0) {
-                    break;
+            foreach ($items as $item) {
+                $released = 0;
+                $purchased = 0;
+                $returned = 0;
+                foreach ($item->purchaseItemTransactions as $pivot) {
+                    $transaction = $pivot->transaction;
+                    if (! $transaction) {
+                        continue;
+                    }
+                    // Cash received by Procurement/User
+                    if (
+                        in_array($transaction->type, ['released', 'transfer'], true)
+                        && (int) $transaction->to_user_id === (int) $this->user->id
+                        && is_null($transaction->vendor_id)
+                    ) {
+                        $released += (float) $pivot->amount;
+                    }
+                    // Procurement → Vendor
+                    if (
+                        $transaction->type === 'purchased'
+                        && (int) $transaction->from_user_id === (int) $this->user->id
+                        && is_null($transaction->to_user_id)
+                        && ! is_null($transaction->vendor_id)
+                    ) {
+                        $purchased += (float) $pivot->amount;
+                    }
+                    // Procurement → Accounting
+                    if (
+                        $transaction->type === 'returned'
+                        && (int) $transaction->from_user_id === (int) $this->user->id
+                        && (int) $transaction->to_user_id === (int) auth()->id()
+                    ) {
+                        $returned += (float) $pivot->amount;
+                    }
                 }
+                $released = round($released, 2);
+                $purchased = round($purchased, 2);
+                $returned = round($returned, 2);
 
-                $allocation = min(
-                    $remaining,
-                    (float) $purchaseRow->amount
-                );
-
-                PurchaseItemTransaction::create([
-                    'purchase_item_id' => $purchaseRow->purchase_item_id,
-                    'transaction_id' => $transaction->id,
-                    'amount' => $allocation,
-                ]);
-
-                $remaining = round(
-                    $remaining - $allocation,
+                /*
+                * Already settled amount.
+                */
+                $balance = round(
+                    $released - $purchased - $returned,
                     2
                 );
+
+                /*
+                * balance < 0
+                * Procurement spent more than the money released.
+                *
+                * Accounting → Procurement
+                */
+                if ($balance < 0) {
+                    $amount = abs($balance);
+
+                    $transaction = Transaction::create([
+                        'from_user_id' => auth()->id(),
+                        'to_user_id' => $this->user->id,
+                        'vendor_id' => null,
+                        'type' => 'released',
+                        'amount' => $amount,
+                        'remark' => sprintf(
+                            'Liquidation release for %s - %s',
+                            $item->item_name,
+                            $this->purchaseDate
+                        ),
+                        'created_by' => auth()->id(),
+                    ]);
+
+                    PurchaseItemTransaction::create([
+                        'purchase_item_id' => $item->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $amount,
+                    ]);
+                }
+
+                /*
+                * balance > 0
+                * Procurement has money left.
+                *
+                * Procurement → Accounting
+                */
+                elseif ($balance > 0) {
+                    $amount = $balance;
+
+                    $transaction = Transaction::create([
+                        'from_user_id' => $this->user->id,
+                        'to_user_id' => auth()->id(),
+                        'vendor_id' => null,
+                        'type' => 'returned',
+                        'amount' => $amount,
+                        'remark' => sprintf(
+                            'Liquidation return for %s - %s',
+                            $item->item_name,
+                            $this->purchaseDate
+                        ),
+                        'created_by' => auth()->id(),
+                    ]);
+
+                    PurchaseItemTransaction::create([
+                        'purchase_item_id' => $item->id,
+                        'transaction_id' => $transaction->id,
+                        'amount' => $amount,
+                    ]);
+                }
             }
         });
 
@@ -286,7 +348,7 @@ class UserLiquidations extends Component
 
         $this->dispatch(
             'notify',
-            message: 'Returned funds received successfully.'
+            message: 'Liquidation completed successfully.'
         );
     }
 

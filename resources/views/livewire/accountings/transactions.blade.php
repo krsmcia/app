@@ -195,7 +195,7 @@
                                     $typeLabel = match ($transaction->type) {
                                         'purchased' => 'Purchased',
                                         'released' => 'Release',
-                                        'returned' => 'Refund',
+                                        'returned' => 'Returned',
                                         'transfer' => 'Transfer',
                                         'spent' => 'Spent',
                                         'adjustment' => 'Adjustment',

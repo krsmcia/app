@@ -48,6 +48,9 @@
                         <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
                             Item
                         </th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">
+                            Purchased By
+                        </th>
                         <th class="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">
                             Released
                         </th>
@@ -84,6 +87,35 @@
                                     </div>
                                 @endif
                             </td>
+                            @php
+                                $purchasedBy = $purchasedByUsers[$item->purchased_by_id] ?? null;
+                            @endphp
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                @if ($purchasedBy)
+                                    <a
+                                        href="{{ route('accountings.user-liquidations', [
+                                            'user' => $purchasedBy->id,
+                                            'date' => $item->purchaseRequest?->created_at?->format('Y-m-d'),
+                                        ]) }}"
+                                        class="flex items-center gap-2 hover:opacity-80"
+                                    >
+                                        <img
+                                            src="{{ $purchasedBy->profile_photo_url }}"
+                                            alt="{{ $purchasedBy->name }}"
+                                            class="size-7 rounded-full object-cover"
+                                        >
+
+                                        <span class="text-sm font-medium text-gray-900">
+                                            {{ $purchasedBy->name }}
+                                        </span>
+                                    </a>
+                                @else
+                                    <span class="text-sm text-gray-400">
+                                        -
+                                    </span>
+                                @endif
+                            </td>
                             <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-700">
                                 ₱{{ number_format($released, 2) }}
                             </td>
@@ -99,7 +131,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">
+                            <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">
                                 No items requiring liquidation.
                             </td>
                         </tr>

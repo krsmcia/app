@@ -82,7 +82,7 @@
                     </div>
                     @if (
                         $purchaseDate &&
-                        //$purchaseDate < now()->toDateString() &&
+                        $purchaseDate < now()->toDateString() &&
                         $totalLiquidationAmount > 0
                     )
                         <button

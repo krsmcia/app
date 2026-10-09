@@ -5,9 +5,9 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushMessage;
-use NotificationChannels\WebPush\WebPushChannel;
+use Illuminate\Notifications\Notification;
 
-class TestWebPushNotification extends Notification
+class ProcurementRequestNotification extends Notification
 {
     public function via($notifiable)
     {
@@ -22,7 +22,7 @@ class TestWebPushNotification extends Notification
             //->icon('/approved-icon.png') 
             //->badge('/badge.png') 
             ->action('View account', 'view_account') 
-            ->data([ 'url' => 'https://app.ciamactan.com/dashboard', ]) 
+            ->data([ 'url' => url('/dashboard'), ]) 
             ->options([ 'TTL' => 3600, ]) 
             ->vibrate([300, 100, 300, 100, 500]);
             // ->badge()

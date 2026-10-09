@@ -156,6 +156,45 @@
                     }"
                     class="items-center justify-center flex gap-4"
                 >
+                    <div
+                        x-data="pushNotificationToggle"
+                        class="flex flex-col items-center justify-center gap-0.5 text-gray-700"
+                    >
+                        <button
+                            type="button"
+                            @click="toggle()"
+                            :disabled="loading || !supported"
+                            :title="enabled ? 'Disable notifications' : 'Enable notifications'"
+                            :aria-label="enabled ? 'Disable notifications' : 'Enable notifications'"
+                            :aria-pressed="enabled"
+                            class="relative flex items-center justify-center rounded-lg transition-colors active:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            :class="enabled
+                                ? 'text-indigo-600'
+                                : 'text-gray-500 hover:text-gray-700'"
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                                />
+                            </svg>
+
+                            <span
+                                x-cloak
+                                x-show="enabled"
+                                class="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-indigo-600 ring-1 ring-white"
+                            ></span>
+                        </button>
+                    </div>
+                    
                     <a
                         href="{{ route('wishlist') }}"
                         class="

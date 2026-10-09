@@ -243,32 +243,4 @@
             </div>
         </a>
     </div>
-    <div class="flex gap-3">
-        <button
-            type="button"
-            onclick="subscribeWebPush(@js(config('webpush.vapid.public_key')))"
-            class="rounded-lg bg-blue-600 px-4 py-2 text-white"
-        >
-            Enable Notifications
-        </button>
-
-        <button
-            type="button"
-            onclick="fetch('/push/test', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector(
-                        'meta[name=csrf-token]'
-                    ).content,
-                    'Accept': 'application/json'
-                }
-            }).then(async response => {
-                if (!response.ok) throw new Error('Failed');
-                alert('Test notification requested.');
-            }).catch(() => alert('Notification failed.'))"
-            class="rounded-lg bg-gray-800 px-4 py-2 text-white"
-        >
-            Send Test Notification
-        </button>
-    </div>
 </div>

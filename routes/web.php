@@ -98,27 +98,33 @@ Route::middleware([
 
 
 
-    Route::post('/push/subscribe', function (Request $request) {
-        $data = $request->validate([
-            'endpoint' => ['required', 'url', 'max:2048'],
-            'keys.p256dh' => ['required', 'string'],
-            'keys.auth' => ['required', 'string'],
-        ]);
-        $request->user()->updatePushSubscription(
-            $data['endpoint'],
-            $data['keys']['p256dh'],
-            $data['keys']['auth']
-        );
-        return response()->json([
-            'message' => 'Push subscription saved.',
-        ]);
-    });
-    Route::post('/push/test', function (Request $request) {
-        $request->user()->notify(
-            new TestWebPushNotification()
-        );
-        return response()->json([
-            'message' => 'Push notification sent.',
-        ]);
+    Route::middleware('auth')->prefix('push')->name('push.')->group(function () {
+        Route::get('/vapid-public-key', function () {
+            return response()->json([
+                'publicKey' => config('webpush.vapid.public_key'),
+            ]);
+        })->name('vapid-public-key');
+        Route::post('/subscribe', function (Request $request) {
+            $validated = $request->validate([
+                'endpoint' => ['required', 'url', 'max:4096'],
+                'keys.p256dh' => ['required', 'string', 'max:255'],
+                'keys.auth' => ['required', 'string', 'max:255'],
+            ]);
+            $request->user()->updatePushSubscription(
+                $validated['endpoint'],
+                $validated['keys']['p256dh'],
+                $validated['keys']['auth'],
+            );
+            return response()->json(['success' => true]);
+        })->name('subscribe');
+        Route::delete('/unsubscribe', function (Request $request) {
+            $validated = $request->validate([
+                'endpoint' => ['required', 'url', 'max:4096'],
+            ]);
+            $request->user()->deletePushSubscription(
+                $validated['endpoint']
+            );
+            return response()->json(['success' => true]);
+        })->name('unsubscribe');
     });
 });

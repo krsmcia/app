@@ -158,19 +158,18 @@
                 >
                     <div
                         x-data="pushNotificationToggle"
+                        x-cloak
                         class="flex flex-col items-center justify-center gap-0.5 text-gray-700"
                     >
+                        {{-- 구독하지 않은 경우 --}}
                         <button
                             type="button"
+                            x-show="supported && !enabled"
                             @click="toggle()"
-                            :disabled="loading || !supported"
-                            :title="enabled ? 'Disable notifications' : 'Enable notifications'"
-                            :aria-label="enabled ? 'Disable notifications' : 'Enable notifications'"
-                            :aria-pressed="enabled"
-                            class="relative flex items-center justify-center rounded-lg transition-colors active:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            :class="enabled
-                                ? 'text-indigo-600'
-                                : 'text-gray-500 hover:text-gray-700'"
+                            :disabled="loading"
+                            title="Enable notifications"
+                            aria-label="Enable notifications"
+                            class="relative flex items-center justify-center rounded-lg text-gray-500 transition-colors hover:text-indigo-600 active:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <svg
                                 class="h-5 w-5"
@@ -187,11 +186,62 @@
                                 />
                             </svg>
                             <span
-                                x-cloak
-                                x-show="enabled"
+                                x-show="loading"
+                                class="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-amber-500"
+                            ></span>
+                        </button>
+
+                        {{-- 구독한 경우 --}}
+                        <button
+                            type="button"
+                            x-show="supported && enabled"
+                            @click="toggle()"
+                            :disabled="loading"
+                            title="Disable notifications"
+                            aria-label="Disable notifications"
+                            aria-pressed="true"
+                            class="relative flex items-center justify-center rounded-lg p-1 text-indigo-600 transition-colors hover:text-indigo-700 active:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                                />
+                            </svg>
+                            <span
                                 class="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-indigo-600 ring-1 ring-white"
                             ></span>
                         </button>
+
+                        {{-- 지원하지 않는 브라우저 --}}
+                        <span
+                            x-show="!supported"
+                            title="Push notifications are not supported"
+                            class="text-gray-400"
+                        >
+                            <svg
+                                class="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                                />
+                            </svg>
+                        </span>
                     </div>
                     
                     <a

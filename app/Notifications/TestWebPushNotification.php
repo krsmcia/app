@@ -22,7 +22,8 @@ class TestWebPushNotification extends Notification
             ->body('Your account was approved!')
             ->action('View account', 'view_account')
             ->options(['TTL' => 1000])
-            ->data(['url' => 'https://app.ciamactan.com/dashboard']);
+            ->data(['url' => 'https://app.ciamactan.com/dashboard'])
+            ->vibrate();
             // ->badge()
             // ->dir()
             // ->image()
@@ -30,6 +31,5 @@ class TestWebPushNotification extends Notification
             // ->renotify()
             // ->requireInteraction()
             // ->tag()
-            // ->vibrate()
     }
 }

@@ -16,8 +16,7 @@ class TestWebPushNotification extends Notification
 
     public function toWebPush($notifiable, $notification)
     {
-        return (new WebPushMessage)
-            return (new WebPushMessage) 
+        return (new WebPushMessage) 
             ->title('Approved!') 
             ->body('Your account was approved!') 
             ->icon('/approved-icon.png') 

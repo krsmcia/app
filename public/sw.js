@@ -40,27 +40,37 @@ self.addEventListener('push', function (event) {
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
 
-    const url = event.notification.data?.url ?? '/dashboard';
+    const targetUrl = new URL(
+        event.notification.data?.url ?? '/dashboard',
+        self.location.origin
+    ).href;
 
-    event.waitUntil(
-        clients.matchAll({
-            type: 'window',
-            includeUncontrolled: true,
-        }).then(function (clientList) {
+    event.waitUntil((async () => {
+        try {
+            const clientList = await self.clients.matchAll({
+                type: 'window',
+                includeUncontrolled: true,
+            });
 
-            // 이미 CIA 사이트가 열려 있다면 해당 창으로 이동
+            // 같은 사이트의 창만 대상으로 처리
             for (const client of clientList) {
-                if ('focus' in client) {
-                    return client
-                        .navigate(url)
-                        .then(() => client.focus());
+                if (new URL(client.url).origin !== self.location.origin) {
+                    continue;
+                }
+
+                try {
+                    await client.navigate(targetUrl);
+                    await client.focus();
+                    return;
+                } catch (error) {
+                    // 해당 창이 더 이상 유효하지 않으면 다음 창을 확인
+                    console.warn('Could not reuse notification client:', error);
                 }
             }
 
-            // 열려 있는 창이 없다면 새 창
-            if (clients.openWindow) {
-                return clients.openWindow(url);
-            }
-        })
-    );
+            await self.clients.openWindow(targetUrl);
+        } catch (error) {
+            console.error('Notification click failed:', error);
+        }
+    })());
 });

@@ -1,76 +1,33 @@
-self.addEventListener('push', function (event) {
-    if (!event.data) {
-        return;
-    }
-
-    let data;
-
-    try {
-        data = event.data.json();
-    } catch {
-        data = {
-            title: 'CIA Notification',
-            body: event.data.text(),
-        };
-    }
+self.addEventListener('push', function(event) {
+    const data = event.data.json();
 
     const options = {
-        body: data.body ?? '',
-        icon: data.icon ?? '/icon.png',
-        badge: data.badge ?? '/badge.png',
-
-        vibrate: [300, 100, 300, 100, 500],
-
-        requireInteraction: true,
-
-        data: {
-            url: '/dashboard',
-        },
+        body: data.body,
+        icon: '/icon.png',       // 필요하면 public에 icon.png 넣기
+        badge: '/badge.png',     // 필요하면 public에 badge.png 넣기
+        vibrate: [300, 100, 300, 100, 500], // 진동
+        data: { url: data.url },
+        requireInteraction: true
     };
 
     event.waitUntil(
-        self.registration.showNotification(
-            data.title ?? 'CIA Notification',
-            options
-        )
+        self.registration.showNotification(data.title, options)
     );
 });
 
-
-self.addEventListener('notificationclick', function (event) {
+self.addEventListener('notificationclick', function(event) {
     event.notification.close();
 
-    const targetUrl = new URL(
-        event.notification.data?.url ?? '/dashboard',
-        self.location.origin
-    ).href;
+    const url = event.notification.data.url;
 
-    event.waitUntil((async () => {
-        try {
-            const clientList = await self.clients.matchAll({
-                type: 'window',
-                includeUncontrolled: true,
-            });
-
-            // 같은 사이트의 창만 대상으로 처리
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(clientList => {
             for (const client of clientList) {
-                if (new URL(client.url).origin !== self.location.origin) {
-                    continue;
-                }
-
-                try {
-                    await client.navigate(targetUrl);
-                    await client.focus();
-                    return;
-                } catch (error) {
-                    // 해당 창이 더 이상 유효하지 않으면 다음 창을 확인
-                    console.warn('Could not reuse notification client:', error);
+                if (client.url === url && 'focus' in client) {
+                    return client.focus();
                 }
             }
-
-            await self.clients.openWindow(targetUrl);
-        } catch (error) {
-            console.error('Notification click failed:', error);
-        }
-    })());
+            return clients.openWindow(url);
+        })
+    );
 });

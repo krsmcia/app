@@ -2,7 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
+use App\Models\Department;
 use App\Models\PurchaseRequest;
+use App\Notifications\ProcurementRequestNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -22,7 +25,7 @@ class Cart extends Component
             return;
         }
         try {
-            DB::transaction(function () use ($cartItems, $remark) {
+            $purchaseRequest = DB::transaction(function () use ($cartItems, $remark) {
                 $user = auth()->user();
                 $purchaseRequest = PurchaseRequest::create([
                     'request_no' => $this->generateRequestNo(),
@@ -62,6 +65,7 @@ class Cart extends Component
                         'status' => 'pending',
                     ]);
                 }
+                return $purchaseRequest;
             });
         } catch (\RuntimeException $e) {
             $this->dispatch(
@@ -71,6 +75,34 @@ class Cart extends Component
 
             return;
         }
+
+        // Send push notifications to Procurement users.
+        try {
+            $department = Department::where('code', 'procurement')->first();
+            if ($department) {
+                User::whereHas('departments', function ($query) {
+                    $query->where('departments.code', 'procurement');
+                })
+                ->role(['staff', 'team-leader'])
+                ->each(function (User $user) use ($purchaseRequest) {
+                    $user->notify(
+                        new ProcurementRequestNotification(
+                            $purchaseRequest->request_no,
+                            $purchaseRequest->id,
+                        )
+                    );
+                });
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error(
+                'Purchase request push notification failed.',
+                [
+                    'request_id' => $purchaseRequest->id,
+                    'error' => $e->getMessage(),
+                ]
+            );
+        }
+
         $this->dispatch('cart-request-created');
     }
     protected function nextApprovalStep($user): ?string

@@ -4,31 +4,30 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\DeclarativeWebPushMessage;
 use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class ProcurementRequestNotification extends Notification
 {
-    public function via($notifiable)
+    use Queueable;
+
+    public function __construct(
+        public string $requestNo,
+        public int $requestId,
+    ) {}
+
+    public function via($notifiable): array
     {
         return [WebPushChannel::class];
     }
 
-    public function toWebPush($notifiable, $notification)
+    public function toWebPush($notifiable, $notification): WebPushMessage
     {
-        return (new WebPushMessage) 
-            ->title('Approved!')
-            ->icon('/approved-icon.png')
-            ->body('Your account was approved!')
-            ->action('View account', 'view_account', url('/procurements/requests'))
-            ->navigate(env('VAPID_SUBJECT'))
-            ->vibrate([300, 100, 300, 100, 500]);
-            // ->badge()
-            // ->dir()
-            // ->image()
-            // ->lang()
-            // ->renotify()
-            // ->requireInteraction()
-            // ->tag()
+        return (new WebPushMessage)
+            ->title('New Purchase Request')
+            ->body("Purchase request {$this->requestNo} requires review.")
+            ->data([
+                'url' => url('/procurements/requests'),
+            ]);
     }
 }

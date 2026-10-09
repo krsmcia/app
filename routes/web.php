@@ -4,6 +4,9 @@ use App\Http\Controllers\Purchasing\PurchaseRequestController;
 use App\Livewire;
 use Illuminate\Support\Facades\Route;
 
+use Illuminate\Http\Request;
+use App\Notifications\TestWebPushNotification;
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -90,5 +93,32 @@ Route::middleware([
         Route::get('/transactions', Livewire\Accountings\Transactions::class)->name('transactions');
         Route::get('/liquidations', Livewire\Accountings\Liquidations::class)->name('liquidations');
         Route::get('/liquidations/{user}', Livewire\Accountings\UserLiquidations::class)->name('user-liquidations');
+    });
+
+
+
+
+    Route::post('/push/subscribe', function (Request $request) {
+        $data = $request->validate([
+            'endpoint' => ['required', 'url', 'max:2048'],
+            'keys.p256dh' => ['required', 'string'],
+            'keys.auth' => ['required', 'string'],
+        ]);
+        $request->user()->updatePushSubscription(
+            $data['endpoint'],
+            $data['keys']['p256dh'],
+            $data['keys']['auth']
+        );
+        return response()->json([
+            'message' => 'Push subscription saved.',
+        ]);
+    });
+    Route::post('/push/test', function (Request $request) {
+        $request->user()->notify(
+            new TestWebPushNotification()
+        );
+        return response()->json([
+            'message' => 'Push notification sent.',
+        ]);
     });
 });

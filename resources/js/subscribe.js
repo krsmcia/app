@@ -56,18 +56,23 @@ document.addEventListener('alpine:init', () => {
             }
 
             try {
+                // Register the service worker if it does not exist.
+                await navigator.serviceWorker.register('/sw.js');
+
                 const registration = await navigator.serviceWorker.ready;
                 const subscription =
                     await registration.pushManager.getSubscription();
 
                 this.enabled = !!subscription;
+
                 this.status = this.enabled
                     ? 'Notifications are enabled on this device.'
                     : Notification.permission === 'denied'
                         ? 'Notifications are blocked in browser settings.'
                         : 'Notifications are disabled on this device.';
             } catch (error) {
-                this.status = 'Unable to check notification status.';
+                console.error('Push initialization failed:', error);
+                this.status = 'Unable to initialize notifications.';
             } finally {
                 this.loading = false;
             }

@@ -20,7 +20,7 @@ class Details extends Component
                         'item.primaryImage',
                         'itemVendor.vendor',
                         'purchaseWorkflowItems' => function ($query) {
-                            $query->with('purchaseWorkflow');
+                            $query->with([ 'purchaseWorkflow', 'purchaseActions.actedBy', ]);
                         },
                     ]);
                 },
@@ -28,6 +28,7 @@ class Details extends Component
                     $query->with([
                         'purchaseWorkflowItems.purchaseItem',
                         'purchaseWorkflowItems.receivedItemPhotos',
+                        'purchaseWorkflowItems.purchaseActions.actedBy',
                     ]);
                 },
             ])

@@ -480,6 +480,52 @@
                                                             <span>Received by Procurement</span>
                                                         </div>
                                                     @endif
+
+                                                    @if ($workflowItem->purchaseActions->contains(
+                                                        fn ($action) => $action->action === 'denied'
+                                                    ))
+                                                        @foreach (
+                                                            $workflowItem->purchaseActions
+                                                                ->where('action', 'denied')
+                                                                ->sortByDesc('acted_at') as $denyAction
+                                                        )
+                                                            <div class="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
+                                                                <div class="flex items-center gap-2 text-sm font-semibold text-red-700">
+                                                                    <svg class="h-4 w-4 shrink-0"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+                                                                    </svg>
+                                                                    Request Denied
+                                                                </div>
+
+                                                                <div class="mt-2 text-xs text-gray-600">
+                                                                    <span class="font-medium">Denied by:</span>
+                                                                    {{ $denyAction->actedBy?->name ?? 'Unknown' }}
+                                                                </div>
+
+                                                                <div class="mt-1 text-xs text-gray-600">
+                                                                    <span class="font-medium">Date:</span>
+                                                                    {{ $denyAction->acted_at }}
+                                                                </div>
+
+                                                                <div class="mt-3 border-t border-red-200 pt-2">
+                                                                    <div class="text-xs font-semibold text-red-700">
+                                                                        Reason for Denial
+                                                                    </div>
+
+                                                                    <div class="mt-1 whitespace-pre-line break-words text-sm text-gray-700">
+                                                                        {{ $denyAction->comment ?: 'No reason provided.' }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
+
                                                 </div>
                                             @endforeach
 
@@ -594,45 +640,129 @@
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-gray-100">
+                                            <tbody class="divide-y divide-gray-100 bg-white">
                                                 @foreach ($workflow->purchaseWorkflowItems as $workflowItem)
                                                     @php
                                                         $itemStatusClasses = match ($workflowItem->status) {
-                                                            'approved' => 'bg-green-100 text-green-700',
-                                                            'purchased' => 'bg-green-100 text-green-700',
-                                                            'fund released' => 'bg-green-100 text-green-700',
-                                                            'ordered' => 'bg-green-100 text-green-700',
-                                                            'rejected' => 'bg-red-100 text-red-700',
-                                                            'pending' => 'bg-yellow-100 text-yellow-700',
-                                                            default => 'bg-gray-100 text-gray-600',
+                                                            'approved', 'purchased', 'fund released', 'ordered'
+                                                                => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20',
+                                                            'denied'
+                                                                => 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
+                                                            'pending'
+                                                                => 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20',
+                                                            default
+                                                                => 'bg-gray-100 text-gray-600 ring-1 ring-inset ring-gray-500/10',
                                                         };
+                                                        $denyActions = $workflowItem->purchaseActions
+                                                            ->where('action', 'denied')
+                                                            ->sortByDesc('acted_at');
                                                     @endphp
-                                                    <tr>
-                                                        <td class="px-3 py-2 text-sm text-gray-700">
-                                                            <div class="flex items-center gap-2">
-                                                                {{ $workflowItem->purchaseItem?->item_name ?? '-' }}
-                                                                @if ($workflowItem->receivedItemPhotos->isNotEmpty())
-                                                                    <div class="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-700">
-                                                                        <span class="h-2 w-2 rounded-full bg-green-500"></span>
-                                                                        <span>Received by Procurement</span>
+                                                    <tr class="transition-colors hover:bg-gray-50/80">
+                                                        {{-- Item --}}
+                                                        <td class="px-4 py-4">
+                                                            <div class="flex items-center gap-3">
+                                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="h-5 w-5"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        stroke="currentColor"
+                                                                        stroke-width="1.5">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round"
+                                                                            d="M20.25 7.5l-8.25-4.5L3.75 7.5m16.5 0L12 12m8.25-4.5v9L12 21m0-9L3.75 7.5m8.25 4.5v9m-8.25-13.5v9L12 21"/>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="min-w-0">
+                                                                    <div class="font-medium text-gray-900">
+                                                                        {{ $workflowItem->purchaseItem?->item_name ?? '-' }}
                                                                     </div>
-                                                                @endif
+                                                                    @if ($workflowItem->receivedItemPhotos->isNotEmpty())
+                                                                        <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                                                            Received by Procurement
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
                                                             </div>
                                                         </td>
-                                                        <td class="px-3 py-2 text-right text-sm text-gray-700">
-                                                            {{ number_format($workflowItem->purchaseItem?->quantity ?? 0) }}
-                                                        </td>
-                                                        <td class="px-3 py-2 text-center">
-                                                            <span class="rounded-full px-2 py-1 text-xs font-medium {{ $itemStatusClasses }}">
-                                                                {{ ucfirst($workflowItem->status) }}
+                                                        {{-- Quantity --}}
+                                                        <td class="whitespace-nowrap px-4 py-4 text-right">
+                                                            <span class="inline-flex min-w-10 items-center justify-center rounded-lg bg-gray-100 px-2.5 py-1.5 text-sm font-semibold tabular-nums text-gray-700">
+                                                                {{ number_format($workflowItem->purchaseItem?->quantity ?? 0) }}
                                                             </span>
                                                         </td>
-                                                        <td class="whitespace-nowrap px-3 py-2 text-right text-xs text-gray-500">
-                                                            {{ $workflowItem->acted_at?->format('M d, Y h:i A') ?? '-' }}
+                                                        {{-- Status / Denial details --}}
+                                                        <td class="px-4 py-4">
+                                                            @if ($denyActions->isNotEmpty())
+                                                                <div class="space-y-3">
+                                                                    @foreach ($denyActions as $denyAction)
+                                                                        <div class="overflow-hidden rounded-xl border border-red-200 bg-red-50/70">
+                                                                            <div class="flex items-center gap-2 border-b border-red-100 px-3 py-2">
+                                                                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600">
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                                        class="h-3.5 w-3.5"
+                                                                                        fill="none"
+                                                                                        viewBox="0 0 24 24"
+                                                                                        stroke="currentColor"
+                                                                                        stroke-width="2">
+                                                                                        <path stroke-linecap="round"
+                                                                                            stroke-linejoin="round"
+                                                                                            d="M6 18L18 6M6 6l12 12"/>
+                                                                                    </svg>
+                                                                                </span>
+                                                                                <span class="text-xs font-bold uppercase tracking-wide text-red-700">
+                                                                                    Request Denied
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="flex items-start gap-3 p-3">
+                                                                                {{-- Denied by: profile image --}}
+                                                                                @php
+                                                                                    $deniedBy = $denyAction->actedBy;
+                                                                                @endphp
+                                                                                @if ($deniedBy?->profile_photo_url)
+                                                                                    <img
+                                                                                        src="{{ $deniedBy->profile_photo_url }}"
+                                                                                        alt="{{ $deniedBy->name ?? 'User' }}"
+                                                                                        class="h-8 w-8 shrink-0 rounded-full object-cover ring-2 ring-white"
+                                                                                    >
+                                                                                @else
+                                                                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-bold text-red-700 ring-2 ring-white">
+                                                                                        {{ strtoupper(substr($deniedBy?->name ?? '?', 0, 1)) }}
+                                                                                    </div>
+                                                                                @endif
+                                                                                <div class="min-w-0 flex-1">
+                                                                                    <div class="text-sm font-semibold text-gray-900">
+                                                                                        {{ $deniedBy?->name ?? 'Unknown' }}
+                                                                                    </div>
+                                                                                    <div class="mt-1 whitespace-pre-line break-words text-sm leading-5 text-gray-600">{{ $denyAction->comment ?: 'No reason provided.' }}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            @else
+                                                                <span class="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold {{ $itemStatusClasses }}">
+                                                                    {{ ucfirst($workflowItem->status) }}
+                                                                </span>
+                                                            @endif
+                                                        </td>
+
+                                                        {{-- Last activity --}}
+                                                        <td class="whitespace-nowrap px-4 py-4 text-right">
+                                                            @if ($workflowItem->acted_at)
+                                                                <div class="text-sm font-medium text-gray-700">
+                                                                    {{ $workflowItem->acted_at->format('M d, Y') }}
+                                                                </div>
+                                                                <div class="mt-0.5 text-xs text-gray-400">
+                                                                    {{ $workflowItem->acted_at->format('h:i A') }}
+                                                                </div>
+                                                            @else
+                                                                <span class="text-sm text-gray-400">—</span>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                 @endforeach
-
                                             </tbody>
 
                                         </table>

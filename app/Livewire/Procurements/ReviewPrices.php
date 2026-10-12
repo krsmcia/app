@@ -48,38 +48,6 @@ class ReviewPrices extends Component
                 $workflowItem->purchaseWorkflow
             );
         });
-        // Audit 팀에 Web Push 알림 전송
-        try {
-            $recipients = User::query()
-                ->whereHas('departments', function ($query) {
-                    $query->where('departments.code', 'audit');
-                })
-                ->role('audit')
-                ->get();
-            $title = 'Purchase Request Requires Audit';
-            $message = "Purchase request {$workflow->purchaseRequest->request_no} is ready for audit review.";
-            $url = url('/audits/requests');
-            foreach ($recipients as $user) {
-                try {
-                    $user->notify(new WorkflowNotification(
-                        title: $title,
-                        message: $message,
-                        url: $url,
-                    ));
-                } catch (\Throwable $e) {
-                    Log::error('Audit workflow notification failed for user.', [
-                        'request_id' => $workflow->purchaseRequest->id,
-                        'user_id' => $user->id,
-                        'error' => $e->getMessage(),
-                    ]);
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::error('Failed to retrieve Audit notification recipients.', [
-                'request_id' => $workflow->purchaseRequest->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
         $this->dispatch('approval-updated');
     }
     public function openDenyModal(int $workflowItemId): void
@@ -283,6 +251,38 @@ class ReviewPrices extends Component
             $nextWorkflow->purchaseWorkflowItems()->create([
                 'purchase_item_id' => $workflowItem->purchase_item_id,
                 'status' => 'pending',
+            ]);
+        }
+        // Audit 팀에 Web Push 알림 전송
+        try {
+            $recipients = User::query()
+                ->whereHas('departments', function ($query) {
+                    $query->where('departments.code', 'audit');
+                })
+                ->role('audit')
+                ->get();
+            $title = 'Purchase Request Requires Audit';
+            $message = "Purchase request {$workflow->purchaseRequest->request_no} is ready for audit review.";
+            $url = url('/audits/requests');
+            foreach ($recipients as $user) {
+                try {
+                    $user->notify(new WorkflowNotification(
+                        title: $title,
+                        message: $message,
+                        url: $url,
+                    ));
+                } catch (\Throwable $e) {
+                    Log::error('Audit workflow notification failed for user.', [
+                        'request_id' => $workflow->purchaseRequest->id,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to retrieve Audit notification recipients.', [
+                'request_id' => $workflow->purchaseRequest->id,
+                'error' => $e->getMessage(),
             ]);
         }
     }

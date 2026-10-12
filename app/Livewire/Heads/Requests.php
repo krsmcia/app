@@ -1,5 +1,9 @@
 <?php
 namespace App\Livewire\Heads;
+
+use App\Models\User;
+use App\Notifications\WorkflowNotification;
+use Illuminate\Support\Facades\Log;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
@@ -257,6 +261,37 @@ class Requests extends Component
             $nextWorkflow->purchaseWorkflowItems()->create([
                 'purchase_item_id' => $workflowItem->purchase_item_id,
                 'status' => 'pending',
+            ]);
+        }
+        // head에서 accounting department로 Web Push 알림 전송
+        try {
+            $recipients = User::query()
+                ->whereHas('departments', function ($query) {
+                    $query->where('departments.code', 'accounting');
+                })
+                ->get();
+            $title = 'Purchase Request Requires Payment';
+            $message = "Purchase request {$workflow->purchaseRequest->request_no} has been approved by the Head and is ready for payment processing.";
+            $url = url('/accountings/requests');
+            foreach ($recipients as $user) {
+                try {
+                    $user->notify(new WorkflowNotification(
+                        title: $title,
+                        message: $message,
+                        url: $url,
+                    ));
+                } catch (\Throwable $e) {
+                    Log::error('Audit workflow notification failed for user.', [
+                        'request_id' => $workflow->purchaseRequest->id,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to retrieve Audit notification recipients.', [
+                'request_id' => $workflow->purchaseRequest->id,
+                'error' => $e->getMessage(),
             ]);
         }
     }

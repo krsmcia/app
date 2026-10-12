@@ -1,12 +1,16 @@
 <?php
 namespace App\Livewire\Audits;
+use App\Models\Department;
+use App\Models\User;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseWorkflow;
 use App\Models\PurchaseWorkflowItem;
+use App\Notifications\WorkflowNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
 class Requests extends Component
 {
     use WithPagination;
@@ -249,7 +253,75 @@ class Requests extends Component
                 'status' => 'pending',
             ]);
         }
+        $this->notifyDepartmentHeads($purchaseRequest);
     }
+    private function notifyDepartmentHeads(
+        PurchaseRequest $purchaseRequest
+    ): void {
+        try {
+            $departmentId = $purchaseRequest->user?->current_department_id;
+
+            if (!$departmentId) {
+                Log::warning('Department head notification skipped: no current department.', [
+                    'purchase_request_id' => $purchaseRequest->id,
+                    'requester_id' => $purchaseRequest->user_id,
+                ]);
+
+                return;
+            }
+
+            $department = Department::find($departmentId);
+
+            if (!$department) {
+                Log::warning('Department head notification skipped: department not found.', [
+                    'purchase_request_id' => $purchaseRequest->id,
+                    'department_id' => $departmentId,
+                ]);
+
+                return;
+            }
+
+            $departmentId = $purchaseRequest->user?->current_department_id;
+            $headUsers = User::query()
+                ->whereHas('departments', function ($query) use ($departmentId) {
+                    $query->where('departments.id', $departmentId);
+                })
+                ->role('head')
+                ->get();
+            if ($headUsers->isEmpty()) {
+                Log::info('No department heads found for purchase request.', [
+                    'purchase_request_id' => $purchaseRequest->id,
+                    'department_id' => $departmentId,
+                ]);
+                return;
+            }
+            DB::afterCommit(function () use ($headUsers, $purchaseRequest, $departmentId) {
+                foreach ($headUsers as $user) {
+                    try {
+                        $user->notify(new WorkflowNotification(
+                            title: 'Purchase Request Pending Approval',
+                            message: "Purchase request {$purchaseRequest->request_no} is waiting for your approval.",
+                            url: url('/heads/requests'),
+                        ));
+                    } catch (\Throwable $e) {
+                        Log::error('Department head push notification failed.', [
+                            'purchase_request_id' => $purchaseRequest->id,
+                            'user_id' => $user->id,
+                            'department_id' => $departmentId,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('Failed to prepare department head notifications.', [
+                'purchase_request_id' => $purchaseRequest->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+
     /**
      * ---------------------------------------------------------
      * Render

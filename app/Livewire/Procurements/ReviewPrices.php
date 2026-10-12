@@ -259,7 +259,6 @@ class ReviewPrices extends Component
                 ->whereHas('departments', function ($query) {
                     $query->where('departments.code', 'audit');
                 })
-                ->role('audit')
                 ->get();
             $title = 'Purchase Request Requires Audit';
             $message = "Purchase request {$workflow->purchaseRequest->request_no} is ready for audit review.";

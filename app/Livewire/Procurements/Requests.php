@@ -1,5 +1,8 @@
 <?php
 namespace App\Livewire\Procurements;
+
+use App\Notifications\WorkflowNotification;
+use App\Models\User;
 use App\Models\Item;
 use App\Models\Vendor;
 use App\Models\ItemVendor;
@@ -11,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
 use Livewire\Component;
+use Illuminate\Support\Facades\Log;
 class Requests extends Component
 {
     use WithPagination;
@@ -317,7 +321,7 @@ class Requests extends Component
                 ],
             ]
         )->validate();
-        DB::transaction(function () use (
+        $nextStep = DB::transaction(function () use (
             $workflow,
             $requestDiscount,
             $items
@@ -487,18 +491,60 @@ class Requests extends Component
             | 다음 단계 → Audit or Procurement Supervisor's review
             |--------------------------------------------------------------------------
             */
-            $isProcurementSupervisor = auth()->user()->departments()->where('code', 'procurement')->exists() && auth()->user()->hasRole('supervisor');
-            if($isProcurementSupervisor)
-            {
-                //Go to Audit
-                $this->createAuditWorkflow($workflow);    
+            $isProcurementSupervisor = auth()->user()
+                ->departments()
+                ->where('code', 'procurement')
+                ->exists()
+                && auth()->user()->hasRole('supervisor');
+
+            if ($isProcurementSupervisor) {
+                $this->createAuditWorkflow($workflow);
+
+                return 'audit';
             }
-            else
-            {
-                //Go to Procurement supervisor
-                $this->createReviewWorkflow($workflow);
-            }
+
+            $this->createReviewWorkflow($workflow);
+
+            return 'review-prices';
         });
+        
+        //push notification to procurement supervisor or audit
+        try {
+            if ($nextStep === 'audit') {
+                // Procurement Supervisor가 승인한 경우 → Audit 팀에 알림
+                $recipients = User::whereHas('departments', function ($query) {
+                    $query->where('departments.code', 'audit');
+                });
+                $title = 'Purchase Request Requires Audit';
+                $message = "Purchase request {$workflow->purchaseRequest->request_no} requires audit review.";
+                $url = url('/audit/requests'); // 실제 Audit 목록 경로로 수정
+            } else {
+                // 일반 Procurement 사용자가 승인한 경우 → Procurement Supervisor에게 알림
+                $recipients = User::whereHas('departments', function ($query) {
+                    $query->where('departments.code', 'procurement');
+                })->role('supervisor');
+                $title = 'Purchase Request Requires Supervisor Review';
+                $message = "Purchase request {$workflow->purchaseRequest->request_no} requires supervisor review.";
+                $url = url('/procurements/review-prices');
+            }
+            $recipients->each(function (User $user) use (
+                $title,
+                $message,
+                $url
+            ) {
+                $user->notify(new WorkflowNotification(
+                    title: $title,
+                    message: $message,
+                    url: $url,
+                ));
+            });
+        } catch (\Throwable $e) {
+            Log::error('Purchase workflow notification failed.', [
+                'request_id' => $workflow->purchaseRequest->id,
+                'next_step' => $nextStep,
+                'error' => $e->getMessage(),
+            ]);
+        }
         $this->dispatch('approval-updated');
     }
     private function createAuditWorkflow(PurchaseWorkflow $workflow): void

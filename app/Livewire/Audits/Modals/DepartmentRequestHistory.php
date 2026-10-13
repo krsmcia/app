@@ -3,7 +3,6 @@ namespace App\Livewire\Audits\Modals;
 use App\Models\Department;
 use App\Models\PurchaseItem;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
@@ -68,23 +67,23 @@ class DepartmentRequestHistory extends Component
     public function render()
     {
         $requestsCount = 0;
+
         $groupedItems = new LengthAwarePaginator(
             collect(),
             0,
             $this->perPage,
             $this->getPage()
         );
+
         if ($this->departmentId) {
+
             /*
-             * ---------------------------------------------------------
-             * Total request count
-             * ---------------------------------------------------------
-             *
-             * Count ALL purchase requests made by users
-             * belonging to this department.
-             */
-            $requestsCountQuery = $this->department
-                ->purchaseRequests();
+            |--------------------------------------------------------------------------
+            | 1. Count purchase requests for this department
+            |--------------------------------------------------------------------------
+            */
+            $requestsCountQuery = $this->department->purchaseRequests();
+
             if ($this->from) {
                 $requestsCountQuery->whereDate(
                     'created_at',
@@ -92,6 +91,7 @@ class DepartmentRequestHistory extends Component
                     $this->from
                 );
             }
+
             if ($this->to) {
                 $requestsCountQuery->whereDate(
                     'created_at',
@@ -99,20 +99,21 @@ class DepartmentRequestHistory extends Component
                     $this->to
                 );
             }
+
             $requestsCount = $requestsCountQuery->count();
+
             /*
-             * ---------------------------------------------------------
-             * Product IDs requested by this department
-             * ---------------------------------------------------------
-             *
-             * We paginate PRODUCTS, not purchase requests.
-             */
+            |--------------------------------------------------------------------------
+            | 2. Get unique product IDs requested by this department
+            |--------------------------------------------------------------------------
+            */
             $itemIdsQuery = PurchaseItem::query()
                 ->whereHas('purchaseRequest', function ($query) {
                     $query->where(
                         'department_id',
                         $this->departmentId
                     );
+
                     if ($this->from) {
                         $query->whereDate(
                             'created_at',
@@ -120,6 +121,7 @@ class DepartmentRequestHistory extends Component
                             $this->from
                         );
                     }
+
                     if ($this->to) {
                         $query->whereDate(
                             'created_at',
@@ -128,60 +130,60 @@ class DepartmentRequestHistory extends Component
                         );
                     }
                 })
-                ->when(
-                    trim($this->title) !== '',
-                    function ($query) {
-                        $search = trim($this->title);
-                        $query->where(function ($query) use ($search) {
-                            $query
-                                ->where(
-                                    'item_name',
-                                    'like',
-                                    '%' . $search . '%'
-                                )
-                                ->orWhere(
-                                    'sku',
-                                    'like',
-                                    '%' . $search . '%'
-                                )
-                                ->orWhere(
-                                    'vendor_name',
-                                    'like',
-                                    '%' . $search . '%'
-                                );
-                        });
-                    }
-                )
+                ->when(trim($this->title) !== '', function ($query) {
+                    $search = trim($this->title);
+
+                    $query->where(function ($query) use ($search) {
+                        $query
+                            ->where(
+                                'item_name',
+                                'like',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'sku',
+                                'like',
+                                "%{$search}%"
+                            )
+                            ->orWhere(
+                                'vendor_name',
+                                'like',
+                                "%{$search}%"
+                            );
+                    });
+                })
                 ->whereNotNull('item_id')
                 ->select('item_id')
                 ->distinct();
+
             /*
-             * ---------------------------------------------------------
-             * Count unique products
-             * ---------------------------------------------------------
-             */
-            $totalProducts = (clone $itemIdsQuery)->count();
+            |--------------------------------------------------------------------------
+            | 3. Count unique products
+            |--------------------------------------------------------------------------
+            */
+            $totalProducts = (clone $itemIdsQuery)
+                ->count('item_id');
+
             /*
-             * ---------------------------------------------------------
-             * Get current page item IDs
-             * ---------------------------------------------------------
-             */
-            $itemIds = $itemIdsQuery
+            |--------------------------------------------------------------------------
+            | 4. Paginate product IDs, not purchase requests
+            |--------------------------------------------------------------------------
+            */
+            $itemIds = (clone $itemIdsQuery)
                 ->orderBy('item_id')
                 ->forPage(
                     $this->getPage(),
                     $this->perPage
                 )
                 ->pluck('item_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | 5. Load all matching history for products on this page
+            |--------------------------------------------------------------------------
+            */
             if ($itemIds->isNotEmpty()) {
-                /*
-                 * -----------------------------------------------------
-                 * Get ALL purchase items for the products
-                 * on the current page.
-                 *
-                 * This is intentionally NOT paginated.
-                 * -----------------------------------------------------
-                 */
+
                 $purchaseItems = PurchaseItem::query()
                     ->with([
                         'item.primaryImage',
@@ -189,11 +191,13 @@ class DepartmentRequestHistory extends Component
                         'purchaseRequest.user',
                         'purchaseRequest.department',
                     ])
+                    ->whereIn('item_id', $itemIds)
                     ->whereHas('purchaseRequest', function ($query) {
                         $query->where(
                             'department_id',
                             $this->departmentId
                         );
+
                         if ($this->from) {
                             $query->whereDate(
                                 'created_at',
@@ -201,6 +205,7 @@ class DepartmentRequestHistory extends Component
                                 $this->from
                             );
                         }
+
                         if ($this->to) {
                             $query->whereDate(
                                 'created_at',
@@ -209,127 +214,105 @@ class DepartmentRequestHistory extends Component
                             );
                         }
                     })
-                    ->whereIn('item_id', $itemIds)
-                    ->orderByDesc(
-                        DB::raw('COALESCE(created_at, id)')
-                    )
+                    ->orderByDesc('id')
                     ->get();
+
                 /*
-                 * -----------------------------------------------------
-                 * Group by product
-                 * -----------------------------------------------------
-                 */
-                $groupedItems = $purchaseItems
+                |--------------------------------------------------------------------------
+                | 6. Group purchase items by item_id
+                |--------------------------------------------------------------------------
+                */
+                $groupedCollection = $purchaseItems
                     ->groupBy('item_id')
                     ->map(function ($items) {
-                        $firstItem = $items->first();
+
+                        // Latest purchase-item record
+                        $latestItem = $items->first();
+
+                        // Unique purchase requests for this product
                         $requests = $items
-                            ->map(
-                                fn ($purchaseItem) =>
-                                    $purchaseItem->purchaseRequest
-                            )
-                            ->filter();
+                            ->pluck('purchaseRequest')
+                            ->filter()
+                            ->unique('id')
+                            ->values();
+
+                        // Latest purchase request
+                        $latestRequest = $requests
+                            ->sortByDesc('created_at')
+                            ->first();
+
+                        // Unique users who requested this product
+                        $requesters = $requests
+                            ->pluck('user')
+                            ->filter()
+                            ->unique('id')
+                            ->values();
+
                         return [
-                            /*
-                             * Product
-                             */
-                            'item' => $firstItem->item,
-                            /*
-                             * First purchase item
-                             *
-                             * Useful for SKU / vendor / item information.
-                             */
-                            'purchase_item' => $firstItem,
-                            /*
-                             * Number of unique purchase requests
-                             */
-                            'request_count' => $requests
-                                ->pluck('id')
-                                ->unique()
-                                ->count(),
-                            /*
-                             * Total quantity requested
-                             * by this department
-                             */
+                            'item' => $latestItem->item,
+
+                            'purchase_item' => $latestItem,
+
+                            'request_count' => $requests->count(),
+
                             'total_quantity' => $items->sum(
                                 fn ($purchaseItem) =>
                                     (float) $purchaseItem->quantity
                             ),
-                            /*
-                             * Last requested date
-                             */
-                            'last_requested_at' => $requests
-                                ->max('created_at'),
-                            /*
-                             * Last request number
-                             */
-                            'last_request_no' => $requests
-                                ->sortByDesc('created_at')
-                                ->first()?->request_no,
-                            /*
-                             * Users who requested this product
-                             *
-                             * Useful for Audit.
-                             */
-                            'requesters' => $requests
-                                ->pluck('user')
-                                ->filter()
-                                ->unique('id')
-                                ->values(),
-                            /*
-                             * Number of unique users who requested it
-                             */
+
+                            'last_requested_at' =>
+                                $latestRequest?->created_at,
+
+                            'last_request_no' =>
+                                $latestRequest?->request_no,
+
+                            'requesters' => $requesters,
+
                             'requester_count' => $requests
                                 ->pluck('user_id')
                                 ->filter()
                                 ->unique()
                                 ->count(),
-                            /*
-                             * Complete request history for this product
-                             *
-                             * Useful if the Blade needs to expand
-                             * the product and show individual requests.
-                             */
+
                             'requests' => $requests
                                 ->sortByDesc('created_at')
                                 ->values(),
                         ];
                     });
+
                 /*
-                 * -----------------------------------------------------
-                 * Keep database ordering
-                 * -----------------------------------------------------
-                 */
-                $groupedItems = $itemIds
-                    ->map(function ($itemId) use ($groupedItems) {
-                        return $groupedItems->get($itemId);
-                    })
+                |--------------------------------------------------------------------------
+                | 7. Preserve the order of paginated product IDs
+                |--------------------------------------------------------------------------
+                */
+                $groupedCollection = $itemIds
+                    ->map(
+                        fn ($itemId) => $groupedCollection->get($itemId)
+                    )
                     ->filter()
                     ->values();
-                /*
-                 * -----------------------------------------------------
-                 * Convert to paginator
-                 * -----------------------------------------------------
-                 */
-                $groupedItems = new LengthAwarePaginator(
-                    $groupedItems,
-                    $totalProducts,
-                    $this->perPage,
-                    $this->getPage(),
-                    [
-                        'path' => request()->url(),
-                        'query' => request()->query(),
-                    ]
-                );
+
             } else {
-                $groupedItems = new LengthAwarePaginator(
-                    collect(),
-                    $totalProducts,
-                    $this->perPage,
-                    $this->getPage()
-                );
+                $groupedCollection = collect();
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 8. Build the paginator
+            |--------------------------------------------------------------------------
+            */
+            $groupedItems = new LengthAwarePaginator(
+                $groupedCollection,
+                $totalProducts,
+                $this->perPage,
+                $this->getPage(),
+                [
+                    'path' => request()->url(),
+                    'query' => request()->query(),
+                ]
+            );
         }
+
         return view(
             'livewire.audits.modals.department-request-history',
             [

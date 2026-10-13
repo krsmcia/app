@@ -64,26 +64,32 @@ class DepartmentRequestHistory extends Component
         ]);
         $this->resetPage();
     }
+    public function openProductHistory(int $itemId)
+    {
+        $this->dispatch(
+            'open-purchase-request-history',
+            departmentId: $this->departmentId,
+            itemId: $itemId,
+            from: $this->from,
+            to: $this->to,
+        );
+    }
     public function render()
     {
         $requestsCount = 0;
-
         $groupedItems = new LengthAwarePaginator(
             collect(),
             0,
             $this->perPage,
             $this->getPage()
         );
-
         if ($this->departmentId) {
-
             /*
             |--------------------------------------------------------------------------
             | 1. Count purchase requests for this department
             |--------------------------------------------------------------------------
             */
             $requestsCountQuery = $this->department->purchaseRequests();
-
             if ($this->from) {
                 $requestsCountQuery->whereDate(
                     'created_at',
@@ -91,7 +97,6 @@ class DepartmentRequestHistory extends Component
                     $this->from
                 );
             }
-
             if ($this->to) {
                 $requestsCountQuery->whereDate(
                     'created_at',
@@ -99,9 +104,7 @@ class DepartmentRequestHistory extends Component
                     $this->to
                 );
             }
-
             $requestsCount = $requestsCountQuery->count();
-
             /*
             |--------------------------------------------------------------------------
             | 2. Get unique product IDs requested by this department
@@ -113,7 +116,6 @@ class DepartmentRequestHistory extends Component
                         'department_id',
                         $this->departmentId
                     );
-
                     if ($this->from) {
                         $query->whereDate(
                             'created_at',
@@ -121,7 +123,6 @@ class DepartmentRequestHistory extends Component
                             $this->from
                         );
                     }
-
                     if ($this->to) {
                         $query->whereDate(
                             'created_at',
@@ -132,7 +133,6 @@ class DepartmentRequestHistory extends Component
                 })
                 ->when(trim($this->title) !== '', function ($query) {
                     $search = trim($this->title);
-
                     $query->where(function ($query) use ($search) {
                         $query
                             ->where(
@@ -155,7 +155,6 @@ class DepartmentRequestHistory extends Component
                 ->whereNotNull('item_id')
                 ->select('item_id')
                 ->distinct();
-
             /*
             |--------------------------------------------------------------------------
             | 3. Count unique products
@@ -163,7 +162,6 @@ class DepartmentRequestHistory extends Component
             */
             $totalProducts = (clone $itemIdsQuery)
                 ->count('item_id');
-
             /*
             |--------------------------------------------------------------------------
             | 4. Paginate product IDs, not purchase requests
@@ -176,14 +174,12 @@ class DepartmentRequestHistory extends Component
                     $this->perPage
                 )
                 ->pluck('item_id');
-
             /*
             |--------------------------------------------------------------------------
             | 5. Load all matching history for products on this page
             |--------------------------------------------------------------------------
             */
             if ($itemIds->isNotEmpty()) {
-
                 $purchaseItems = PurchaseItem::query()
                     ->with([
                         'item.primaryImage',
@@ -197,7 +193,6 @@ class DepartmentRequestHistory extends Component
                             'department_id',
                             $this->departmentId
                         );
-
                         if ($this->from) {
                             $query->whereDate(
                                 'created_at',
@@ -205,7 +200,6 @@ class DepartmentRequestHistory extends Component
                                 $this->from
                             );
                         }
-
                         if ($this->to) {
                             $query->whereDate(
                                 'created_at',
@@ -216,7 +210,6 @@ class DepartmentRequestHistory extends Component
                     })
                     ->orderByDesc('id')
                     ->get();
-
                 /*
                 |--------------------------------------------------------------------------
                 | 6. Group purchase items by item_id
@@ -225,61 +218,47 @@ class DepartmentRequestHistory extends Component
                 $groupedCollection = $purchaseItems
                     ->groupBy('item_id')
                     ->map(function ($items) {
-
                         // Latest purchase-item record
                         $latestItem = $items->first();
-
                         // Unique purchase requests for this product
                         $requests = $items
                             ->pluck('purchaseRequest')
                             ->filter()
                             ->unique('id')
                             ->values();
-
                         // Latest purchase request
                         $latestRequest = $requests
                             ->sortByDesc('created_at')
                             ->first();
-
                         // Unique users who requested this product
                         $requesters = $requests
                             ->pluck('user')
                             ->filter()
                             ->unique('id')
                             ->values();
-
                         return [
                             'item' => $latestItem->item,
-
                             'purchase_item' => $latestItem,
-
                             'request_count' => $requests->count(),
-
                             'total_quantity' => $items->sum(
                                 fn ($purchaseItem) =>
                                     (float) $purchaseItem->quantity
                             ),
-
                             'last_requested_at' =>
                                 $latestRequest?->created_at,
-
                             'last_request_no' =>
                                 $latestRequest?->request_no,
-
                             'requesters' => $requesters,
-
                             'requester_count' => $requests
                                 ->pluck('user_id')
                                 ->filter()
                                 ->unique()
                                 ->count(),
-
                             'requests' => $requests
                                 ->sortByDesc('created_at')
                                 ->values(),
                         ];
                     });
-
                 /*
                 |--------------------------------------------------------------------------
                 | 7. Preserve the order of paginated product IDs
@@ -291,11 +270,9 @@ class DepartmentRequestHistory extends Component
                     )
                     ->filter()
                     ->values();
-
             } else {
                 $groupedCollection = collect();
             }
-
             /*
             |--------------------------------------------------------------------------
             | 8. Build the paginator
@@ -312,7 +289,6 @@ class DepartmentRequestHistory extends Component
                 ]
             );
         }
-
         return view(
             'livewire.audits.modals.department-request-history',
             [

@@ -618,6 +618,7 @@
     </x-dialog-modal>
     <livewire:audits.modals.user-request-history />
     <livewire:audits.modals.department-request-history />
+    <livewire:audits.modals.purchase-request-history />
     <livewire:audits.modals.item />
     <livewire:audits.modals.vendors />
 </div>

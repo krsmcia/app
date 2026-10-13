@@ -70,177 +70,28 @@
                         Items
                     ====================================================== --}}
                     <div class="divide-y divide-gray-100">
-                        @foreach ($request->review_prices_workflow->purchaseWorkflowItems as $workflowItem)
-                            @php
-                                $purchaseItem = $workflowItem->purchaseItem;
-                                $item = $purchaseItem->item;
-                                $itemVendor = $purchaseItem->itemVendor;
+                        @if ($request->reviewPricesWorkflow)
+                            @foreach ($request->reviewPricesItems as $workflowItem)
+                                @php
+                                    $purchaseItem = $workflowItem->purchaseItem;
+                                    $item = $purchaseItem->item;
+                                    $itemVendor = $purchaseItem->itemVendor;
 
-                                $baseAmount = (float) ($purchaseItem->unit_price * $purchaseItem->quantity ?? 0);
-                                $itemDiscount = (float) ($purchaseItem->discount ?? 0);
-                                $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
+                                    $baseAmount = (float) ($purchaseItem->unit_price * $purchaseItem->quantity ?? 0);
+                                    $itemDiscount = (float) ($purchaseItem->discount ?? 0);
+                                    $shippingFee = (float) ($purchaseItem->shipping_fee ?? 0);
 
-                                $finalAmount = $baseAmount - $itemDiscount + $shippingFee;
-                                $firstAction = $workflowItem->purchaseActions()->first();
-                            @endphp
-                            <div
-                                class="px-4 py-4 sm:px-5 {{ $firstAction->action == 'denied' ? 'bg-gray-100' : '' }}"
-                                wire:key="workflow-item-{{ $workflowItem->id }}"
-                            >
-                                {{-- =================================================
-                                    DESKTOP
-                                ================================================== --}}
-                                <div class="hidden items-center gap-4 md:flex">
-
-                                    {{-- Image --}}
-                                    <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
-                                        <img
-                                            src="{{ $item?->primaryImage
-                                                ? Storage::url($item->primaryImage->path)
-                                                : asset('images/default-item.png') }}"
-                                            alt="{{ $purchaseItem->item_name }}"
-                                            class="h-full w-full object-cover"
-                                        >
-                                    </div>
-
-                                    {{-- Item Info --}}
-                                    <div class="min-w-0 flex-1">
-                                        <button
-                                            x-on:click="$dispatch('open-item', {
-                                                itemId: {{ $purchaseItem->item_id }}
-                                            })"
-                                            class="block max-w-full truncate text-sm font-medium text-gray-900 hover:text-gray-700"
-                                            wire:loading.attr="disabled"
-                                        >
-                                            {{ $purchaseItem->item_name }}
-                                        </button>
-
-                                        <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
-                                            <span>
-                                                SKU:
-                                                {{ $purchaseItem->sku }}
-                                            </span>
-
-                                            <span class="text-gray-300">|</span>
-
-                                            <span>
-                                                Qty:
-                                                <span class="font-semibold text-gray-700">
-                                                    {{ $purchaseItem->quantity }}
-                                                </span>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Vendor --}}
-                                    <div class="w-40 min-w-0 shrink-0">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                            Vendor
-                                        </div>
-
-                                        @if ($itemVendor)
-                                            <button
-                                                x-on:click="$dispatch('open-vendor', {
-                                                    vendorId: {{ $itemVendor->vendor_id }}
-                                                })"
-                                                class="mt-0.5 block w-full truncate text-left text-sm font-medium text-gray-700 hover:text-gray-900"
-                                                wire:loading.attr="disabled"
-                                            >
-                                                {{ $purchaseItem->vendor_name }}
-                                            </button>
-                                        @else
-                                            <div class="mt-0.5 truncate text-sm text-gray-500">
-                                                {{ $purchaseItem->vendor_name ?: '-' }}
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    {{-- Unit Price --}}
-                                    <div class="w-24 shrink-0 text-right">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                            Unit
-                                        </div>
-
-                                        <div class="mt-0.5 text-sm font-medium text-gray-900">
-                                            {{ number_format($purchaseItem->unit_price, 2) }}
-                                        </div>
-                                    </div>
-
-                                    {{-- Amount --}}
-                                    <div class="w-24 shrink-0 text-right">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                            Amount
-                                        </div>
-
-                                        <div class="mt-0.5 text-sm font-medium text-gray-900">
-                                            {{ number_format($baseAmount, 2) }}
-                                        </div>
-                                    </div>
-
-                                    {{-- Adjustments --}}
-                                    <div class="shrink-0 text-right">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                            Adjustments
-                                        </div>
-                                        <div class="mt-0.5 space-y-0.5 text-xs">
-                                            @if ($itemDiscount > 0)
-                                                <div class="flex items-center justify-between gap-1">
-                                                    <span>{{ __('Discount') }}</span>
-                                                    <span class="font-medium text-red-600">
-                                                        -{{ number_format($itemDiscount, 2) }}
-                                                    </span>
-                                                </div>
-                                            @endif
-                                            @if ($shippingFee > 0)
-                                                <div class="flex items-center justify-between gap-1">
-                                                    <span>{{ __('Shipping') }}</span>
-                                                    <span class="font-medium text-blue-600">
-                                                        +{{ number_format($shippingFee, 2) }}
-                                                    </span>
-                                                </div>
-                                            @endif
-                                            @if ($itemDiscount <= 0 && $shippingFee <= 0)
-                                                <div class="text-gray-400">
-                                                    -
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    {{-- Final Amount --}}
-                                    <div class="w-28 shrink-0 text-right">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                            Final
-                                        </div>
-
-                                        <div class="mt-0.5 text-sm font-bold text-gray-900">
-                                            {{ number_format($finalAmount, 2) }}
-                                        </div>
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        <span class="font-medium text-gray-700">
-                                            {{ $firstAction->actedBy?->name ?? __('Unknown user') }}
-                                        </span>
-                                        <span>
-                                            {{ __(ucfirst($firstAction->action)) }}
-                                        </span>
-                                        <span class="text-gray-400">
-                                            {{ $firstAction->acted_at }}
-                                        </span>
-                                        @if ($firstAction->comment)
-                                            <div class="mt-0.5 text-gray-500">
-                                                {{ $firstAction->comment }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                {{-- =================================================
-                                    MOBILE
-                                ================================================== --}}
-                                <div class="md:hidden">
-
-                                    {{-- Item Header --}}
-                                    <div class="flex items-start gap-3">
+                                    $finalAmount = $baseAmount - $itemDiscount + $shippingFee;
+                                    $firstAction = $workflowItem->purchaseActions->first();
+                                @endphp
+                                <div
+                                    class="px-4 py-4 sm:px-5 {{ $firstAction?->action === 'denied' ? 'bg-gray-100' : '' }}""
+                                    wire:key="workflow-item-{{ $workflowItem->id }}"
+                                >
+                                    {{-- =================================================
+                                        DESKTOP
+                                    ================================================== --}}
+                                    <div class="hidden items-center gap-4 md:flex">
 
                                         {{-- Image --}}
                                         <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
@@ -253,128 +104,279 @@
                                             >
                                         </div>
 
-                                        {{-- Item Name / SKU --}}
+                                        {{-- Item Info --}}
                                         <div class="min-w-0 flex-1">
                                             <button
                                                 x-on:click="$dispatch('open-item', {
                                                     itemId: {{ $purchaseItem->item_id }}
                                                 })"
-                                                class="block w-full truncate text-left text-sm font-semibold text-gray-900"
+                                                class="block max-w-full truncate text-sm font-medium text-gray-900 hover:text-gray-700"
                                                 wire:loading.attr="disabled"
                                             >
                                                 {{ $purchaseItem->item_name }}
                                             </button>
 
-                                            <div class="mt-1 truncate text-xs text-gray-500">
-                                                SKU:
-                                                {{ $purchaseItem->sku }}
+                                            <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                                                <span>
+                                                    SKU:
+                                                    {{ $purchaseItem->sku }}
+                                                </span>
+
+                                                <span class="text-gray-300">|</span>
+
+                                                <span>
+                                                    Qty:
+                                                    <span class="font-semibold text-gray-700">
+                                                        {{ $purchaseItem->quantity }}
+                                                    </span>
+                                                </span>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {{-- Item Details --}}
-                                    <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-gray-50 p-3">
-
-                                        {{-- Quantity --}}
-                                        <div class="min-w-0">
+                                        {{-- Vendor --}}
+                                        <div class="w-40 min-w-0 shrink-0">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                                Qty
+                                                Vendor
                                             </div>
 
-                                            <div class="mt-1 text-sm font-semibold text-gray-900">
-                                                {{ $purchaseItem->quantity }}
-                                            </div>
+                                            @if ($itemVendor)
+                                                <button
+                                                    x-on:click="$dispatch('open-vendor', {
+                                                        vendorId: {{ $itemVendor->vendor_id }}
+                                                    })"
+                                                    class="mt-0.5 block w-full truncate text-left text-sm font-medium text-gray-700 hover:text-gray-900"
+                                                    wire:loading.attr="disabled"
+                                                >
+                                                    {{ $purchaseItem->vendor_name }}
+                                                </button>
+                                            @else
+                                                <div class="mt-0.5 truncate text-sm text-gray-500">
+                                                    {{ $purchaseItem->vendor_name ?: '-' }}
+                                                </div>
+                                            @endif
                                         </div>
 
                                         {{-- Unit Price --}}
-                                        <div class="min-w-0 text-right">
+                                        <div class="w-24 shrink-0 text-right">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                                Unit Price
+                                                Unit
                                             </div>
 
-                                            <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                            <div class="mt-0.5 text-sm font-medium text-gray-900">
                                                 {{ number_format($purchaseItem->unit_price, 2) }}
                                             </div>
                                         </div>
 
                                         {{-- Amount --}}
-                                        <div class="min-w-0">
+                                        <div class="w-24 shrink-0 text-right">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Amount
                                             </div>
 
-                                            <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                            <div class="mt-0.5 text-sm font-medium text-gray-900">
                                                 {{ number_format($baseAmount, 2) }}
                                             </div>
                                         </div>
 
-                                        {{-- Discount --}}
-                                        <div class="min-w-0 text-right">
+                                        {{-- Adjustments --}}
+                                        <div class="shrink-0 text-right">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                                Discount
+                                                Adjustments
                                             </div>
-
-                                            <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                            <div class="mt-0.5 space-y-0.5 text-xs">
                                                 @if ($itemDiscount > 0)
-                                                    -{{ number_format($itemDiscount, 2) }}
-                                                @else
-                                                    -
+                                                    <div class="flex items-center justify-between gap-1">
+                                                        <span>{{ __('Discount') }}</span>
+                                                        <span class="font-medium text-red-600">
+                                                            -{{ number_format($itemDiscount, 2) }}
+                                                        </span>
+                                                    </div>
                                                 @endif
-                                            </div>
-                                        </div>
-
-                                        {{-- Shipping --}}
-                                        <div class="min-w-0">
-                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                                Shipping
-                                            </div>
-
-                                            <div class="mt-1 truncate text-sm font-semibold text-gray-900">
                                                 @if ($shippingFee > 0)
-                                                    +{{ number_format($shippingFee, 2) }}
-                                                @else
-                                                    -
+                                                    <div class="flex items-center justify-between gap-1">
+                                                        <span>{{ __('Shipping') }}</span>
+                                                        <span class="font-medium text-blue-600">
+                                                            +{{ number_format($shippingFee, 2) }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                                @if ($itemDiscount <= 0 && $shippingFee <= 0)
+                                                    <div class="text-gray-400">
+                                                        -
+                                                    </div>
                                                 @endif
                                             </div>
                                         </div>
 
-                                        {{-- Final --}}
-                                        <div class="min-w-0 text-right">
+                                        {{-- Final Amount --}}
+                                        <div class="w-28 shrink-0 text-right">
                                             <div class="text-[10px] uppercase tracking-wide text-gray-400">
                                                 Final
                                             </div>
 
-                                            <div class="mt-1 truncate text-sm font-bold text-gray-900">
+                                            <div class="mt-0.5 text-sm font-bold text-gray-900">
                                                 {{ number_format($finalAmount, 2) }}
                                             </div>
                                         </div>
+                                        <div class="text-xs text-gray-500">
+                                            <span class="font-medium text-gray-700">
+                                                {{ $firstAction->actedBy?->name ?? __('Unknown user') }}
+                                            </span>
+                                            <span>
+                                                {{ __(ucfirst($firstAction->action)) }}
+                                            </span>
+                                            <span class="text-gray-400">
+                                                {{ $firstAction->acted_at }}
+                                            </span>
+                                            @if ($firstAction->comment)
+                                                <div class="mt-0.5 text-gray-500">
+                                                    {{ $firstAction->comment }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
+                                    {{-- =================================================
+                                        MOBILE
+                                    ================================================== --}}
+                                    <div class="md:hidden">
 
-                                    {{-- Vendor --}}
-                                    <div class="mt-3">
-                                        <div class="text-[10px] uppercase tracking-wide text-gray-400">
-                                            Vendor
+                                        {{-- Item Header --}}
+                                        <div class="flex items-start gap-3">
+
+                                            {{-- Image --}}
+                                            <div class="h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                                                <img
+                                                    src="{{ $item?->primaryImage
+                                                        ? Storage::url($item->primaryImage->path)
+                                                        : asset('images/default-item.png') }}"
+                                                    alt="{{ $purchaseItem->item_name }}"
+                                                    class="h-full w-full object-cover"
+                                                >
+                                            </div>
+
+                                            {{-- Item Name / SKU --}}
+                                            <div class="min-w-0 flex-1">
+                                                <button
+                                                    x-on:click="$dispatch('open-item', {
+                                                        itemId: {{ $purchaseItem->item_id }}
+                                                    })"
+                                                    class="block w-full truncate text-left text-sm font-semibold text-gray-900"
+                                                    wire:loading.attr="disabled"
+                                                >
+                                                    {{ $purchaseItem->item_name }}
+                                                </button>
+
+                                                <div class="mt-1 truncate text-xs text-gray-500">
+                                                    SKU:
+                                                    {{ $purchaseItem->sku }}
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        @if ($itemVendor)
-                                            <button
-                                                x-on:click="$dispatch('open-vendor', {
-                                                    vendorId: {{ $itemVendor->vendor_id }}
-                                                })"
-                                                class="mt-0.5 block max-w-full truncate text-left text-sm font-medium text-gray-700"
-                                                wire:loading.attr="disabled"
-                                            >
-                                                {{ $purchaseItem->vendor_name }}
-                                            </button>
-                                        @else
-                                            <div class="mt-0.5 text-sm text-gray-500">
-                                                {{ $purchaseItem->vendor_name ?: '-' }}
+                                        {{-- Item Details --}}
+                                        <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg bg-gray-50 p-3">
+
+                                            {{-- Quantity --}}
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Qty
+                                                </div>
+
+                                                <div class="mt-1 text-sm font-semibold text-gray-900">
+                                                    {{ $purchaseItem->quantity }}
+                                                </div>
                                             </div>
-                                        @endif
+
+                                            {{-- Unit Price --}}
+                                            <div class="min-w-0 text-right">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Unit Price
+                                                </div>
+
+                                                <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                                    {{ number_format($purchaseItem->unit_price, 2) }}
+                                                </div>
+                                            </div>
+
+                                            {{-- Amount --}}
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Amount
+                                                </div>
+
+                                                <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                                    {{ number_format($baseAmount, 2) }}
+                                                </div>
+                                            </div>
+
+                                            {{-- Discount --}}
+                                            <div class="min-w-0 text-right">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Discount
+                                                </div>
+
+                                                <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                                    @if ($itemDiscount > 0)
+                                                        -{{ number_format($itemDiscount, 2) }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            {{-- Shipping --}}
+                                            <div class="min-w-0">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Shipping
+                                                </div>
+
+                                                <div class="mt-1 truncate text-sm font-semibold text-gray-900">
+                                                    @if ($shippingFee > 0)
+                                                        +{{ number_format($shippingFee, 2) }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            {{-- Final --}}
+                                            <div class="min-w-0 text-right">
+                                                <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                    Final
+                                                </div>
+
+                                                <div class="mt-1 truncate text-sm font-bold text-gray-900">
+                                                    {{ number_format($finalAmount, 2) }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Vendor --}}
+                                        <div class="mt-3">
+                                            <div class="text-[10px] uppercase tracking-wide text-gray-400">
+                                                Vendor
+                                            </div>
+
+                                            @if ($itemVendor)
+                                                <button
+                                                    x-on:click="$dispatch('open-vendor', {
+                                                        vendorId: {{ $itemVendor->vendor_id }}
+                                                    })"
+                                                    class="mt-0.5 block max-w-full truncate text-left text-sm font-medium text-gray-700"
+                                                    wire:loading.attr="disabled"
+                                                >
+                                                    {{ $purchaseItem->vendor_name }}
+                                                </button>
+                                            @else
+                                                <div class="mt-0.5 text-sm text-gray-500">
+                                                    {{ $purchaseItem->vendor_name ?: '-' }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        @endif
                     </div>
                     {{-- =====================================================
                         Footer

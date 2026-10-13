@@ -80,157 +80,132 @@ class UserRequestHistory extends Component
             }
             $requestsCount = $requestsCountQuery->count();
             /*
-             * ---------------------------------------------------------
-             * Product IDs requested by this user
-             *
-             * IMPORTANT:
-             * We paginate PRODUCTS, not purchase requests.
-             * ---------------------------------------------------------
-             */
+            |--------------------------------------------------------------------------
+            | 1. Find unique product IDs requested by this user
+            |--------------------------------------------------------------------------
+            */
             $itemIdsQuery = PurchaseItem::query()
                 ->whereHas('purchaseRequest', function ($query) {
-                    $query->where('user_id', $this->userId);
-                    if ($this->from) {
-                        $query->whereDate('created_at', '>=', $this->from);
-                    }
-                    if ($this->to) {
-                        $query->whereDate('created_at', '<=', $this->to);
-                    }
+                    $query->where('user_id', $this->userId)
+                        ->when($this->from, fn ($q) =>
+                            $q->whereDate('created_at', '>=', $this->from)
+                        )
+                        ->when($this->to, fn ($q) =>
+                            $q->whereDate('created_at', '<=', $this->to)
+                        );
                 })
-                ->when(
-                    trim($this->title) !== '',
-                    function ($query) {
-                        $search = trim($this->title);
-                        $query->where(function ($query) use ($search) {
-                            $query
-                                ->where('item_name', 'like', '%' . $search . '%')
-                                ->orWhere('sku', 'like', '%' . $search . '%')
-                                ->orWhere('vendor_name', 'like', '%' . $search . '%');
-                        });
-                    }
-                )
+                ->when(trim($this->title) !== '', function ($query) {
+                    $search = trim($this->title);
+
+                    $query->where(function ($q) use ($search) {
+                        $q->where('item_name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%")
+                            ->orWhere('vendor_name', 'like', "%{$search}%");
+                    });
+                })
                 ->whereNotNull('item_id')
                 ->select('item_id')
                 ->distinct();
+
             /*
-             * ---------------------------------------------------------
-             * Count unique products
-             * ---------------------------------------------------------
-             */
-            $totalProducts = (clone $itemIdsQuery)->count();
+            |--------------------------------------------------------------------------
+            | 2. Count unique products, not purchase requests
+            |--------------------------------------------------------------------------
+            */
+            $totalProducts = (clone $itemIdsQuery)->count('item_id');
+
             /*
-             * ---------------------------------------------------------
-             * Get current page item IDs
-             * ---------------------------------------------------------
-             */
-            $itemIds = $itemIdsQuery
+            |--------------------------------------------------------------------------
+            | 3. Paginate unique product IDs
+            |--------------------------------------------------------------------------
+            */
+            $itemIds = (clone $itemIdsQuery)
                 ->orderBy('item_id')
-                ->forPage(
-                    $this->getPage(),
-                    $this->perPage
-                )
+                ->forPage($this->getPage(), $this->perPage)
                 ->pluck('item_id');
+
+            /*
+            |--------------------------------------------------------------------------
+            | 4. Load all matching purchase records for current-page products
+            |--------------------------------------------------------------------------
+            */
             if ($itemIds->isNotEmpty()) {
-                /*
-                 * -----------------------------------------------------
-                 * Get all purchase items belonging to the products
-                 * on the current page.
-                 *
-                 * This is NOT paginated.
-                 *
-                 * We need all history for these products so that
-                 * total quantity / request count are accurate.
-                 * -----------------------------------------------------
-                 */
                 $purchaseItems = PurchaseItem::query()
                     ->with([
                         'item.primaryImage',
                         'itemVendor.vendor',
                         'purchaseRequest',
                     ])
-                    ->whereHas('purchaseRequest', function ($query) {
-                        $query->where('user_id', $this->userId);
-                        if ($this->from) {
-                            $query->whereDate('created_at', '>=', $this->from);
-                        }
-                        if ($this->to) {
-                            $query->whereDate('created_at', '<=', $this->to);
-                        }
-                    })
                     ->whereIn('item_id', $itemIds)
-                    ->orderByDesc(
-                        DB::raw('COALESCE(created_at, id)')
-                    )
+                    ->whereHas('purchaseRequest', function ($query) {
+                        $query->where('user_id', $this->userId)
+                            ->when($this->from, fn ($q) =>
+                                $q->whereDate('created_at', '>=', $this->from)
+                            )
+                            ->when($this->to, fn ($q) =>
+                                $q->whereDate('created_at', '<=', $this->to)
+                            );
+                    })
+                    ->orderByDesc('id')
                     ->get();
+
                 /*
-                 * -----------------------------------------------------
-                 * Group by product
-                 * -----------------------------------------------------
-                 */
-                $groupedItems = $purchaseItems
+                |--------------------------------------------------------------------------
+                | 5. Group all records by product ID
+                |--------------------------------------------------------------------------
+                */
+                $groupedCollection = $purchaseItems
                     ->groupBy('item_id')
                     ->map(function ($items) {
-                        $firstItem = $items->first();
+                        $latestItem = $items->sortByDesc('id')->first();
+
                         $requests = $items
-                            ->map(function ($purchaseItem) {
-                                return $purchaseItem->purchaseRequest;
-                            })
-                            ->filter();
+                            ->pluck('purchaseRequest')
+                            ->filter()
+                            ->unique('id');
+
+                        $latestRequest = $requests
+                            ->sortByDesc('created_at')
+                            ->first();
+
                         return [
-                            'item' => $firstItem->item,
-                            'purchase_item' => $firstItem,
-                            'request_count' => $requests
-                                ->pluck('id')
-                                ->unique()
-                                ->count(),
+                            'item' => $latestItem->item,
+                            'purchase_item' => $latestItem,
+                            'request_count' => $requests->count(),
                             'total_quantity' => $items->sum(
                                 fn ($purchaseItem) =>
                                     (float) $purchaseItem->quantity
                             ),
-                            'last_requested_at' => $requests
-                                ->max('created_at'),
-                            'last_request_no' => $requests
-                                ->sortByDesc('created_at')
-                                ->first()?->request_no,
+                            'last_requested_at' => $latestRequest?->created_at,
+                            'last_request_no' => $latestRequest?->request_no,
                         ];
                     });
-                /*
-                 * -----------------------------------------------------
-                 * Keep database ordering
-                 * -----------------------------------------------------
-                 */
-                $groupedItems = $itemIds
-                    ->map(function ($itemId) use ($groupedItems) {
-                        return $groupedItems->get($itemId);
-                    })
+
+                // Keep products in the same order as the paginated IDs.
+                $groupedCollection = $itemIds
+                    ->map(fn ($itemId) => $groupedCollection->get($itemId))
                     ->filter()
                     ->values();
-                /*
-                 * -----------------------------------------------------
-                 * Convert to paginator
-                 *
-                 * This paginator is LOCAL.
-                 * It is NOT stored in a Livewire public property.
-                 * -----------------------------------------------------
-                 */
-                $groupedItems = new LengthAwarePaginator(
-                    $groupedItems,
-                    $totalProducts,
-                    $this->perPage,
-                    $this->getPage(),
-                    [
-                        'path' => request()->url(),
-                        'query' => request()->query(),
-                    ]
-                );
+
             } else {
-                $groupedItems = new LengthAwarePaginator(
-                    collect(),
-                    $totalProducts,
-                    $this->perPage,
-                    $this->getPage()
-                );
+                $groupedCollection = collect();
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | 6. Create paginator for grouped products
+            |--------------------------------------------------------------------------
+            */
+            $groupedItems = new LengthAwarePaginator(
+                $groupedCollection,
+                $totalProducts,
+                $this->perPage,
+                $this->getPage(),
+                [
+                    'path' => request()->url(),
+                    'query' => request()->query(),
+                ]
+            );
         }
         return view(
             'livewire.audits.modals.user-request-history',

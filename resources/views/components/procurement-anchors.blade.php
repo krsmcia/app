@@ -155,7 +155,7 @@
         <span class="transition group-hover:ml-1">→</span>
     </div>
 </a>
-@if(auth()->user()->hasRole('supervisor'))
+@if(auth()->user()->hasRole(['supervisor', 'super-admin']))
 {{-- Review Prices --}}
 <a
     href="{{ route('procurements.review-prices') }}"

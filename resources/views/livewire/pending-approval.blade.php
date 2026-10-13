@@ -1,8 +1,9 @@
 <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
     <div class="mb-5 flex items-center justify-between">
         <div>
-            <h1 class="text-lg font-semibold text-gray-900">
-                Pending Approval
+            <h1 class="">
+                <span class="text-lg font-semibold text-gray-900">Pending Approval</span>
+                <a href="action-history" class="ml-2 text-gray-400 hover:text-gray-600 text-sm">{{__('Approval History')}}</a>
             </h1>
             @if ($approvalStep)
                 <p class="mt-0.5 text-xs text-gray-500">

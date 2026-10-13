@@ -33,12 +33,14 @@ Route::middleware([
     */
     Route::get('/dashboard', function () {return view('dashboard');})->name('dashboard');
     Route::get('/pending-approval', Livewire\PendingApproval::class)->name('pending-approval');
+    Route::get('/action-history', Livewire\ActionHistory::class)->name('action-history');
     Route::get('/items', Livewire\Items::class)->name('items');
     Route::get('/items/category/{category:code}', Livewire\Items\Category::class)->name('items.category');
     Route::get('/wishlist', Livewire\Wishlist::class)->name('wishlist');
     Route::get('/purchase-requests', Livewire\PurchaseRequests::class)->name('purchase-requests');
     Route::get('/cart', Livewire\Cart::class)->name('cart');
     Route::get('/my-requests', Livewire\MyRequests::class)->name('my-requests');
+    Route::get('/team-requests', Livewire\TeamRequests::class)->name('team-requests');
     Route::get('/ready-for-pickup', Livewire\ReadyForPickup::class)->name('ready-for-pickup');
 
     /*
@@ -62,8 +64,9 @@ Route::middleware([
         Route::get('/items', Livewire\Procurements\Items::class)->name('items');
         Route::get('/vendors', Livewire\Procurements\Vendors::class)->name('vendors');
         Route::get('/requests', Livewire\Procurements\Requests::class)->name('requests');
-        Route::middleware(['role:supervisor'])->group(function () {
+        Route::middleware(['role:supervisor|super-admin'])->group(function () {
             Route::get('/review-prices', Livewire\Procurements\ReviewPrices::class)->name('review-prices');
+            Route::get('/action-history', Livewire\Procurements\ActionHistory::class)->name('action-history');
         });
         Route::get('/approved', Livewire\Procurements\Approved::class)->name('approved');
         Route::get('/purchased', Livewire\Procurements\Purchased::class)->name('purchased');

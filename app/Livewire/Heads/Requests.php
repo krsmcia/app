@@ -269,6 +269,9 @@ class Requests extends Component
                 ->whereHas('departments', function ($query) {
                     $query->where('departments.code', 'accounting');
                 })
+                ->whereDoesntHave('roles', function ($query) {
+                    $query->where('name', 'head');
+                })
                 ->get();
             $title = 'Purchase Request Requires Payment';
             $message = "Purchase request {$workflow->purchaseRequest->request_no} has been approved by the Head and is ready for payment processing.";

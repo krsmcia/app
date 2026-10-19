@@ -85,6 +85,7 @@ Route::middleware([
         Route::get('/requests', Livewire\Audits\Requests::class)->name('requests');
         Route::get('/inventories', Livewire\Audits\Inventories::class)->name('inventories');
         Route::get('/vendors', Livewire\Audits\Vendors::class)->name('vendors');
+        Route::get('/transactions', Livewire\Audits\Transactions::class)->name('transactions');
     });
     Route::middleware(['role:super-admin|head'])->group(function () {
         Route::get('/heads/requests', Livewire\Heads\Requests::class)->name('heads.requests');

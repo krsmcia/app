@@ -109,3 +109,40 @@
         <span class="transition group-hover:ml-1">→</span>
     </div>
 </a>
+<a
+    href="{{ route('audits.transactions') }}"
+    class="group flex aspect-square flex-col rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+        transition hover:-translate-y-1 hover:border-purple-200 hover:shadow-md
+        sm:p-5 lg:aspect-auto lg:p-6"
+>
+    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 sm:h-11 sm:w-11">
+        {{-- Transaction History Icon --}}
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="size-5 text-purple-600 sm:size-6"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm0 5.25h.008v.008H3.75V12zm0 5.25h.008v.008H3.75v-.008z"
+            />
+        </svg>
+    </div>
+
+    <h2 class="mt-4 text-base font-semibold leading-5 text-purple-600 sm:mt-5 sm:text-lg">
+        Transaction Audit
+    </h2>
+
+    <p class="mt-2 line-clamp-2 text-xs leading-5 text-gray-500 sm:text-sm sm:leading-6">
+        Review financial transactions, verify cash movements, and audit transaction records.
+    </p>
+
+    <div class="mt-auto pt-3 text-xs font-semibold text-purple-600 sm:text-sm">
+        Review transactions
+        <span class="transition group-hover:ml-1">→</span>
+    </div>
+</a>

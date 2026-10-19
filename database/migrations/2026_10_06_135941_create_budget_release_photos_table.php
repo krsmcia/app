@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('budget_release_photos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_action_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('transaction_id')->constrained()->cascadeOnDelete();
             $table->string('budget_receiver_photo_path', 2048)->nullable();
             $table->timestamps();
         });

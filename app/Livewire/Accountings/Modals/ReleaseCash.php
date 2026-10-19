@@ -150,6 +150,10 @@ class ReleaseCash extends Component
             * One physical cash handover
             * = one Transaction.
             */
+            $path = Storage::disk('local')->putFile(
+                'accounting/release-budget/' . now()->format('Y/m/d'),
+                $this->confirmationPhoto
+            );
             $transaction = Transaction::create([
                 'from_user_id' => auth()->id(),
                 'to_user_id' => $recipient->id,
@@ -160,6 +164,9 @@ class ReleaseCash extends Component
                     $workflow->purchaseRequest->request_no
                 ),
                 'created_by' => auth()->id(),
+            ]);
+            $transaction->budgetReleasePhotos()->create([
+                'budget_receiver_photo_path' => $path,
             ]);
             /*
             * One PurchaseRequest ↔ Transaction connection.
@@ -184,10 +191,7 @@ class ReleaseCash extends Component
                     'status' => 'fund released',
                     'acted_at' => now(),
                 ]);
-                $path = Storage::disk('local')->putFile(
-                    'accounting/release-budget/' . now()->format('Y/m/d'),
-                    $this->confirmationPhoto
-                );
+                
                 /*
                 * Action history
                 */
@@ -195,9 +199,6 @@ class ReleaseCash extends Component
                     'action' => 'fund released',
                     'acted_by' => auth()->id(),
                     'acted_at' => now(),
-                ]);
-                $purchaseAction->budgetReleasePhotos()->create([
-                    'budget_receiver_photo_path' => $path,
                 ]);
                 /*
                 * Transaction ↔ Item

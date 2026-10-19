@@ -7,10 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class BudgetReleasePhoto extends Model
 {
     protected $guarded = [];
-    public function purchaseAction()
+    public function transaction()
     {
-        return $this->belongsTo(
-            PurchaseAction::class
-        );
+        return $this->belongsTo(Transaction::class);
     }
 }

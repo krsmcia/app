@@ -46,4 +46,12 @@ class Transaction extends Model
     {
         return $this->hasMany(PurchaseItemTransaction::class);
     }
+    public function cashReleases()
+    {
+        return $this->hasMany(CashRelease::class);
+    }
+    public function budgetReleasePhotos()
+    {
+        return $this->hasMany(BudgetReleasePhoto::class);
+    }
 }

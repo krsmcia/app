@@ -37,7 +37,8 @@ class Transactions extends Component
             'fromUser:id,name,email',
             'toUser:id,name,email',
             'vendor:id,name',
-            'purchaseItemTransactions.purchaseItem.item.primaryImage'
+            'purchaseItemTransactions.purchaseItem.item.primaryImage',
+            'budgetReleasePhotos'
         ])
         ->when($this->fromDate, function ($query) {
             $query->whereDate('created_at', '>=', $this->fromDate);

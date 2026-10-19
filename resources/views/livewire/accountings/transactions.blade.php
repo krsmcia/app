@@ -205,6 +205,29 @@
                                 <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $typeClass }}">
                                     {{ $typeLabel }}
                                 </span>
+                                {{-- Budget Receiver Photo --}}
+                                <div class="mt-2">
+                                    @if ($transaction->budgetReleasePhotos->isNotEmpty())
+                                        <button
+                                            type="button"
+                                            wire:click="$dispatch('open-budget-photos', { transactionId: {{ $transaction->id }} })"
+                                            class="inline-flex items-center gap-1 rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="size-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 16M4 6h16v12H4z" />
+                                            </svg>
+
+                                            View Photos ({{ $transaction->budgetReleasePhotos->count() }})
+                                        </button>
+                                    @endif
+                                </div>
                             </td>
                             {{-- Amount --}}
                             <td class="whitespace-nowrap px-4 py-3 text-right">
@@ -278,5 +301,5 @@
         @endif
 
     </div>
-
+    <livewire:accountings.modals.budget-photos />
 </div>

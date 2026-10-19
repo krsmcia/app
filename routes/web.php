@@ -2,8 +2,9 @@
 
 use App\Http\Controllers\Purchasing\PurchaseRequestController;
 use App\Livewire;
+use App\Models\BudgetReleasePhoto;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Notifications\TestWebPushNotification;
 
@@ -96,6 +97,11 @@ Route::middleware([
         Route::get('/transactions', Livewire\Accountings\Transactions::class)->name('transactions');
         Route::get('/liquidations', Livewire\Accountings\Liquidations::class)->name('liquidations');
         Route::get('/liquidations/{user}', Livewire\Accountings\UserLiquidations::class)->name('user-liquidations');
+        Route::get('/budget-photos/{photo}', function (BudgetReleasePhoto $photo) {
+            $path = $photo->budget_receiver_photo_path;
+            abort_unless(Storage::disk('local')->exists($path),404);
+            return response()->file(Storage::disk('local')->path($path));
+        })->name('budget-photos.show');
     });
 
 

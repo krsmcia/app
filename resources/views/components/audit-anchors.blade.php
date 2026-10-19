@@ -128,7 +128,14 @@
             <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75zm0 5.25h.008v.008H3.75V12zm0 5.25h.008v.008H3.75v-.008z"
+                d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5
+                A4.5 4.5 0 0021 12V9"
+            />
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 3L21 7.5m0 0L16.5 12M21 7.5H7.5
+                A4.5 4.5 0 003 12v3"
             />
         </svg>
     </div>
